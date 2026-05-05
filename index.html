@@ -319,6 +319,9 @@ const PATTERNS = [
   {id:'noise',      lbl:'ノイズ'},
   {id:'scanlines',  lbl:'スキャンライン'},
   {id:'asanoha',    lbl:'麻の葉'},
+  {id:'sunburst',   lbl:'サンバースト'},
+  {id:'multistripe',lbl:'マルチストライプ'},
+  {id:'tartan',     lbl:'タータン'},
 ];
 
 const ANGLES = ['0°','45°','90°','135°','180°','225°','270°','315°'];
@@ -790,31 +793,39 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       }
       break;
     case 'memphis':{
-      ctx.lineWidth=sc*.12;
-      const tot=Math.round(ext*2/(sc*3));
-      const lc=v=>((v*1664525+1013904223)>>>0)/4294967295;
-      for(let i=0;i<tot*tot;i++){
-        const ox=lc(i)*ext*2-ext*.5, oy=lc(i+10000)*ext*2-ext*.5;
-        const ang=lc(i+30000)*Math.PI, tp=Math.floor(lc(i+20000)*5);
-        const co=Math.cos(ang), si=Math.sin(ang);
-        const R=(px,py)=>[ox+px*co-py*si, oy+px*si+py*co];
-        nc();
-        ctx.beginPath();
-        if(tp===0){
-          ctx.arc(ox,oy,sc*.35,0,Math.PI*2); ctx.stroke();
-        } else if(tp===1){
-          const [ax,ay]=R(-sc*.4,-sc*.07),[bx,by]=R(sc*.4,-sc*.07);
-          const [cx2,cy2]=R(sc*.4,sc*.07),[dx,dy]=R(-sc*.4,sc*.07);
-          ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.lineTo(dx,dy);
-          ctx.closePath();ctx.fill();
-        } else if(tp===2){
-          const [ax,ay]=R(0,-sc*.4),[bx,by]=R(sc*.35,sc*.3),[cx2,cy2]=R(-sc*.35,sc*.3);
-          ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);
-          ctx.closePath();ctx.stroke();
-        } else if(tp===3){
-          ctx.arc(ox,oy,sc*.12,0,Math.PI*2); ctx.fill();
-        } else {
-          ctx.arc(ox,oy,sc*.4,ang,ang+Math.PI); ctx.stroke();
+      ctx.lineWidth=sc*.15;
+      const step=sc*2.4;
+      let idx=0;
+      for(let gy=-step;gy<h+step*2;gy+=step){
+        const rowOff=(Math.round(gy/step)%2)*step*.5;
+        for(let gx=-step+rowOff;gx<w+step*2;gx+=step){
+          const ang=(idx*97)*Math.PI/180;
+          const co=Math.cos(ang),si=Math.sin(ang);
+          const R=(px,py)=>[gx+px*co-py*si,gy+px*si+py*co];
+          nc();
+          switch(idx%6){
+            case 0: // 丸（輪郭）
+              ctx.beginPath();ctx.arc(gx,gy,sc*.38,0,Math.PI*2);ctx.stroke();break;
+            case 1:{ // 回転長方形
+              const[ax,ay]=R(-sc*.35,-sc*.08),[bx,by]=R(sc*.35,-sc*.08);
+              const[cx2,cy2]=R(sc*.35,sc*.08),[dx,dy]=R(-sc*.35,sc*.08);
+              ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.lineTo(dx,dy);ctx.closePath();ctx.fill();break;
+            }
+            case 2:{ // 三角形
+              const[ax,ay]=R(0,-sc*.38),[bx,by]=R(sc*.33,sc*.22),[cx2,cy2]=R(-sc*.33,sc*.22);
+              ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.closePath();ctx.stroke();break;
+            }
+            case 3: // 塗り丸
+              ctx.beginPath();ctx.arc(gx,gy,sc*.18,0,Math.PI*2);ctx.fill();break;
+            case 4: // 半円
+              ctx.beginPath();ctx.arc(gx,gy,sc*.36,ang,ang+Math.PI);ctx.stroke();break;
+            case 5:{ // ×印
+              const d=sc*.28;
+              ctx.beginPath();ctx.moveTo(gx-d,gy-d);ctx.lineTo(gx+d,gy+d);ctx.stroke();
+              ctx.beginPath();ctx.moveTo(gx+d,gy-d);ctx.lineTo(gx-d,gy+d);ctx.stroke();break;
+            }
+          }
+          idx++;
         }
       }
       break;
@@ -854,10 +865,69 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
     }
     case 'confetti':{
       for(let i=0;i<Math.round(ext*2/(sc*sc)*60);i++){
-        ctx.save();ctx.fillStyle=pcs[i%pcs.length];ctx.globalAlpha=op*(Math.random()*.5+.3);
-        ctx.translate(Math.random()*ext*2-ext*.5,Math.random()*ext*2-ext*.5);ctx.rotate(Math.random()*Math.PI);
-        ctx.fillRect(-sc*.28,-sc*.09,sc*.56,sc*.18);ctx.restore();
+        const fx=Math.random()*ext*2-ext*.5, fy=Math.random()*ext*2-ext*.5;
+        const fa=Math.random()*Math.PI, co2=Math.cos(fa), si2=Math.sin(fa);
+        const hw=sc*.28, hh=sc*.09;
+        const R2=(px,py)=>[fx+px*co2-py*si2, fy+px*si2+py*co2];
+        const [x1,y1]=R2(-hw,-hh),[x2,y2]=R2(hw,-hh);
+        const [x3,y3]=R2(hw,hh),[x4,y4]=R2(-hw,hh);
+        nc();ctx.globalAlpha=op*(Math.random()*.5+.3);
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x3,y3);ctx.lineTo(x4,y4);ctx.closePath();ctx.fill();
       }
+      ctx.globalAlpha=op;
+      break;
+    }
+    case 'sunburst':{
+      const cx=w/2, cy=h/2;
+      const rays=Math.round(36*(sc/50));
+      for(let i=0;i<rays;i++){
+        const a1=(i/rays)*Math.PI*2, a2=((i+.5)/rays)*Math.PI*2;
+        const len=Math.max(w,h)*1.5;
+        nc();
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(cx+Math.cos(a1)*len, cy+Math.sin(a1)*len);
+        ctx.lineTo(cx+Math.cos(a2)*len, cy+Math.sin(a2)*len);
+        ctx.closePath();ctx.fill();
+      }
+      break;
+    }
+    case 'multistripe':{
+      const pattern=[1,.5,2,.5,1,3,.5];
+      const total=pattern.reduce((s,v)=>s+v,0)*sc;
+      let ci=0;
+      for(let x=-ext*.5;x<ext*1.5;){
+        const w2=pattern[ci%pattern.length]*sc;
+        nc();ctx.fillRect(x,0,w2,h);
+        x+=w2; ci++;
+      }
+      break;
+    }
+    case 'tartan':{
+      const bands=[{w:sc*.6,alpha:op},{w:sc*.2,alpha:op*.6},{w:sc*.4,alpha:op},{w:sc*.2,alpha:op*.6}];
+      const pitch=bands.reduce((s,b)=>s+b.w,0);
+      // vertical stripes
+      for(let x=-ext*.5;x<ext*1.5;){
+        let bx=x;
+        for(let b=0;b<bands.length;b++){
+          nc();ctx.globalAlpha=bands[b].alpha;
+          ctx.fillRect(bx,0,bands[b].w,h);
+          bx+=bands[b].w;
+        }
+        x+=pitch;
+      }
+      // horizontal stripes (blended)
+      ctx.globalAlpha=op*.5;
+      for(let y=-ext*.5;y<ext*1.5;){
+        let by=y;
+        for(let b=0;b<bands.length;b++){
+          nc();
+          ctx.fillRect(0,by,w,bands[b].w);
+          by+=bands[b].w;
+        }
+        y+=pitch;
+      }
+      ctx.globalAlpha=op;
       break;
     }
   }
