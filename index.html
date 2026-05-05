@@ -796,36 +796,39 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       ctx.lineWidth=sc*.15;
       const step=sc*2.4;
       const sr=n=>((n*1664525+1013904223)>>>0)/4294967295;
-      const jitter=step*.45; // グリッドからのランダムズレ幅
+      const jitter=step*.85; // 大きくズラすほど散らかった印象に
       let idx=0;
       for(let gy=-step;gy<h+step*2;gy+=step){
         const rowOff=(Math.round(gy/step)%2)*step*.5;
         for(let gx=-step+rowOff;gx<w+step*2;gx+=step){
-          // 位置と角度をランダムにズラす（シード付きで再描画しても変わらない）
           const ox=gx+(sr(idx)*2-1)*jitter;
           const oy=gy+(sr(idx+5000)*2-1)*jitter;
           const ang=sr(idx+10000)*Math.PI*2;
+          const sz=0.55+sr(idx+15000)*0.9; // 0.55〜1.45倍のランダムサイズ
           const co=Math.cos(ang),si=Math.sin(ang);
           const R=(px,py)=>[ox+px*co-py*si,oy+px*si+py*co];
+          ctx.lineWidth=sc*.15*sz;
           nc();
           switch(idx%6){
             case 0:
-              ctx.beginPath();ctx.arc(ox,oy,sc*.38,0,Math.PI*2);ctx.stroke();break;
+              ctx.beginPath();ctx.arc(ox,oy,sc*.38*sz,0,Math.PI*2);ctx.stroke();break;
             case 1:{
-              const[ax,ay]=R(-sc*.35,-sc*.08),[bx,by]=R(sc*.35,-sc*.08);
-              const[cx2,cy2]=R(sc*.35,sc*.08),[dx,dy]=R(-sc*.35,sc*.08);
+              const s=sc*sz;
+              const[ax,ay]=R(-s*.35,-s*.08),[bx,by]=R(s*.35,-s*.08);
+              const[cx2,cy2]=R(s*.35,s*.08),[dx,dy]=R(-s*.35,s*.08);
               ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.lineTo(dx,dy);ctx.closePath();ctx.fill();break;
             }
             case 2:{
-              const[ax,ay]=R(0,-sc*.38),[bx,by]=R(sc*.33,sc*.22),[cx2,cy2]=R(-sc*.33,sc*.22);
+              const s=sc*sz;
+              const[ax,ay]=R(0,-s*.38),[bx,by]=R(s*.33,s*.22),[cx2,cy2]=R(-s*.33,s*.22);
               ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.closePath();ctx.stroke();break;
             }
             case 3:
-              ctx.beginPath();ctx.arc(ox,oy,sc*.18,0,Math.PI*2);ctx.fill();break;
+              ctx.beginPath();ctx.arc(ox,oy,sc*.18*sz,0,Math.PI*2);ctx.fill();break;
             case 4:
-              ctx.beginPath();ctx.arc(ox,oy,sc*.36,ang,ang+Math.PI);ctx.stroke();break;
+              ctx.beginPath();ctx.arc(ox,oy,sc*.36*sz,ang,ang+Math.PI);ctx.stroke();break;
             case 5:{
-              const d=sc*.28;
+              const d=sc*.28*sz;
               ctx.beginPath();ctx.moveTo(ox-d,oy-d);ctx.lineTo(ox+d,oy+d);ctx.stroke();
               ctx.beginPath();ctx.moveTo(ox+d,oy-d);ctx.lineTo(ox-d,oy+d);ctx.stroke();break;
             }
@@ -833,6 +836,7 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
           idx++;
         }
       }
+      ctx.lineWidth=sc*.15; // リセット
       break;
     }
     case 'marble':
