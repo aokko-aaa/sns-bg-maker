@@ -862,7 +862,7 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       ctx.lineWidth=sc*.06;
       const rows2=Math.ceil(ext*2/(sc*.866))+2,cols2=Math.ceil(ext*2/sc)+2;
       for(let row=-2;row<rows2;row++) for(let col=-2;col<cols2;col++){
-        const cx=col*sc+(row%2)*sc*.5-ext*.5,cy=row*sc*.866-ext*.5,r=sc*.5*.9;
+        const cx=col*sc+(row%2)*sc*.5-ext*.5,cy=row*sc*.866-ext*.5,r=sc*.5;
         nc();
         for(let i=0;i<6;i++){
           const a=Math.PI/3*i,a3=Math.PI/3*(i+1);
@@ -890,16 +890,23 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
     }
     case 'sunburst':{
       const cx=w/2, cy=h/2;
-      const rays=Math.round(36*(sc/50));
+      const len=Math.sqrt(w*w+h*h);
+      // 放射線 — scが小さいほど本数が増えて繊細に
+      const rays=Math.max(24, Math.round(2400/Math.max(sc,1)));
+      ctx.lineWidth=Math.max(0.4, sc*0.04);
       for(let i=0;i<rays;i++){
-        const a1=(i/rays)*Math.PI*2, a2=((i+.5)/rays)*Math.PI*2;
-        const len=Math.max(w,h)*1.5;
+        const a=(i/rays)*Math.PI*2;
         nc();
         ctx.beginPath();
         ctx.moveTo(cx,cy);
-        ctx.lineTo(cx+Math.cos(a1)*len, cy+Math.sin(a1)*len);
-        ctx.lineTo(cx+Math.cos(a2)*len, cy+Math.sin(a2)*len);
-        ctx.closePath();ctx.fill();
+        ctx.lineTo(cx+Math.cos(a)*len, cy+Math.sin(a)*len);
+        ctx.stroke();
+      }
+      // 同心円リング
+      ctx.lineWidth=Math.max(0.3, sc*0.02);
+      for(let r=sc*1.5;r<len;r+=sc*2){
+        nc();
+        ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
       }
       break;
     }
