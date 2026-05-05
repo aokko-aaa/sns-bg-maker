@@ -215,6 +215,11 @@
           <label>模様の回転 <span id="rotateV">0</span>°</label>
           <input type="range" id="rotateR" min="0" max="360" value="0">
         </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="font-size:12px;color:#666;white-space:nowrap">模様の色</label>
+          <input type="color" id="patColorPicker" value="#ffffff" style="width:44px;height:36px;border:2px solid #ddd;border-radius:7px;cursor:pointer;padding:2px;transition:border-color .15s;">
+          <div id="patColorPresets" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        </div>
         <div>
           <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">グラデーション方向</label>
           <div class="angle-row" id="angleRow"></div>
@@ -312,6 +317,7 @@ const S = {
   sizeIdx:   0,
   patId:     'gradient',
   colors:    ['#6c63ff','#a78bfa','#f9a8d4'],
+  patColor:  '#ffffff',
   scale:     50,
   opacity:   80,
   rotate:    0,
@@ -682,7 +688,7 @@ function buildAngles() {
 function drawPat(ctx, id, w, h, sc, op, rot) {
   if(id==='flat'||id==='gradient') return;
   ctx.save();
-  ctx.globalAlpha=op; ctx.fillStyle='#fff'; ctx.strokeStyle='#fff';
+  ctx.globalAlpha=op; ctx.fillStyle=S.patColor; ctx.strokeStyle=S.patColor;
   const ext=Math.max(w,h)*1.5;
   if(rot){ ctx.translate(w/2,h/2); ctx.rotate(rot*Math.PI/180); ctx.translate(-w/2,-h/2); }
 
@@ -861,6 +867,37 @@ function render() {
 }
 
 // ============================================================
+// PATTERN COLOR
+// ============================================================
+function initPatColor() {
+  const PAT_COLOR_PRESETS = [
+    '#ffffff','#000000','#ff0000','#ff9900','#ffff00',
+    '#00cc44','#0099ff','#9933ff','#ff66cc','#888888',
+  ];
+  const picker   = document.getElementById('patColorPicker');
+  const presetWrap = document.getElementById('patColorPresets');
+
+  PAT_COLOR_PRESETS.forEach(hex => {
+    const btn = document.createElement('div');
+    btn.style.cssText = `width:22px;height:22px;border-radius:5px;background:${hex};cursor:pointer;border:2px solid ${hex==='#ffffff'?'#ccc':'transparent'};box-sizing:border-box;transition:transform .1s;`;
+    btn.title = hex;
+    btn.onmouseenter = () => btn.style.transform='scale(1.2)';
+    btn.onmouseleave = () => btn.style.transform='';
+    btn.onclick = () => {
+      S.patColor = hex;
+      picker.value = hex;
+      refreshPatThumbs(); render();
+    };
+    presetWrap.appendChild(btn);
+  });
+
+  picker.addEventListener('input', () => {
+    S.patColor = picker.value;
+    refreshPatThumbs(); render();
+  });
+}
+
+// ============================================================
 // INIT
 // ============================================================
 buildSizes();
@@ -870,6 +907,7 @@ buildPatterns();
 buildAngles();
 initSwatches();
 initImageExtract();
+initPatColor();
 
 [['scaleR','scaleV','scale'],['opacityR','opacityV','opacity'],['rotateR','rotateV','rotate']].forEach(([rid,vid,key])=>{
   const range=document.getElementById(rid), val=document.getElementById(vid);
