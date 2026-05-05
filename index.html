@@ -314,7 +314,6 @@ const PATTERNS = [
   {id:'cross',      lbl:'クロス'},
   {id:'zigzag',     lbl:'ジグザグ'},
   {id:'checkers',   lbl:'市松'},
-  {id:'polka',      lbl:'水玉'},
   {id:'confetti',   lbl:'紙吹雪'},
   {id:'marble',     lbl:'マーブル'},
   {id:'noise',      lbl:'ノイズ'},
@@ -714,13 +713,12 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
 
   switch(id){
     case 'dots':
-      for(let x=sc;x<ext*2;x+=sc*2.2) for(let y=sc;y<ext*2;y+=sc*2.2)
-        {nc();ctx.beginPath();ctx.arc(x-ext*.5,y-ext*.5,sc*.32,0,Math.PI*2);ctx.fill();}
-      break;
-    case 'polka':
-      for(let x=0;x<ext*2;x+=sc*3) for(let y=0;y<ext*2;y+=sc*3){
-        const ox=(Math.floor(y/(sc*3))%2)*sc*1.5;
-        nc();ctx.beginPath();ctx.arc(x+ox-ext*.5,y-ext*.5,sc*.6,0,Math.PI*2);ctx.fill();
+      for(let row=0;row*sc*2<ext*2+sc;row++){
+        const ox=(row%2)*sc;
+        for(let col=0;col*sc*2<ext*2+sc;col++){
+          const x=col*sc*2+ox-ext*.5, y=row*sc*1.73-ext*.5;
+          nc();ctx.beginPath();ctx.arc(x,y,sc*.42,0,Math.PI*2);ctx.fill();
+        }
       }
       break;
     case 'border':
