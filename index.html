@@ -795,34 +795,39 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
     case 'memphis':{
       ctx.lineWidth=sc*.15;
       const step=sc*2.4;
+      const sr=n=>((n*1664525+1013904223)>>>0)/4294967295;
+      const jitter=step*.45; // グリッドからのランダムズレ幅
       let idx=0;
       for(let gy=-step;gy<h+step*2;gy+=step){
         const rowOff=(Math.round(gy/step)%2)*step*.5;
         for(let gx=-step+rowOff;gx<w+step*2;gx+=step){
-          const ang=(idx*97)*Math.PI/180;
+          // 位置と角度をランダムにズラす（シード付きで再描画しても変わらない）
+          const ox=gx+(sr(idx)*2-1)*jitter;
+          const oy=gy+(sr(idx+5000)*2-1)*jitter;
+          const ang=sr(idx+10000)*Math.PI*2;
           const co=Math.cos(ang),si=Math.sin(ang);
-          const R=(px,py)=>[gx+px*co-py*si,gy+px*si+py*co];
+          const R=(px,py)=>[ox+px*co-py*si,oy+px*si+py*co];
           nc();
           switch(idx%6){
-            case 0: // 丸（輪郭）
-              ctx.beginPath();ctx.arc(gx,gy,sc*.38,0,Math.PI*2);ctx.stroke();break;
-            case 1:{ // 回転長方形
+            case 0:
+              ctx.beginPath();ctx.arc(ox,oy,sc*.38,0,Math.PI*2);ctx.stroke();break;
+            case 1:{
               const[ax,ay]=R(-sc*.35,-sc*.08),[bx,by]=R(sc*.35,-sc*.08);
               const[cx2,cy2]=R(sc*.35,sc*.08),[dx,dy]=R(-sc*.35,sc*.08);
               ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.lineTo(dx,dy);ctx.closePath();ctx.fill();break;
             }
-            case 2:{ // 三角形
+            case 2:{
               const[ax,ay]=R(0,-sc*.38),[bx,by]=R(sc*.33,sc*.22),[cx2,cy2]=R(-sc*.33,sc*.22);
               ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.closePath();ctx.stroke();break;
             }
-            case 3: // 塗り丸
-              ctx.beginPath();ctx.arc(gx,gy,sc*.18,0,Math.PI*2);ctx.fill();break;
-            case 4: // 半円
-              ctx.beginPath();ctx.arc(gx,gy,sc*.36,ang,ang+Math.PI);ctx.stroke();break;
-            case 5:{ // ×印
+            case 3:
+              ctx.beginPath();ctx.arc(ox,oy,sc*.18,0,Math.PI*2);ctx.fill();break;
+            case 4:
+              ctx.beginPath();ctx.arc(ox,oy,sc*.36,ang,ang+Math.PI);ctx.stroke();break;
+            case 5:{
               const d=sc*.28;
-              ctx.beginPath();ctx.moveTo(gx-d,gy-d);ctx.lineTo(gx+d,gy+d);ctx.stroke();
-              ctx.beginPath();ctx.moveTo(gx+d,gy-d);ctx.lineTo(gx-d,gy+d);ctx.stroke();break;
+              ctx.beginPath();ctx.moveTo(ox-d,oy-d);ctx.lineTo(ox+d,oy+d);ctx.stroke();
+              ctx.beginPath();ctx.moveTo(ox+d,oy-d);ctx.lineTo(ox-d,oy+d);ctx.stroke();break;
             }
           }
           idx++;
@@ -864,14 +869,16 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       break;
     }
     case 'confetti':{
-      for(let i=0;i<Math.round(ext*2/(sc*sc)*60);i++){
-        const fx=Math.random()*ext*2-ext*.5, fy=Math.random()*ext*2-ext*.5;
+      // scale小→ピース小・密度高、scale大→ピース大・密度低
+      const count=Math.min(12000, Math.round(w*h/(sc*sc)*2.5));
+      for(let i=0;i<count;i++){
+        const fx=Math.random()*w, fy=Math.random()*h;
         const fa=Math.random()*Math.PI, co2=Math.cos(fa), si2=Math.sin(fa);
-        const hw=sc*.28, hh=sc*.09;
+        const hw=sc*.32, hh=sc*.1;
         const R2=(px,py)=>[fx+px*co2-py*si2, fy+px*si2+py*co2];
         const [x1,y1]=R2(-hw,-hh),[x2,y2]=R2(hw,-hh);
         const [x3,y3]=R2(hw,hh),[x4,y4]=R2(-hw,hh);
-        nc();ctx.globalAlpha=op*(Math.random()*.5+.3);
+        nc();ctx.globalAlpha=op*(Math.random()*.6+.4);
         ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x3,y3);ctx.lineTo(x4,y4);ctx.closePath();ctx.fill();
       }
       ctx.globalAlpha=op;
@@ -893,39 +900,28 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       break;
     }
     case 'multistripe':{
-      const pattern=[1,.5,2,.5,1,3,.5];
-      const total=pattern.reduce((s,v)=>s+v,0)*sc;
-      let ci=0;
-      for(let x=-ext*.5;x<ext*1.5;){
-        const w2=pattern[ci%pattern.length]*sc;
-        nc();ctx.fillRect(x,0,w2,h);
-        x+=w2; ci++;
+      // 太さの異なるストライプ＋ギャップで背景を透かす
+      const widths=[sc*.4, sc*.8, sc*1.6, sc*.8, sc*.4, sc*2.4];
+      const gap=sc*.7;
+      let x=-ext*.5, wi=0;
+      while(x<ext*1.5){
+        const bw=widths[wi%widths.length];
+        nc();ctx.fillRect(x,0,bw,h);
+        x+=bw+gap; wi++;
       }
       break;
     }
     case 'tartan':{
-      const bands=[{w:sc*.6,alpha:op},{w:sc*.2,alpha:op*.6},{w:sc*.4,alpha:op},{w:sc*.2,alpha:op*.6}];
-      const pitch=bands.reduce((s,b)=>s+b.w,0);
-      // vertical stripes
-      for(let x=-ext*.5;x<ext*1.5;){
-        let bx=x;
-        for(let b=0;b<bands.length;b++){
-          nc();ctx.globalAlpha=bands[b].alpha;
-          ctx.fillRect(bx,0,bands[b].w,h);
-          bx+=bands[b].w;
-        }
-        x+=pitch;
-      }
-      // horizontal stripes (blended)
+      const tw=sc*.35, pitch=sc*2.2;
+      // 縦帯（半透明）
       ctx.globalAlpha=op*.5;
-      for(let y=-ext*.5;y<ext*1.5;){
-        let by=y;
-        for(let b=0;b<bands.length;b++){
-          nc();
-          ctx.fillRect(0,by,w,bands[b].w);
-          by+=bands[b].w;
-        }
-        y+=pitch;
+      for(let x=-ext*.5;x<ext*1.5;x+=pitch){nc();ctx.fillRect(x,0,tw,h);}
+      // 横帯（半透明）
+      for(let y=-ext*.5;y<ext*1.5;y+=pitch){nc();ctx.fillRect(0,y,w,tw);}
+      // 交差点を重ねて濃くする
+      ctx.globalAlpha=op*.65;
+      for(let x=-ext*.5;x<ext*1.5;x+=pitch){
+        for(let y=-ext*.5;y<ext*1.5;y+=pitch){nc();ctx.fillRect(x,y,tw,tw);}
       }
       ctx.globalAlpha=op;
       break;
