@@ -103,6 +103,10 @@
   .angle-btn:hover{border-color:#6c63ff;}
   .angle-btn.on{border-color:#6c63ff;background:#6c63ff;color:#fff;}
 
+  .bgt-btn{flex:1;padding:6px 4px;font-size:11px;font-weight:700;border:1.5px solid #e0e0e0;border-radius:7px;background:#fafafa;color:#888;cursor:pointer;transition:all .15s;}
+  .bgt-btn:hover{border-color:#6c63ff;color:#6c63ff;}
+  .bgt-btn.on{border-color:#6c63ff;background:#6c63ff;color:#fff;}
+
   .dl-btn{display:block;width:100%;padding:13px;background:linear-gradient(135deg,#6c63ff,#a78bfa);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
   .dl-btn:hover{opacity:.9;}
 
@@ -224,6 +228,13 @@
           <input type="color" id="patColorHidden" style="display:none">
         </div>
         <div>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">背景スタイル</label>
+          <div style="display:flex;gap:6px">
+            <button class="bgt-btn on" id="bgtGrad" onclick="setBgType('gradient')">グラデーション</button>
+            <button class="bgt-btn"    id="bgtSolid" onclick="setBgType('solid')">単色（色1）</button>
+          </div>
+        </div>
+        <div>
           <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">グラデーション方向</label>
           <div class="angle-row" id="angleRow"></div>
         </div>
@@ -321,6 +332,7 @@ const S = {
   patId:     'gradient',
   colors:    ['#6c63ff','#a78bfa','#f9a8d4'],
   patColors: ['#ffffff'],
+  bgType:    'gradient',
   scale:     50,
   opacity:   80,
   rotate:    0,
@@ -781,19 +793,31 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       break;
     case 'memphis':{
       ctx.lineWidth=sc*.12;
-      const n=Math.round(ext*2/(sc*3));
-      const sr = n=>((n*1664525+1013904223)>>>0)/4294967295;
-      for(let i=0;i<n*n;i++){
-        const rx=sr(i)*ext*2-ext*.5,ry=sr(i+1e4)*ext*2-ext*.5,t=Math.floor(sr(i+2e4)*5);
-        nc();ctx.save();ctx.translate(rx,ry);ctx.rotate(sr(i+3e4)*Math.PI);
-        switch(t){
-          case 0:ctx.beginPath();ctx.arc(0,0,sc*.35,0,Math.PI*2);ctx.stroke();break;
-          case 1:ctx.fillRect(-sc*.4,-sc*.07,sc*.8,sc*.14);break;
-          case 2:ctx.beginPath();ctx.moveTo(0,-sc*.4);ctx.lineTo(sc*.35,sc*.3);ctx.lineTo(-sc*.35,sc*.3);ctx.closePath();ctx.stroke();break;
-          case 3:ctx.beginPath();ctx.arc(0,0,sc*.12,0,Math.PI*2);ctx.fill();break;
-          case 4:ctx.beginPath();ctx.arc(0,0,sc*.4,0,Math.PI);ctx.stroke();break;
+      const tot=Math.round(ext*2/(sc*3));
+      const lc=v=>((v*1664525+1013904223)>>>0)/4294967295;
+      for(let i=0;i<tot*tot;i++){
+        const ox=lc(i)*ext*2-ext*.5, oy=lc(i+10000)*ext*2-ext*.5;
+        const ang=lc(i+30000)*Math.PI, tp=Math.floor(lc(i+20000)*5);
+        const co=Math.cos(ang), si=Math.sin(ang);
+        const R=(px,py)=>[ox+px*co-py*si, oy+px*si+py*co];
+        nc();
+        ctx.beginPath();
+        if(tp===0){
+          ctx.arc(ox,oy,sc*.35,0,Math.PI*2); ctx.stroke();
+        } else if(tp===1){
+          const [ax,ay]=R(-sc*.4,-sc*.07),[bx,by]=R(sc*.4,-sc*.07);
+          const [cx2,cy2]=R(sc*.4,sc*.07),[dx,dy]=R(-sc*.4,sc*.07);
+          ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.lineTo(dx,dy);
+          ctx.closePath();ctx.fill();
+        } else if(tp===2){
+          const [ax,ay]=R(0,-sc*.4),[bx,by]=R(sc*.35,sc*.3),[cx2,cy2]=R(-sc*.35,sc*.3);
+          ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);
+          ctx.closePath();ctx.stroke();
+        } else if(tp===3){
+          ctx.arc(ox,oy,sc*.12,0,Math.PI*2); ctx.fill();
+        } else {
+          ctx.arc(ox,oy,sc*.4,ang,ang+Math.PI); ctx.stroke();
         }
-        ctx.restore();
       }
       break;
     }
@@ -864,13 +888,24 @@ function render() {
   const ctx=canvas.getContext('2d');
   const w=size.w, h=size.h;
 
+  // 背景描画
+  const drawBg = () => {
+    if(S.bgType==='solid'){
+      ctx.fillStyle=S.colors[0]; ctx.fillRect(0,0,w,h);
+    } else {
+      const {x0,y0,x1,y1}=angToXY(S.angle,w,h);
+      const bg=ctx.createLinearGradient(x0,y0,x1,y1);
+      bg.addColorStop(0,S.colors[0]); bg.addColorStop(.5,S.colors[1]); bg.addColorStop(1,S.colors[2]);
+      ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+    }
+  };
+
   if(S.patId==='flat'){
     ctx.fillStyle=S.colors[0]; ctx.fillRect(0,0,w,h);
+  } else if(S.patId==='gradient'){
+    drawBg();
   } else {
-    const {x0,y0,x1,y1}=angToXY(S.angle,w,h);
-    const bg=ctx.createLinearGradient(x0,y0,x1,y1);
-    bg.addColorStop(0,S.colors[0]); bg.addColorStop(.5,S.colors[1]); bg.addColorStop(1,S.colors[2]);
-    ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+    drawBg();
   }
   drawPat(ctx, S.patId, w, h, S.scale, S.opacity/100, S.rotate);
 }
@@ -926,6 +961,16 @@ function initPatColor() {
   };
 
   renderPatColorSlots();
+}
+
+// ============================================================
+// BG TYPE TOGGLE
+// ============================================================
+function setBgType(type) {
+  S.bgType = type;
+  document.getElementById('bgtGrad').classList.toggle('on',  type==='gradient');
+  document.getElementById('bgtSolid').classList.toggle('on', type==='solid');
+  render();
 }
 
 // ============================================================
