@@ -767,7 +767,7 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
     case 'memphis':{
       ctx.lineWidth=sc*.12;
       const n=Math.round(ext*2/(sc*3));
-      function sr(n){return((n*1664525+1013904223)>>>0)/4294967295;}
+      const sr = n=>((n*1664525+1013904223)>>>0)/4294967295;
       for(let i=0;i<n*n;i++){
         const rx=sr(i)*ext*2-ext*.5,ry=sr(i+1e4)*ext*2-ext*.5,t=Math.floor(sr(i+2e4)*5);
         ctx.save();ctx.translate(rx,ry);ctx.rotate(sr(i+3e4)*Math.PI);
