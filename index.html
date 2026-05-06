@@ -1003,34 +1003,36 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       break;
     }
     case 'leopard':{
-      const count=Math.min(100, Math.max(10, Math.round(w*h/(sc*sc*5))));
+      const count=Math.min(55, Math.max(8, Math.round(w*h/(sc*sc*9))));
+      // スムーズな不規則ブロブを描くヘルパー
+      const blob=(bx,by,br)=>{
+        const pts=Math.floor(8+Math.random()*7);
+        const verts=[];
+        for(let j=0;j<pts;j++){
+          const a=(j/pts)*Math.PI*2;
+          verts.push([bx+Math.cos(a)*br*(0.45+Math.random()*0.75),
+                      by+Math.sin(a)*br*(0.45+Math.random()*0.75)]);
+        }
+        const n=verts.length;
+        ctx.beginPath();
+        ctx.moveTo((verts[0][0]+verts[n-1][0])*.5,(verts[0][1]+verts[n-1][1])*.5);
+        for(let j=0;j<n;j++){
+          const nx=(j+1)%n;
+          ctx.quadraticCurveTo(verts[j][0],verts[j][1],
+            (verts[j][0]+verts[nx][0])*.5,(verts[j][1]+verts[nx][1])*.5);
+        }
+        ctx.closePath();ctx.fill();
+      };
       for(let i=0;i<count;i++){
         const bx=Math.random()*w, by=Math.random()*h;
-        const br=sc*(0.45+Math.random()*0.5);
+        const br=sc*(0.9+Math.random()*1.3);
+        // 外側の大きな暗いブロブ
         nc();
-        // 2〜4個の不規則ブロブをロゼット風にランダム配置
-        const blobs=Math.floor(2+Math.random()*3);
-        for(let s=0;s<blobs;s++){
-          const da=Math.random()*Math.PI*2;
-          const dd=br*(0.25+Math.random()*0.45);
-          const cx2=bx+Math.cos(da)*dd, cy2=by+Math.sin(da)*dd;
-          const sr2=br*(0.22+Math.random()*0.32);
-          const pts=Math.floor(5+Math.random()*4);
-          const verts=[];
-          for(let j=0;j<pts;j++){
-            const a=(j/pts)*Math.PI*2;
-            verts.push([cx2+Math.cos(a)*sr2*(0.55+Math.random()*0.7),
-                        cy2+Math.sin(a)*sr2*(0.55+Math.random()*0.7)]);
-          }
-          const n=verts.length;
-          ctx.beginPath();
-          ctx.moveTo((verts[0][0]+verts[n-1][0])*.5,(verts[0][1]+verts[n-1][1])*.5);
-          for(let j=0;j<n;j++){
-            const nx=(j+1)%n;
-            ctx.quadraticCurveTo(verts[j][0],verts[j][1],
-              (verts[j][0]+verts[nx][0])*.5,(verts[j][1]+verts[nx][1])*.5);
-          }
-          ctx.closePath();ctx.fill();
+        blob(bx,by,br);
+        // ロゼット中心：少し小さく明るいブロブを重ねる（55%の確率）
+        if(Math.random()<.55){
+          nc();
+          blob(bx+(Math.random()-.5)*br*.3, by+(Math.random()-.5)*br*.3, br*.45);
         }
       }
       break;
