@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SNS 背景メーカー</title>
+<title>背景メーカー</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Hiragino Sans','Yu Gothic',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;}
@@ -115,12 +115,33 @@
   .preview-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
   #preview{border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);max-width:100%;max-height:72vh;}
   #previewInfo{font-size:12px;color:#888;}
+
+  /* モバイル対応 */
+  @media(max-width:700px){
+    .app{grid-template-columns:1fr;min-height:auto;}
+    .panel{border-right:none;border-bottom:1px solid #e0e0e0;overflow-y:visible;}
+    /* プレビューをコントロールの上に固定表示 */
+    .preview-area{
+      order:-1;
+      padding:12px 16px;
+      min-height:auto;
+      position:sticky;
+      top:0;
+      z-index:20;
+      box-shadow:0 2px 8px rgba(0,0,0,.12);
+    }
+    #preview{max-height:38vw;}
+    #previewInfo{font-size:11px;}
+    header{padding:10px 14px;}
+    header h1{font-size:15px;}
+    .pat-grid{grid-template-columns:repeat(4,1fr);}
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🎨 SNS 背景メーカー</h1>
+  <h1>背景メーカー</h1>
   <span>配色・模様を選んでオリジナル背景を作ろう</span>
 </header>
 
@@ -1076,7 +1097,9 @@ function angToXY(ang, w, h) {
 function render() {
   const size=SIZES[S.sizeIdx];
   const canvas=document.getElementById('preview');
-  const maxW=Math.min(820,window.innerWidth-420), maxH=window.innerHeight-160;
+  const isMobile=window.innerWidth<=700;
+  const maxW=isMobile ? window.innerWidth-32 : Math.min(820,window.innerWidth-420);
+  const maxH=isMobile ? window.innerWidth*.55 : window.innerHeight-160;
   const ratio=Math.min(maxW/size.w, maxH/size.h, 1);
   canvas.width=size.w; canvas.height=size.h;
   canvas.style.width=Math.round(size.w*ratio)+'px';
