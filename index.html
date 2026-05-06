@@ -1003,47 +1003,52 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       break;
     }
     case 'leopard':{
-      const count=Math.max(12, Math.round(w*h/(sc*sc*4)));
+      const count=Math.min(120, Math.max(12, Math.round(w*h/(sc*sc*5))));
       for(let i=0;i<count;i++){
         const bx=Math.random()*w, by=Math.random()*h;
-        const br=sc*(0.4+Math.random()*0.6);
+        const br=sc*(0.45+Math.random()*0.55);
         nc();
+        // ロゼット: 弧セグメントをリング状に配置
         const segs=Math.floor(3+Math.random()*3);
         for(let s=0;s<segs;s++){
           const a0=(s/segs)*Math.PI*2+(Math.random()-.5)*.5;
-          const a1=a0+(Math.PI*2/segs)*(0.42+Math.random()*.32);
-          const ro=br*(0.82+Math.random()*.25);
+          const a1=a0+(Math.PI*2/segs)*(0.4+Math.random()*.3);
+          const ro=br*(0.82+Math.random()*.22);
           ctx.beginPath();
           ctx.arc(bx,by,ro,a0,a1);
-          ctx.arc(bx,by,br*.35,a1,a0,true);
+          ctx.arc(bx,by,br*.36,a1,a0,true);
           ctx.closePath();ctx.fill();
         }
-        if(Math.random()<.35){
+        if(Math.random()<.4){
           ctx.beginPath();ctx.arc(bx,by,br*.18,0,Math.PI*2);ctx.fill();
         }
       }
       break;
     }
     case 'paisley':{
-      const count=Math.max(8, Math.round(w*h/(sc*sc*9)));
+      const count=Math.min(60, Math.max(8, Math.round(w*h/(sc*sc*10))));
       for(let i=0;i<count;i++){
         const bx=Math.random()*w, by=Math.random()*h;
         const sz=sc*(1.5+Math.random()*1.8);
         const ang=Math.random()*Math.PI*2;
-        const T=(px,py)=>[bx+px*Math.cos(ang)-py*Math.sin(ang),by+px*Math.sin(ang)+py*Math.cos(ang)];
+        const co=Math.cos(ang), si=Math.sin(ang);
+        const T=(px,py)=>[bx+px*co-py*si, by+px*si+py*co];
         nc();
         ctx.globalAlpha=op*(0.8+Math.random()*.2);
+        // ペイズリー（涙形＋フック）
         ctx.beginPath();
-        ctx.moveTo(...T(0,-sz*.5));
-        ctx.bezierCurveTo(...T(sz*.55,-sz*.45),...T(sz*.5,sz*.1),...T(0,sz*.5));
-        ctx.bezierCurveTo(...T(-sz*.28,sz*.68),...T(-sz*.55,sz*.3),...T(-sz*.48,0));
-        ctx.bezierCurveTo(...T(-sz*.52,-sz*.3),...T(-sz*.25,-sz*.58),...T(0,-sz*.5));
+        ctx.moveTo(...T(0.1*sz,-0.55*sz));
+        ctx.bezierCurveTo(...T(0.7*sz,-0.5*sz),...T(0.6*sz,0),...T(0.5*sz,0.1*sz));
+        ctx.bezierCurveTo(...T(0.5*sz,0.45*sz),...T(0.25*sz,0.65*sz),...T(0,0.55*sz));
+        ctx.bezierCurveTo(...T(-0.3*sz,0.65*sz),...T(-0.55*sz,0.3*sz),...T(-0.45*sz,0.1*sz));
+        ctx.bezierCurveTo(...T(-0.55*sz,-0.05*sz),...T(-0.5*sz,-0.48*sz),...T(-0.28*sz,-0.5*sz));
+        ctx.bezierCurveTo(...T(-0.05*sz,-0.7*sz),...T(0.05*sz,-0.65*sz),...T(0.1*sz,-0.55*sz));
         ctx.closePath();ctx.fill();
-        // 内側の楕円装飾
+        // 内側の小円
         nc();
-        ctx.globalAlpha=op*.55;
-        const [ix,iy]=T(sz*.04,sz*.08);
-        ctx.beginPath();ctx.ellipse(ix,iy,sz*.17,sz*.24,ang,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=op*.5;
+        const [ix,iy]=T(sz*.06,sz*.05);
+        ctx.beginPath();ctx.arc(ix,iy,sz*.18,0,Math.PI*2);ctx.fill();
       }
       ctx.globalAlpha=op;
       break;
@@ -1051,18 +1056,20 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
     case 'camo':{
       // 1色目で全面塗り
       nc();ctx.fillRect(0,0,w,h);
-      // 3レイヤーの有機ブロブで本物のカモフラに
+      // 3レイヤーの有機ブロブ（Array.fromではなくforループで安全に）
       for(let layer=0;layer<3;layer++){
         const bsz=sc*(2.6-layer*.4);
-        const cnt=Math.min(60,Math.round(w*h/(bsz*bsz*1.3)));
+        const cnt=Math.min(55, Math.round(w*h/(bsz*bsz*1.3)));
         const col=nc();
         for(let i=0;i<cnt;i++){
           const bx=(Math.random()*1.15-.075)*w, by=(Math.random()*1.15-.075)*h;
           const br=bsz*(.45+Math.random()*.85);
-          const verts=Array.from({length:Math.floor(7+Math.random()*8)},(_,j,a)=>{
-            const ag=(j/a.length)*Math.PI*2;
-            return [bx+Math.cos(ag)*br*(.5+Math.random()*.7),by+Math.sin(ag)*br*(.5+Math.random()*.7)];
-          });
+          const vpts=Math.floor(7+Math.random()*8);
+          const verts=[];
+          for(let j=0;j<vpts;j++){
+            const ag=(j/vpts)*Math.PI*2;
+            verts.push([bx+Math.cos(ag)*br*(.5+Math.random()*.7), by+Math.sin(ag)*br*(.5+Math.random()*.7)]);
+          }
           const n=verts.length;
           ctx.fillStyle=col;
           ctx.beginPath();
