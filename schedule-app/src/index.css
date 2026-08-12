@@ -29,3 +29,18 @@ body {
 .pt-safe {
   padding-top: env(safe-area-inset-top);
 }
+
+/* 背景画像。public/bg.png を置くと表示される（無ければ淡色の下地のまま） */
+.app-bg {
+  background-color: #f2f6fb; /* 画像が無いときのフォールバック */
+  background-image: url('/bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+/* 背景が敷かれても読みやすいよう、コンテンツ面は半透明の白ベースに */
+.surface-translucent {
+  background-color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}

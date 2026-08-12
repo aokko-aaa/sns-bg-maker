@@ -10,7 +10,7 @@ const TABS = [
 
 export default function BottomTabBar() {
   return (
-    <nav className="pb-safe border-t border-gray-200 bg-white">
+    <nav className="pb-safe surface-translucent border-t border-white/40">
       <ul className="flex">
         {TABS.map((t) => (
           <li key={t.to} className="flex-1">

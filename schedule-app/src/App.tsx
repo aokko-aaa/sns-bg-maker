@@ -36,8 +36,8 @@ export default function App() {
   if (!session) return <Login />
 
   return (
-    <div className="relative mx-auto flex h-full max-w-md flex-col bg-white">
-      <header className="pt-safe border-b border-gray-200 bg-white">
+    <div className="app-bg relative mx-auto flex h-full max-w-md flex-col">
+      <header className="pt-safe surface-translucent border-b border-white/40">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-base font-bold text-gray-800">{title}</h1>
           <button
