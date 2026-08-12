@@ -6,6 +6,7 @@ import CategorySheet from '@/components/CategorySheet'
 import Placeholder from '@/pages/Placeholder'
 import DayView from '@/pages/DayView'
 import MonthView from '@/pages/MonthView'
+import InboxView from '@/pages/InboxView'
 import Login from '@/pages/Login'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -59,10 +60,7 @@ export default function App() {
             element={<Placeholder title="ウィークリー（ガント）" phase="Phase 5" />}
           />
           <Route path="/month" element={<MonthView />} />
-          <Route
-            path="/inbox"
-            element={<Placeholder title="受信箱" phase="Phase 3" />}
-          />
+          <Route path="/inbox" element={<InboxView />} />
           <Route path="*" element={<Navigate to="/day" replace />} />
         </Routes>
       </main>
