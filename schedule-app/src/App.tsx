@@ -3,8 +3,8 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomTabBar from '@/components/BottomTabBar'
 import GroupFilterBar from '@/components/GroupFilterBar'
 import CategorySheet from '@/components/CategorySheet'
-import Placeholder from '@/pages/Placeholder'
 import DayView from '@/pages/DayView'
+import WeekView from '@/pages/WeekView'
 import MonthView from '@/pages/MonthView'
 import InboxView from '@/pages/InboxView'
 import Login from '@/pages/Login'
@@ -55,10 +55,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/day" replace />} />
           <Route path="/day" element={<DayView />} />
-          <Route
-            path="/week"
-            element={<Placeholder title="ウィークリー（ガント）" phase="Phase 5" />}
-          />
+          <Route path="/week" element={<WeekView />} />
           <Route path="/month" element={<MonthView />} />
           <Route path="/inbox" element={<InboxView />} />
           <Route path="*" element={<Navigate to="/day" replace />} />

@@ -85,6 +85,23 @@ export function entryOverlapsDay(
   return new Date(startsAt).getTime() < de && new Date(endsAt).getTime() > ds
 }
 
+/** その週の日曜0:00(JST)の instant */
+export function startOfWeekJst(d: Date): Date {
+  const dow = Number(formatInTimeZone(d, TZ, 'c')) % 7 // 0=日..6=土
+  return addDays(startOfDayJst(d), -dow)
+}
+
+/** その週の7日分の Date（日曜始まり） */
+export function weekDays(anchor: Date): Date[] {
+  const s = startOfWeekJst(anchor)
+  return Array.from({ length: 7 }, (_, i) => addDays(s, i))
+}
+
+/** 表示用: 'M/d'（JST） */
+export function fmtMd(d: Date): string {
+  return formatInTimeZone(d, TZ, 'M/d')
+}
+
 /** 月を加算した Date（JST基準） */
 export function addMonths(d: Date, n: number): Date {
   const ym = formatInTimeZone(d, TZ, 'yyyy-MM')
