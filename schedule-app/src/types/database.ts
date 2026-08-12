@@ -12,7 +12,10 @@ export type InboxStatus =
   | 'held'
   | 'dismissed'
 
-export interface Category {
+// NOTE: interface ではなく type alias にすること。
+// Supabase の型は Row/Insert/Update が Record<string, unknown> に代入可能である必要があり、
+// interface は暗黙のインデックスシグネチャを持たず代入不可 → 型が never に退化する。
+export type Category = {
   id: string
   user_id: string
   name: string
@@ -22,7 +25,7 @@ export interface Category {
   created_at: string
 }
 
-export interface Entry {
+export type Entry = {
   id: string
   user_id: string
   title: string
@@ -40,7 +43,7 @@ export interface Entry {
 }
 
 /** AI 解釈結果（仕様 6-3 の出力 JSON） */
-export interface ParsedInboxItem {
+export type ParsedInboxItem = {
   title: string
   kind: EntryKind
   starts_at: string
@@ -51,14 +54,14 @@ export interface ParsedInboxItem {
   source_phrase: string
 }
 
-export interface ParsedInbox {
+export type ParsedInbox = {
   classification: 'schedule' | 'memo' | 'unclear'
   items: ParsedInboxItem[]
   memo: string | null
   reason: string
 }
 
-export interface InboxItem {
+export type InboxItem = {
   id: string
   user_id: string
   raw_text: string
@@ -79,18 +82,21 @@ export interface Database {
         Insert: Omit<Category, 'id' | 'created_at'> &
           Partial<Pick<Category, 'id' | 'created_at'>>
         Update: Partial<Category>
+        Relationships: []
       }
       entries: {
         Row: Entry
         Insert: Omit<Entry, 'id' | 'created_at' | 'updated_at'> &
           Partial<Pick<Entry, 'id' | 'created_at' | 'updated_at'>>
         Update: Partial<Entry>
+        Relationships: []
       }
       inbox_items: {
         Row: InboxItem
         Insert: Omit<InboxItem, 'id' | 'created_at'> &
           Partial<Pick<InboxItem, 'id' | 'created_at'>>
         Update: Partial<InboxItem>
+        Relationships: []
       }
     }
     Views: Record<string, never>
