@@ -16,6 +16,8 @@ interface Props {
   entry: Entry | null
   /** 新規時の初期日時（JST datetime-local 文字列） */
   defaultStartLocal?: string
+  /** 新規時の初期カテゴリ（レーンから追加したとき用） */
+  defaultCategoryId?: string | null
 }
 
 export default function EntrySheet({
@@ -23,6 +25,7 @@ export default function EntrySheet({
   onClose,
   entry,
   defaultStartLocal,
+  defaultCategoryId,
 }: Props) {
   const { data: categories = [] } = useCategories()
   const save = useSaveEntry()
@@ -57,7 +60,7 @@ export default function EntrySheet({
       endDate.setHours(endDate.getHours() + 1)
       setTitle('')
       setKind('event')
-      setCategoryId(categories[0]?.id ?? null)
+      setCategoryId(defaultCategoryId ?? categories[0]?.id ?? null)
       setAllDay(false)
       setStartLocal(base)
       setEndLocal(isoToJstLocal(endDate.toISOString()))

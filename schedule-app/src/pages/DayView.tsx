@@ -11,17 +11,39 @@ import {
 } from '@/lib/dates'
 import { isBandEntry, layoutTimed } from '@/lib/dayLayout'
 import EntrySheet from '@/components/EntrySheet'
-import type { Category, Entry } from '@/types/database'
+import type { Category, Entry, GroupKey } from '@/types/database'
 
 const HOUR_H = 60 // 1時間の高さ(px)
 const START_HOUR = 6 // 初期スクロール位置
+const GUT = '2.5rem' // 左の時刻ラベル幅
+
+type LaneKey = GroupKey | 'other'
+const GROUP_ORDER: GroupKey[] = ['work', 'family', 'personal']
+const LANE_LABEL: Record<LaneKey, string> = {
+  work: '仕事',
+  family: '家族',
+  personal: '個人',
+  other: '未分類',
+}
+const LANE_COLOR: Record<LaneKey, string> = {
+  work: '#4F86F7',
+  family: '#F7845F',
+  personal: '#5FC77E',
+  other: '#9AA5B1',
+}
+
+type ViewMode = 'lanes' | 'single'
 
 export default function DayView() {
   const [day, setDay] = useState(() => new Date())
-  const [nowMin, setNowMin] = useState(() => minutesFromDayStart(new Date().toISOString(), new Date()))
+  const [mode, setMode] = useState<ViewMode>('lanes')
+  const [nowMin, setNowMin] = useState(() =>
+    minutesFromDayStart(new Date().toISOString(), new Date())
+  )
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<Entry | null>(null)
   const [defaultStart, setDefaultStart] = useState<string | undefined>()
+  const [defaultCat, setDefaultCat] = useState<string | null>(null)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchX = useRef<number | null>(null)
@@ -36,29 +58,45 @@ export default function DayView() {
     return m
   }, [categories])
 
+  const groupOf = (e: Entry): LaneKey => {
+    const g = e.category_id ? catMap.get(e.category_id)?.group_key : null
+    return g ?? 'other'
+  }
+  const colorOf = (e: Entry) =>
+    (e.category_id && catMap.get(e.category_id)?.color) || LANE_COLOR.other
+
   // group_key フィルタ（未分類は常に表示）
   const visible = useMemo(
     () =>
       entries.filter((e) => {
-        if (!e.category_id) return true
-        const g = catMap.get(e.category_id)?.group_key
-        return !g || active.includes(g)
+        const g = groupOf(e)
+        return g === 'other' || active.includes(g)
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [entries, catMap, active]
   )
 
   const bandEntries = visible.filter((e) => isBandEntry(e, day))
-  const blocks = useMemo(() => layoutTimed(visible, day), [visible, day])
+
+  // レーン一覧: 有効なグループ + 未分類（該当があれば）
+  const lanes: LaneKey[] = useMemo(() => {
+    const ks: LaneKey[] = GROUP_ORDER.filter((g) => active.includes(g))
+    if (visible.some((e) => groupOf(e) === 'other' && !isBandEntry(e, day)))
+      ks.push('other')
+    return ks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, visible, day])
 
   // 初期スクロールを 6:00 に
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = START_HOUR * HOUR_H
   }, [])
 
-  // 現在時刻の線を更新（1分ごと）
+  // 現在時刻の線を更新
   useEffect(() => {
     const t = setInterval(
-      () => setNowMin(minutesFromDayStart(new Date().toISOString(), new Date())),
+      () =>
+        setNowMin(minutesFromDayStart(new Date().toISOString(), new Date())),
       60_000
     )
     return () => clearInterval(t)
@@ -66,19 +104,23 @@ export default function DayView() {
 
   const isToday = fmtDateLabel(day) === fmtDateLabel(new Date())
 
-  const colorOf = (e: Entry) =>
-    (e.category_id && catMap.get(e.category_id)?.color) || '#9AA5B1'
-
-  function openNew(atMin?: number) {
-    let d = new Date(day)
+  function openNew(atMin?: number, lane?: LaneKey) {
     if (atMin != null) {
       const h = Math.floor(atMin / 60)
       const m = Math.floor((atMin % 60) / 15) * 15
-      const iso = isoToJstLocal(day.toISOString()).slice(0, 11)
-      setDefaultStart(`${iso}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+      const dayPart = isoToJstLocal(day.toISOString()).slice(0, 11)
+      setDefaultStart(
+        `${dayPart}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+      )
     } else {
-      setDefaultStart(isoToJstLocal(d.toISOString()))
+      setDefaultStart(isoToJstLocal(day.toISOString()))
     }
+    // レーンから追加された場合はそのグループの先頭カテゴリを初期選択
+    const cat =
+      lane && lane !== 'other'
+        ? categories.find((c) => c.group_key === lane)?.id ?? null
+        : null
+    setDefaultCat(cat)
     setEditing(null)
     setSheetOpen(true)
   }
@@ -86,7 +128,73 @@ export default function DayView() {
   function openEdit(e: Entry) {
     setEditing(e)
     setDefaultStart(undefined)
+    setDefaultCat(null)
     setSheetOpen(true)
+  }
+
+  // 時刻軸の目盛り + 現在時刻線（共通パーツ）
+  const HourGrid = (
+    <>
+      {Array.from({ length: 24 }, (_, h) => (
+        <div
+          key={h}
+          className="absolute left-0 right-0 border-t border-gray-100"
+          style={{ top: h * HOUR_H }}
+        >
+          <span className="absolute -top-2 left-1 text-[10px] text-gray-400">
+            {String(h).padStart(2, '0')}
+          </span>
+        </div>
+      ))}
+      {isToday && (
+        <div
+          className="pointer-events-none absolute left-0 right-0 z-10"
+          style={{ top: (nowMin / 60) * HOUR_H }}
+        >
+          <div
+            className="h-2 w-2 rounded-full bg-red-500"
+            style={{ position: 'absolute', left: `calc(${GUT} - 4px)`, top: -4 }}
+          />
+          <div className="border-t border-red-500" style={{ marginLeft: GUT }} />
+        </div>
+      )}
+    </>
+  )
+
+  function Block({
+    e,
+    left,
+    width,
+  }: {
+    e: Entry
+    left: string
+    width: string
+  }) {
+    const top = (minutesFromDayStart(e.starts_at, day) / 60) * HOUR_H
+    const endMin = minutesFromDayStart(e.ends_at, day)
+    const h = Math.max(
+      15,
+      endMin - minutesFromDayStart(e.starts_at, day)
+    )
+    return (
+      <button
+        onClick={(ev) => {
+          ev.stopPropagation()
+          openEdit(e)
+        }}
+        className="absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[11px] leading-tight text-white shadow-sm"
+        style={{
+          top,
+          height: (h / 60) * HOUR_H - 2,
+          left,
+          width,
+          backgroundColor: colorOf(e),
+        }}
+      >
+        <div className="truncate font-medium">{e.title}</div>
+        <div className="truncate opacity-90">{fmtHm(e.starts_at)}</div>
+      </button>
+    )
   }
 
   return (
@@ -101,8 +209,8 @@ export default function DayView() {
         touchX.current = null
       }}
     >
-      {/* 日付ナビ */}
-      <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
+      {/* 日付ナビ + 表示切替 */}
+      <div className="flex items-center justify-between border-b border-gray-100 px-2 py-2">
         <button
           onClick={() => setDay((d) => addDays(d, -1))}
           className="min-h-tap min-w-tap text-gray-500"
@@ -117,13 +225,39 @@ export default function DayView() {
           {fmtDateLabel(day)}
           {isToday && <span className="ml-1 text-xs text-group-work">今日</span>}
         </button>
-        <button
-          onClick={() => setDay((d) => addDays(d, 1))}
-          className="min-h-tap min-w-tap text-gray-500"
-          aria-label="翌日"
-        >
-          ›
-        </button>
+        <div className="flex items-center gap-1">
+          <div className="flex overflow-hidden rounded-lg border border-gray-200 text-xs">
+            <button
+              onClick={() => setMode('lanes')}
+              className={
+                'px-2 py-1 ' +
+                (mode === 'lanes'
+                  ? 'bg-group-work text-white'
+                  : 'text-gray-500')
+              }
+            >
+              レーン
+            </button>
+            <button
+              onClick={() => setMode('single')}
+              className={
+                'px-2 py-1 ' +
+                (mode === 'single'
+                  ? 'bg-group-work text-white'
+                  : 'text-gray-500')
+              }
+            >
+              1本
+            </button>
+          </div>
+          <button
+            onClick={() => setDay((d) => addDays(d, 1))}
+            className="min-h-tap min-w-tap text-gray-500"
+            aria-label="翌日"
+          >
+            ›
+          </button>
+        </div>
       </div>
 
       {/* 終日・日またぎの帯 */}
@@ -142,65 +276,85 @@ export default function DayView() {
         </div>
       )}
 
-      {/* 時刻軸 */}
+      {/* レーンモードのヘッダ（種類ラベル） */}
+      {mode === 'lanes' && (
+        <div className="flex border-b border-gray-100 text-center text-xs font-medium">
+          <div style={{ width: GUT }} />
+          {lanes.map((k) => (
+            <div
+              key={k}
+              className="flex-1 border-l border-gray-100 py-1"
+              style={{ color: LANE_COLOR[k] }}
+            >
+              {LANE_LABEL[k]}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* タイムライン本体 */}
       <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
         <div className="relative" style={{ height: 24 * HOUR_H }}>
-          {/* 時間目盛り */}
-          {Array.from({ length: 24 }, (_, h) => (
-            <div
-              key={h}
-              className="absolute left-0 right-0 border-t border-gray-100"
-              style={{ top: h * HOUR_H }}
-            >
-              <span className="absolute -top-2 left-1 text-[10px] text-gray-400">
-                {String(h).padStart(2, '0')}:00
-              </span>
-            </div>
-          ))}
+          {HourGrid}
 
-          {/* タップで新規追加できる透明レイヤ */}
-          <div
-            className="absolute inset-0 ml-12"
-            onClick={(ev) => {
-              const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect()
-              const y = ev.clientY - rect.top + (scrollRef.current?.scrollTop ?? 0)
-              openNew((y / HOUR_H) * 60)
-            }}
-          />
-
-          {/* 予定ブロック */}
-          {blocks.map((b) => (
-            <button
-              key={b.entry.id}
-              onClick={(ev) => {
-                ev.stopPropagation()
-                openEdit(b.entry)
-              }}
-              className="absolute overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs text-white shadow-sm"
-              style={{
-                top: (b.topMin / 60) * HOUR_H,
-                height: (b.heightMin / 60) * HOUR_H - 2,
-                left: `calc(3rem + ${b.left} * (100% - 3rem))`,
-                width: `calc(${b.width} * (100% - 3rem) - 2px)`,
-                backgroundColor: colorOf(b.entry),
-              }}
-            >
-              <div className="truncate font-medium">{b.entry.title}</div>
-              <div className="truncate opacity-90">{fmtHm(b.entry.starts_at)}</div>
-            </button>
-          ))}
-
-          {/* 現在時刻の線 */}
-          {isToday && (
-            <div
-              className="pointer-events-none absolute left-0 right-0 z-10"
-              style={{ top: (nowMin / 60) * HOUR_H }}
-            >
-              <div className="relative">
-                <div className="absolute -top-1 left-11 h-2 w-2 rounded-full bg-red-500" />
-                <div className="ml-12 border-t border-red-500" />
-              </div>
-            </div>
+          {mode === 'lanes' ? (
+            lanes.map((k, li) => {
+              const laneEntries = visible.filter(
+                (e) => groupOf(e) === k && !isBandEntry(e, day)
+              )
+              const blocks = layoutTimed(laneEntries, day)
+              const n = lanes.length
+              return (
+                <div key={k}>
+                  {/* レーンの背景（タップで追加） */}
+                  <div
+                    className="absolute top-0 bottom-0 border-l border-gray-50"
+                    style={{
+                      left: `calc(${GUT} + ${li} * (100% - ${GUT}) / ${n})`,
+                      width: `calc((100% - ${GUT}) / ${n})`,
+                    }}
+                    onClick={(ev) => {
+                      const rect = (
+                        ev.currentTarget as HTMLElement
+                      ).getBoundingClientRect()
+                      const y = ev.clientY - rect.top
+                      openNew((y / HOUR_H) * 60, k)
+                    }}
+                  />
+                  {blocks.map((b) => (
+                    <Block
+                      key={b.entry.id}
+                      e={b.entry}
+                      left={`calc(${GUT} + (${li} + ${b.left}) * (100% - ${GUT}) / ${n} + 1px)`}
+                      width={`calc(${b.width} * (100% - ${GUT}) / ${n} - 2px)`}
+                    />
+                  ))}
+                </div>
+              )
+            })
+          ) : (
+            <>
+              <div
+                className="absolute inset-0"
+                style={{ marginLeft: GUT }}
+                onClick={(ev) => {
+                  const rect = (
+                    ev.currentTarget as HTMLElement
+                  ).getBoundingClientRect()
+                  const y =
+                    ev.clientY - rect.top + (scrollRef.current?.scrollTop ?? 0)
+                  openNew((y / HOUR_H) * 60)
+                }}
+              />
+              {layoutTimed(visible, day).map((b) => (
+                <Block
+                  key={b.entry.id}
+                  e={b.entry}
+                  left={`calc(${GUT} + ${b.left} * (100% - ${GUT}) + 1px)`}
+                  width={`calc(${b.width} * (100% - ${GUT}) - 2px)`}
+                />
+              ))}
+            </>
           )}
         </div>
       </div>
@@ -209,7 +363,7 @@ export default function DayView() {
         <div className="p-4 text-center text-sm text-gray-400">読み込み中…</div>
       )}
 
-      {/* 追加ボタン（下部・片手操作） */}
+      {/* 追加ボタン */}
       <button
         onClick={() => openNew()}
         className="absolute bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
@@ -223,6 +377,7 @@ export default function DayView() {
         onClose={() => setSheetOpen(false)}
         entry={editing}
         defaultStartLocal={defaultStart}
+        defaultCategoryId={defaultCat}
       />
     </div>
   )
