@@ -10,6 +10,7 @@ import {
   weekDays,
 } from '@/lib/dates'
 import EntrySheet from '@/components/EntrySheet'
+import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry } from '@/types/database'
 
 const WEEK_JA = ['日', '月', '火', '水', '木', '金', '土']
@@ -45,7 +46,7 @@ export default function WeekView() {
   const groupOf = (e: Entry) =>
     (e.category_id ? catMap.get(e.category_id)?.group_key : null) ?? 'other'
   const colorOf = (e: Entry) =>
-    (e.category_id && catMap.get(e.category_id)?.color) || '#9AA5B1'
+    (e.category_id && catMap.get(e.category_id)?.color) || GROUP_COLORS.other
 
   const visible = useMemo(
     () =>
@@ -73,7 +74,7 @@ export default function WeekView() {
         ordered.push({ key: c.id, name: c.name, color: c.color, items: byCat.get(c.id)! })
     }
     if (byCat.has('other'))
-      ordered.push({ key: 'other', name: '未分類', color: '#9AA5B1', items: byCat.get('other')! })
+      ordered.push({ key: 'other', name: '未分類', color: GROUP_COLORS.other, items: byCat.get('other')! })
     return ordered
   }, [visible, categories])
 
@@ -246,11 +247,12 @@ export default function WeekView() {
                       setEditing(e)
                       setSheetOpen(true)
                     }}
-                    className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[11px] text-white shadow-sm"
+                    className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[11px] shadow-sm"
                     style={{
                       left: `${start * pct}%`,
                       width: `${count * pct}%`,
                       backgroundColor: colorOf(e),
+                      color: contrastText(colorOf(e)),
                     }}
                   >
                     {/* progress 塗り分け */}

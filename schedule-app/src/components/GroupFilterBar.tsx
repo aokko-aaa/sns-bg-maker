@@ -1,11 +1,6 @@
 import { GROUP_LABELS, useGroupFilter } from '@/hooks/useGroupFilter'
+import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { GroupKey } from '@/types/database'
-
-const GROUP_COLORS: Record<GroupKey, string> = {
-  work: '#4F86F7',
-  family: '#F7845F',
-  personal: '#5FC77E',
-}
 
 const ORDER: GroupKey[] = ['work', 'family', 'personal']
 
@@ -24,7 +19,7 @@ export default function GroupFilterBar() {
             style={{
               borderColor: GROUP_COLORS[g],
               backgroundColor: on ? GROUP_COLORS[g] : 'transparent',
-              color: on ? '#fff' : GROUP_COLORS[g],
+              color: on ? contrastText(GROUP_COLORS[g]) : GROUP_COLORS[g],
             }}
             aria-pressed={on}
           >

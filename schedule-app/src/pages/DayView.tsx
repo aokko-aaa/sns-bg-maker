@@ -11,6 +11,7 @@ import {
 } from '@/lib/dates'
 import { isBandEntry, layoutTimed } from '@/lib/dayLayout'
 import EntrySheet from '@/components/EntrySheet'
+import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry, GroupKey } from '@/types/database'
 
 const HOUR_H = 60 // 1時間の高さ(px)
@@ -25,12 +26,7 @@ const LANE_LABEL: Record<LaneKey, string> = {
   personal: '個人',
   other: '未分類',
 }
-const LANE_COLOR: Record<LaneKey, string> = {
-  work: '#4F86F7',
-  family: '#F7845F',
-  personal: '#5FC77E',
-  other: '#9AA5B1',
-}
+const LANE_COLOR = GROUP_COLORS
 
 type ViewMode = 'lanes' | 'single'
 
@@ -182,13 +178,14 @@ export default function DayView() {
           ev.stopPropagation()
           openEdit(e)
         }}
-        className="absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[11px] leading-tight text-white shadow-sm"
+        className="absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[11px] leading-tight shadow-sm"
         style={{
           top,
           height: (h / 60) * HOUR_H - 2,
           left,
           width,
           backgroundColor: colorOf(e),
+          color: contrastText(colorOf(e)),
         }}
       >
         <div className="truncate font-medium">{e.title}</div>
@@ -267,8 +264,11 @@ export default function DayView() {
             <button
               key={e.id}
               onClick={() => openEdit(e)}
-              className="truncate rounded px-2 py-1 text-left text-xs text-white"
-              style={{ backgroundColor: colorOf(e) }}
+              className="truncate rounded px-2 py-1 text-left text-xs"
+              style={{
+                backgroundColor: colorOf(e),
+                color: contrastText(colorOf(e)),
+              }}
             >
               {e.all_day ? '終日' : '期間'}・{e.title}
             </button>

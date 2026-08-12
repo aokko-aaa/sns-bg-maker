@@ -14,6 +14,7 @@ import {
 } from '@/lib/dates'
 import BottomSheet from '@/components/BottomSheet'
 import EntrySheet from '@/components/EntrySheet'
+import { GROUP_COLORS } from '@/lib/palette'
 import type { Category, Entry } from '@/types/database'
 
 const WEEK = ['日', '月', '火', '水', '木', '金', '土']
@@ -43,7 +44,7 @@ export default function MonthView() {
   const groupOf = (e: Entry) =>
     (e.category_id ? catMap.get(e.category_id)?.group_key : null) ?? 'other'
   const colorOf = (e: Entry) =>
-    (e.category_id && catMap.get(e.category_id)?.color) || '#9AA5B1'
+    (e.category_id && catMap.get(e.category_id)?.color) || GROUP_COLORS.other
 
   const visible = useMemo(
     () =>

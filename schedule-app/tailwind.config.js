@@ -7,11 +7,12 @@ export default {
       minHeight: { tap: '44px' },
       minWidth: { tap: '44px' },
       colors: {
-        // group_key 別の基準色（カテゴリ色は個別 hex で上書きされる）
+        // group_key 別の基準色（背景のパステル調に合わせたトーン）
+        // ※ src/lib/palette.ts の GROUP_COLORS と揃えること
         group: {
-          work: '#4F86F7',
-          family: '#F7845F',
-          personal: '#5FC77E',
+          work: '#5E97D0',
+          family: '#E58C74',
+          personal: '#6FBF9B',
         },
       },
     },

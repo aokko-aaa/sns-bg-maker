@@ -6,10 +6,10 @@ import {
   useUpsertCategory,
 } from '@/hooks/useCategories'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
-import type { GroupKey } from '@/types/database'
+import { CATEGORY_PALETTE as PALETTE } from '@/lib/palette'
+import type { Category, GroupKey } from '@/types/database'
 
 const GROUPS: GroupKey[] = ['work', 'family', 'personal']
-const PALETTE = ['#4F86F7', '#F7845F', '#5FC77E', '#B78BEA', '#F2C14E', '#EA6A8B']
 
 export default function CategorySheet({
   open,
@@ -25,6 +25,18 @@ export default function CategorySheet({
   const [name, setName] = useState('')
   const [group, setGroup] = useState<GroupKey>('work')
   const [color, setColor] = useState(PALETTE[0])
+  const [editColorId, setEditColorId] = useState<string | null>(null)
+
+  async function recolor(c: Category, newColor: string) {
+    await upsert.mutateAsync({
+      id: c.id,
+      name: c.name,
+      group_key: c.group_key,
+      color: newColor,
+      sort_order: c.sort_order,
+    })
+    setEditColorId(null)
+  }
 
   async function add() {
     if (!name.trim()) return
@@ -44,23 +56,48 @@ export default function CategorySheet({
           {categories.map((c) => (
             <li
               key={c.id}
-              className="flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-2"
+              className="rounded-lg border border-gray-100 px-2 py-2"
             >
-              <span
-                className="h-4 w-4 shrink-0 rounded-full"
-                style={{ backgroundColor: c.color }}
-              />
-              <span className="flex-1 text-sm text-gray-800">{c.name}</span>
-              <span className="text-xs text-gray-400">
-                {GROUP_LABELS[c.group_key]}
-              </span>
-              <button
-                onClick={() => del.mutate(c.id)}
-                className="min-h-tap px-2 text-sm text-red-500"
-                aria-label="削除"
-              >
-                削除
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    setEditColorId((id) => (id === c.id ? null : c.id))
+                  }
+                  className="h-5 w-5 shrink-0 rounded-full ring-offset-1"
+                  style={{ backgroundColor: c.color }}
+                  aria-label="色を変更"
+                  title="色を変更"
+                />
+                <span className="flex-1 text-sm text-gray-800">{c.name}</span>
+                <span className="text-xs text-gray-400">
+                  {GROUP_LABELS[c.group_key]}
+                </span>
+                <button
+                  onClick={() => del.mutate(c.id)}
+                  className="min-h-tap px-2 text-sm text-red-500"
+                  aria-label="削除"
+                >
+                  削除
+                </button>
+              </div>
+              {/* 色の変更パレット */}
+              {editColorId === c.id && (
+                <div className="mt-2 flex flex-wrap gap-2 pl-7">
+                  {PALETTE.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => recolor(c, p)}
+                      className="h-7 w-7 rounded-full"
+                      style={{
+                        backgroundColor: p,
+                        outline: c.color === p ? '2px solid #333' : 'none',
+                        outlineOffset: 2,
+                      }}
+                      aria-label={`色 ${p}`}
+                    />
+                  ))}
+                </div>
+              )}
             </li>
           ))}
         </ul>
