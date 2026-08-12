@@ -8,6 +8,7 @@ import {
 import { useCategories } from '@/hooks/useCategories'
 import { useSaveEntry, type EntryInput } from '@/hooks/useEntries'
 import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
+import EntrySheet from '@/components/EntrySheet'
 import type { InboxItem, ParsedInboxItem } from '@/types/database'
 
 const STATUS_LABEL: Record<string, string> = {
@@ -87,6 +88,7 @@ function InboxCard({ item }: { item: InboxItem }) {
 
   const [proposals, setProposals] = useState<ParsedInboxItem[]>([])
   const [err, setErr] = useState<string | null>(null)
+  const [manualOpen, setManualOpen] = useState(false)
 
   useEffect(() => {
     setProposals(item.parsed?.items ?? [])
@@ -151,16 +153,56 @@ function InboxCard({ item }: { item: InboxItem }) {
         </span>
       </div>
 
-      {/* 未解釈: 整理するボタン */}
+      {/* 未解釈: 手動で予定化 / AIで整理 */}
       {!parsed && !done && (
-        <button
-          onClick={onParse}
-          disabled={parse.isPending}
-          className="min-h-tap w-full rounded-lg bg-group-work/10 font-medium text-group-work disabled:opacity-50"
-        >
-          {parse.isPending ? 'AIが整理中…' : '✨ 整理する'}
-        </button>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setManualOpen(true)}
+              className="min-h-tap rounded-lg bg-group-work font-medium text-white"
+            >
+              予定にする
+            </button>
+            <button
+              onClick={onParse}
+              disabled={parse.isPending}
+              className="min-h-tap rounded-lg bg-group-work/10 font-medium text-group-work disabled:opacity-50"
+              title="AI解釈には Anthropic API の設定が必要です"
+            >
+              {parse.isPending ? 'AI整理中…' : '✨ AIで整理'}
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setStatus.mutate({ id: item.id, status: 'memo' })}
+              className="min-h-tap flex-1 rounded-lg border border-gray-300 text-xs text-gray-500"
+            >
+              メモ
+            </button>
+            <button
+              onClick={() =>
+                setStatus.mutate({ id: item.id, status: 'dismissed' })
+              }
+              className="min-h-tap flex-1 rounded-lg border border-red-200 text-xs text-red-500"
+            >
+              破棄
+            </button>
+          </div>
+          {err && <p className="text-sm text-red-600">{err}</p>}
+        </div>
       )}
+
+      {/* 手動予定化シート */}
+      <EntrySheet
+        open={manualOpen}
+        onClose={() => setManualOpen(false)}
+        entry={null}
+        defaultTitle={item.raw_text}
+        inboxId={item.id}
+        onSaved={() =>
+          setStatus.mutate({ id: item.id, status: 'converted' })
+        }
+      />
 
       {/* 解釈済 */}
       {parsed && !done && (

@@ -18,6 +18,12 @@ interface Props {
   defaultStartLocal?: string
   /** 新規時の初期カテゴリ（レーンから追加したとき用） */
   defaultCategoryId?: string | null
+  /** 新規時の初期タイトル（受信箱からの手動予定化など） */
+  defaultTitle?: string
+  /** 受信箱由来として紐付ける inbox_id（指定時 source='inbox'） */
+  inboxId?: string
+  /** 保存成功後に呼ばれる（受信箱ステータス更新などに使う） */
+  onSaved?: () => void
 }
 
 export default function EntrySheet({
@@ -26,6 +32,9 @@ export default function EntrySheet({
   entry,
   defaultStartLocal,
   defaultCategoryId,
+  defaultTitle,
+  inboxId,
+  onSaved,
 }: Props) {
   const { data: categories = [] } = useCategories()
   const save = useSaveEntry()
@@ -58,7 +67,7 @@ export default function EntrySheet({
       // 開始の1時間後をデフォルト終了に（要件 6-4: event は60分）
       const endDate = new Date(jstLocalToIso(base))
       endDate.setHours(endDate.getHours() + 1)
-      setTitle('')
+      setTitle(defaultTitle ?? '')
       setKind('event')
       setCategoryId(defaultCategoryId ?? categories[0]?.id ?? null)
       setAllDay(false)
@@ -94,11 +103,12 @@ export default function EntrySheet({
       all_day: allDay,
       progress: kind === 'task' ? progress : 0,
       notes: notes.trim() || null,
-      source: entry?.source ?? 'manual',
-      inbox_id: entry?.inbox_id ?? null,
+      source: entry ? entry.source : inboxId ? 'inbox' : 'manual',
+      inbox_id: entry ? entry.inbox_id : inboxId ?? null,
     }
     try {
       await save.mutateAsync(payload)
+      onSaved?.()
       onClose()
     } catch (e) {
       setErr(e instanceof Error ? e.message : '保存に失敗しました')
