@@ -137,7 +137,7 @@ export default function DayView() {
           className="absolute left-0 right-0 border-t border-gray-100"
           style={{ top: h * HOUR_H }}
         >
-          <span className="absolute -top-2 left-1 text-[10px] text-gray-400">
+          <span className="absolute -top-2 left-1 text-[12px] text-gray-400">
             {String(h).padStart(2, '0')}
           </span>
         </div>
@@ -178,7 +178,7 @@ export default function DayView() {
           ev.stopPropagation()
           openEdit(e)
         }}
-        className="absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[11px] leading-tight shadow-sm"
+        className="absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[13px] leading-tight shadow-sm"
         style={{
           top,
           height: (h / 60) * HOUR_H - 2,

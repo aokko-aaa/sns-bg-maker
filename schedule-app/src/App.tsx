@@ -11,10 +11,10 @@ import Login from '@/pages/Login'
 import { useAuth } from '@/hooks/useAuth'
 
 const TITLES: Record<string, string> = {
-  '/day': 'デイリー',
-  '/week': 'ウィークリー',
-  '/month': 'マンスリー',
-  '/inbox': '受信箱',
+  '/day': 'Daily',
+  '/week': 'Weekly',
+  '/month': 'Monthly',
+  '/inbox': 'Inbox',
 }
 
 export default function App() {

@@ -12,14 +12,33 @@ body,
   height: 100%;
 }
 
+/* 文字を全体的に +2pt 相当で拡大（rem ベースの text-* が連動して大きくなる） */
+html {
+  font-size: 18px;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', 'Noto Sans JP',
-    sans-serif;
+  /* 太めのゴシック（角ゴシック系を優先） */
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP',
+    'Yu Gothic', 'YuGothic', 'Meiryo', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   /* iOS のホーム画面起動時のスクロールバウンス抑制 */
   overscroll-behavior-y: none;
   background: #f6f7f9;
+}
+
+/* 見出し・強調はさらに太く */
+h1,
+h2,
+h3,
+.font-bold {
+  font-weight: 700;
+}
+.font-medium {
+  font-weight: 600;
 }
 
 /* セーフエリア（ノッチ・ホームインジケータ）対応 */

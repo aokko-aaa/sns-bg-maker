@@ -110,7 +110,7 @@ export default function MonthView() {
       </div>
 
       {/* 曜日 */}
-      <div className="grid grid-cols-7 border-b border-gray-100 text-center text-[11px] text-gray-400">
+      <div className="grid grid-cols-7 border-b border-gray-100 text-center text-[13px] text-gray-400">
         {WEEK.map((w, i) => (
           <div
             key={w}

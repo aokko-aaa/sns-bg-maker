@@ -96,7 +96,7 @@ export default function InboxView() {
           <p className="mt-1 text-xs text-red-500">{dictation.error}</p>
         )}
         {!dictation.supported && (
-          <p className="mt-1 text-[10px] text-gray-400">
+          <p className="mt-1 text-[12px] text-gray-400">
             ※ 音声入力はスマホ実機ではHTTPS（公開後）で使えます。PCのChrome推奨。
           </p>
         )}
@@ -192,7 +192,7 @@ function InboxCard({ item }: { item: InboxItem }) {
         </p>
         <span
           className={
-            'shrink-0 rounded-full px-2 py-0.5 text-[10px] ' +
+            'shrink-0 rounded-full px-2 py-0.5 text-[12px] ' +
             (item.status === 'pending'
               ? 'bg-amber-100 text-amber-700'
               : 'bg-gray-100 text-gray-500')
@@ -322,7 +322,7 @@ function InboxCard({ item }: { item: InboxItem }) {
                 )}
               </div>
               {p.source_phrase && (
-                <p className="mt-1 text-[10px] text-gray-400">
+                <p className="mt-1 text-[12px] text-gray-400">
                   根拠: 「{p.source_phrase}」
                 </p>
               )}

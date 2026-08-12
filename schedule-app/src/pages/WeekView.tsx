@@ -176,7 +176,7 @@ export default function WeekView() {
       </div>
 
       {/* 曜日ヘッダ */}
-      <div className="grid grid-cols-7 border-b border-gray-100 text-center text-[11px]">
+      <div className="grid grid-cols-7 border-b border-gray-100 text-center text-[13px]">
         {days.map((d, i) => {
           const isToday = dayKey(d) === todayKey
           return (
@@ -247,7 +247,7 @@ export default function WeekView() {
                       setEditing(e)
                       setSheetOpen(true)
                     }}
-                    className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[11px] shadow-sm"
+                    className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[13px] shadow-sm"
                     style={{
                       left: `${start * pct}%`,
                       width: `${count * pct}%`,
