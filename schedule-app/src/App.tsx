@@ -5,6 +5,7 @@ import GroupFilterBar from '@/components/GroupFilterBar'
 import CategorySheet from '@/components/CategorySheet'
 import Placeholder from '@/pages/Placeholder'
 import DayView from '@/pages/DayView'
+import MonthView from '@/pages/MonthView'
 import Login from '@/pages/Login'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -57,10 +58,7 @@ export default function App() {
             path="/week"
             element={<Placeholder title="ウィークリー（ガント）" phase="Phase 5" />}
           />
-          <Route
-            path="/month"
-            element={<Placeholder title="マンスリー" phase="Phase 2" />}
-          />
+          <Route path="/month" element={<MonthView />} />
           <Route
             path="/inbox"
             element={<Placeholder title="受信箱" phase="Phase 3" />}

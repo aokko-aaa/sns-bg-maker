@@ -49,4 +49,50 @@ export function minutesFromDayStart(iso: string, day: Date): number {
   return Math.max(0, Math.min(1440, m))
 }
 
+/** 月グリッド（日曜始まりの6週=42セル）。JST基準の日付キーで組み立てる */
+export function monthGrid(anchor: Date): Array<{
+  key: string
+  date: Date
+  inMonth: boolean
+}> {
+  const ym = formatInTimeZone(anchor, TZ, 'yyyy-MM')
+  const first = fromZonedTime(`${ym}-01T00:00:00`, TZ)
+  const firstDow = Number(formatInTimeZone(first, TZ, 'c')) % 7 // 0=日..6=土
+  const gridStart = addDays(first, -firstDow)
+  return Array.from({ length: 42 }, (_, i) => {
+    const date = addDays(gridStart, i)
+    return {
+      key: dayKey(date),
+      date,
+      inMonth: formatInTimeZone(date, TZ, 'yyyy-MM') === ym,
+    }
+  })
+}
+
+/** 表示用: 'yyyy年M月' */
+export function fmtMonthLabel(d: Date): string {
+  return formatInTimeZone(d, TZ, 'yyyy年M月')
+}
+
+/** entry がその日(JST)にかかっているか */
+export function entryOverlapsDay(
+  startsAt: string,
+  endsAt: string,
+  day: Date
+): boolean {
+  const ds = startOfDayJst(day).getTime()
+  const de = endOfDayJst(day).getTime()
+  return new Date(startsAt).getTime() < de && new Date(endsAt).getTime() > ds
+}
+
+/** 月を加算した Date（JST基準） */
+export function addMonths(d: Date, n: number): Date {
+  const ym = formatInTimeZone(d, TZ, 'yyyy-MM')
+  const [y, m] = ym.split('-').map(Number)
+  const total = (y * 12 + (m - 1)) + n
+  const ny = Math.floor(total / 12)
+  const nm = (total % 12) + 1
+  return fromZonedTime(`${ny}-${String(nm).padStart(2, '0')}-01T00:00:00`, TZ)
+}
+
 export { addDays, toZonedTime }

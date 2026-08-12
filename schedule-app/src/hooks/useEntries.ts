@@ -30,6 +30,25 @@ export function useEntriesForDay(day: Date) {
   })
 }
 
+/** 指定期間 [start, end) にかかる entries を取得（月グリッド等の範囲取得用） */
+export function useEntriesForRange(start: Date, end: Date) {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['entries', 'range', user?.id, start.toISOString(), end.toISOString()],
+    enabled: !!user,
+    queryFn: async (): Promise<Entry[]> => {
+      const { data, error } = await supabase
+        .from('entries')
+        .select('*')
+        .lt('starts_at', end.toISOString())
+        .gt('ends_at', start.toISOString())
+        .order('starts_at', { ascending: true })
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
 export function useSaveEntry() {
   const { user } = useAuth()
   const qc = useQueryClient()
