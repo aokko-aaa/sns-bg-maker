@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', 'Noto Sans JP',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* iOS のホーム画面起動時のスクロールバウンス抑制 */
+  overscroll-behavior-y: none;
+  background: #f6f7f9;
+}
+
+/* セーフエリア（ノッチ・ホームインジケータ）対応 */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
