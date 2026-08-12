@@ -36,10 +36,9 @@ export function fmtHm(iso: string): string {
   return formatInTimeZone(new Date(iso), TZ, 'HH:mm')
 }
 
-/** 表示用: 'M月d日(曜)'（JST） */
+/** 表示用: 'Thu, Aug 13, 2026'（JST・英語・西暦つき） */
 export function fmtDateLabel(d: Date): string {
-  const w = ['日', '月', '火', '水', '木', '金', '土'][Number(formatInTimeZone(d, TZ, 'c')) - 1]
-  return `${formatInTimeZone(d, TZ, 'M月d日')}(${w})`
+  return formatInTimeZone(d, TZ, 'EEE, MMM d, yyyy')
 }
 
 /** JST の壁時計での「0:00からの経過分」。範囲外は 0..1440 にクランプ */
@@ -69,9 +68,9 @@ export function monthGrid(anchor: Date): Array<{
   })
 }
 
-/** 表示用: 'yyyy年M月' */
+/** 表示用: 'August 2026'（英語・西暦つき） */
 export function fmtMonthLabel(d: Date): string {
-  return formatInTimeZone(d, TZ, 'yyyy年M月')
+  return formatInTimeZone(d, TZ, 'MMMM yyyy')
 }
 
 /** entry がその日(JST)にかかっているか */

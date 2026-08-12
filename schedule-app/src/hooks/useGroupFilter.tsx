@@ -59,7 +59,7 @@ export function useGroupFilter(): GroupFilterValue {
 }
 
 export const GROUP_LABELS: Record<GroupKey, string> = {
-  work: '仕事',
-  family: '家族',
-  personal: '個人',
+  work: 'Work',
+  family: 'Family',
+  personal: 'Personal',
 }

@@ -13,7 +13,7 @@ import EntrySheet from '@/components/EntrySheet'
 import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry } from '@/types/database'
 
-const WEEK_JA = ['日', '月', '火', '水', '木', '金', '土']
+const WEEK_JA = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function WeekView() {
   const [anchor, setAnchor] = useState(() => new Date())
@@ -162,9 +162,9 @@ export default function WeekView() {
         </button>
         <button
           onClick={() => setAnchor(new Date())}
-          className="text-sm font-bold text-gray-800"
+          className="text-xl font-bold text-gray-800"
         >
-          {fmtMd(days[0])} 〜 {fmtMd(days[6])}
+          {fmtMd(days[0])} – {fmtMd(days[6])}
         </button>
         <button
           onClick={() => setAnchor((d) => addDays(d, 7))}

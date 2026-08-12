@@ -38,6 +38,18 @@ export default function CategorySheet({
     setEditColorId(null)
   }
 
+  async function rename(c: Category) {
+    const name = window.prompt('カテゴリ名を変更', c.name)
+    if (!name || !name.trim() || name.trim() === c.name) return
+    await upsert.mutateAsync({
+      id: c.id,
+      name: name.trim(),
+      group_key: c.group_key,
+      color: c.color,
+      sort_order: c.sort_order,
+    })
+  }
+
   async function add() {
     if (!name.trim()) return
     await upsert.mutateAsync({
@@ -68,7 +80,13 @@ export default function CategorySheet({
                   aria-label="色を変更"
                   title="色を変更"
                 />
-                <span className="flex-1 text-sm text-gray-800">{c.name}</span>
+                <button
+                  onClick={() => rename(c)}
+                  className="flex-1 text-left text-sm text-gray-800"
+                  title="タップで名前を変更"
+                >
+                  {c.name}
+                </button>
                 <span className="text-xs text-gray-400">
                   {GROUP_LABELS[c.group_key]}
                 </span>

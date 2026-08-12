@@ -17,7 +17,7 @@ import EntrySheet from '@/components/EntrySheet'
 import { GROUP_COLORS } from '@/lib/palette'
 import type { Category, Entry } from '@/types/database'
 
-const WEEK = ['日', '月', '火', '水', '木', '金', '土']
+const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function MonthView() {
   const [anchor, setAnchor] = useState(() => new Date())
@@ -96,7 +96,7 @@ export default function MonthView() {
         </button>
         <button
           onClick={() => setAnchor(new Date())}
-          className="text-sm font-bold text-gray-800"
+          className="text-2xl font-bold text-gray-800"
         >
           {fmtMonthLabel(anchor)}
         </button>

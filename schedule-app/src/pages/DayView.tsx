@@ -21,10 +21,10 @@ const GUT = '2.5rem' // 左の時刻ラベル幅
 type LaneKey = GroupKey | 'other'
 const GROUP_ORDER: GroupKey[] = ['work', 'family', 'personal']
 const LANE_LABEL: Record<LaneKey, string> = {
-  work: '仕事',
-  family: '家族',
-  personal: '個人',
-  other: '未分類',
+  work: 'Work',
+  family: 'Family',
+  personal: 'Personal',
+  other: 'Other',
 }
 const LANE_COLOR = GROUP_COLORS
 
@@ -206,53 +206,54 @@ export default function DayView() {
         touchX.current = null
       }}
     >
-      {/* 日付ナビ + 表示切替 */}
-      <div className="flex items-center justify-between border-b border-gray-100 px-2 py-2">
+      {/* 日付ナビ（大きく表示） */}
+      <div className="flex items-center justify-between px-2 pt-2">
         <button
           onClick={() => setDay((d) => addDays(d, -1))}
-          className="min-h-tap min-w-tap text-gray-500"
+          className="min-h-tap min-w-tap text-2xl text-gray-400"
           aria-label="前日"
         >
           ‹
         </button>
         <button
           onClick={() => setDay(new Date())}
-          className="text-sm font-bold text-gray-800"
+          className="flex flex-col items-center leading-tight"
         >
-          {fmtDateLabel(day)}
-          {isToday && <span className="ml-1 text-xs text-group-work">今日</span>}
+          <span className="text-2xl font-bold text-gray-800">
+            {fmtDateLabel(day)}
+          </span>
+          {isToday && (
+            <span className="text-sm font-medium text-group-work">Today</span>
+          )}
         </button>
-        <div className="flex items-center gap-1">
-          <div className="flex overflow-hidden rounded-lg border border-gray-200 text-xs">
-            <button
-              onClick={() => setMode('lanes')}
-              className={
-                'px-2 py-1 ' +
-                (mode === 'lanes'
-                  ? 'bg-group-work text-white'
-                  : 'text-gray-500')
-              }
-            >
-              レーン
-            </button>
-            <button
-              onClick={() => setMode('single')}
-              className={
-                'px-2 py-1 ' +
-                (mode === 'single'
-                  ? 'bg-group-work text-white'
-                  : 'text-gray-500')
-              }
-            >
-              1本
-            </button>
-          </div>
+        <button
+          onClick={() => setDay((d) => addDays(d, 1))}
+          className="min-h-tap min-w-tap text-2xl text-gray-400"
+          aria-label="翌日"
+        >
+          ›
+        </button>
+      </div>
+      {/* 表示切替 */}
+      <div className="flex justify-end border-b border-gray-100 px-2 py-1">
+        <div className="flex overflow-hidden rounded-lg border border-gray-200 text-xs">
           <button
-            onClick={() => setDay((d) => addDays(d, 1))}
-            className="min-h-tap min-w-tap text-gray-500"
-            aria-label="翌日"
+            onClick={() => setMode('lanes')}
+            className={
+              'px-3 py-1 ' +
+              (mode === 'lanes' ? 'bg-group-work text-white' : 'text-gray-500')
+            }
           >
-            ›
+            レーン
+          </button>
+          <button
+            onClick={() => setMode('single')}
+            className={
+              'px-3 py-1 ' +
+              (mode === 'single' ? 'bg-group-work text-white' : 'text-gray-500')
+            }
+          >
+            1本
           </button>
         </div>
       </div>

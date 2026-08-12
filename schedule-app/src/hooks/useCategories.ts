@@ -7,9 +7,9 @@ import { GROUP_COLORS } from '@/lib/palette'
 
 // 初回ログイン時に用意するデフォルトカテゴリ（各 group_key に1つずつ）
 const DEFAULT_CATEGORIES: Array<Pick<Category, 'name' | 'group_key' | 'color'>> = [
-  { name: '仕事', group_key: 'work', color: GROUP_COLORS.work },
-  { name: '家族', group_key: 'family', color: GROUP_COLORS.family },
-  { name: '個人', group_key: 'personal', color: GROUP_COLORS.personal },
+  { name: 'Work', group_key: 'work', color: GROUP_COLORS.work },
+  { name: 'Family', group_key: 'family', color: GROUP_COLORS.family },
+  { name: 'Personal', group_key: 'personal', color: GROUP_COLORS.personal },
 ]
 
 export function useCategories() {
