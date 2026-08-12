@@ -6,6 +6,7 @@ import {
   useUpdateInboxStatus,
 } from '@/hooks/useInbox'
 import { useCategories } from '@/hooks/useCategories'
+import { useDictation } from '@/hooks/useDictation'
 import { useSaveEntry, type EntryInput } from '@/hooks/useEntries'
 import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
 import EntrySheet from '@/components/EntrySheet'
@@ -23,11 +24,30 @@ export default function InboxView() {
   const [text, setText] = useState('')
   const { data: items = [], isLoading } = useInboxItems()
   const add = useAddInbox()
+  const dictation = useDictation()
 
   async function submit() {
     if (!text.trim()) return
-    await add.mutateAsync({ raw_text: text.trim() })
+    // 音声入力は 'voice' として記録（Phase 4）
+    await add.mutateAsync({
+      raw_text: text.trim(),
+      input_type: usedVoice ? 'voice' : 'text',
+    })
     setText('')
+    setUsedVoice(false)
+  }
+
+  const [usedVoice, setUsedVoice] = useState(false)
+
+  function toggleMic() {
+    if (dictation.listening) {
+      dictation.stop()
+      return
+    }
+    setUsedVoice(true)
+    dictation.start((finalText) => {
+      setText((prev) => (prev ? prev + ' ' : '') + finalText)
+    })
   }
 
   return (
@@ -38,19 +58,48 @@ export default function InboxView() {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="つぶやきを投げる（例: 来週火曜10時に歯医者）"
+            placeholder={
+              dictation.listening
+                ? '聞き取り中…話してください'
+                : 'つぶやきを投げる（例: 来週火曜10時に歯医者）'
+            }
             className="min-h-tap flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-base"
             rows={2}
           />
           <button
-            className="min-h-tap min-w-tap rounded-lg border border-gray-200 text-gray-300"
-            title="音声入力は Phase 4 で対応"
-            disabled
-            aria-label="音声入力（準備中）"
+            onClick={toggleMic}
+            disabled={!dictation.supported}
+            className={
+              'min-h-tap min-w-tap rounded-lg border text-lg ' +
+              (dictation.listening
+                ? 'animate-pulse border-red-300 bg-red-50'
+                : dictation.supported
+                  ? 'border-gray-200'
+                  : 'border-gray-100 text-gray-300')
+            }
+            title={
+              dictation.supported
+                ? dictation.listening
+                  ? 'タップで停止'
+                  : 'タップで音声入力'
+                : 'この端末/ブラウザは音声入力に未対応'
+            }
+            aria-label="音声入力"
           >
-            🎤
+            {dictation.listening ? '⏹' : '🎤'}
           </button>
         </div>
+        {dictation.partial && (
+          <p className="mt-1 text-xs text-gray-400">認識中: {dictation.partial}</p>
+        )}
+        {dictation.error && (
+          <p className="mt-1 text-xs text-red-500">{dictation.error}</p>
+        )}
+        {!dictation.supported && (
+          <p className="mt-1 text-[10px] text-gray-400">
+            ※ 音声入力はスマホ実機ではHTTPS（公開後）で使えます。PCのChrome推奨。
+          </p>
+        )}
         <button
           onClick={submit}
           disabled={add.isPending || !text.trim()}
