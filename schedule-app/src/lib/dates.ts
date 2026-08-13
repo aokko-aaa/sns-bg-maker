@@ -36,9 +36,9 @@ export function fmtHm(iso: string): string {
   return formatInTimeZone(new Date(iso), TZ, 'HH:mm')
 }
 
-/** 表示用: 'Thu, Aug 13, 2026'（JST・英語・西暦つき） */
+/** 表示用: '2026.08.13 Thu'（JST・西暦つき） */
 export function fmtDateLabel(d: Date): string {
-  return formatInTimeZone(d, TZ, 'EEE, MMM d, yyyy')
+  return formatInTimeZone(d, TZ, 'yyyy.MM.dd EEE')
 }
 
 /** JST の壁時計での「0:00からの経過分」。範囲外は 0..1440 にクランプ */
