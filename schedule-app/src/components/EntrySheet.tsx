@@ -7,6 +7,7 @@ import {
   type EntryInput,
 } from '@/hooks/useEntries'
 import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
+import { errMessage } from '@/lib/errors'
 import type { Entry, EntryKind } from '@/types/database'
 
 interface Props {
@@ -85,13 +86,27 @@ export default function EntrySheet({
       setErr('タイトルを入力してください')
       return
     }
-    const startsIso = jstLocalToIso(startLocal)
-    const endsIso = allDay
-      ? jstLocalToIso(startLocal)
-      : jstLocalToIso(endLocal)
-    if (!allDay && new Date(endsIso) <= new Date(startsIso)) {
-      setErr('終了は開始より後にしてください')
-      return
+    let startsIso: string
+    let endsIso: string
+    if (allDay) {
+      // 終日・時間未定: 日付だけ。開始日0:00〜終了日の翌0:00（その日を丸ごとカバー）
+      const sDay = startLocal.slice(0, 10)
+      const eDay = endLocal.slice(0, 10) || sDay
+      if (eDay < sDay) {
+        setErr('終了日は開始日以降にしてください')
+        return
+      }
+      startsIso = jstLocalToIso(`${sDay}T00:00`)
+      endsIso = new Date(
+        new Date(jstLocalToIso(`${eDay}T00:00`)).getTime() + 86400000
+      ).toISOString()
+    } else {
+      startsIso = jstLocalToIso(startLocal)
+      endsIso = jstLocalToIso(endLocal)
+      if (new Date(endsIso) <= new Date(startsIso)) {
+        setErr('終了は開始より後にしてください')
+        return
+      }
     }
     const payload: EntryInput = {
       id: entry?.id,
@@ -111,7 +126,7 @@ export default function EntrySheet({
       onSaved?.()
       onClose()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : '保存に失敗しました')
+      setErr('保存に失敗: ' + errMessage(e))
     }
   }
 
@@ -122,7 +137,7 @@ export default function EntrySheet({
       await del.mutateAsync(entry.id)
       onClose()
     } catch (e) {
-      setErr(e instanceof Error ? e.message : '削除に失敗しました')
+      setErr('削除に失敗: ' + errMessage(e))
     }
   }
 
@@ -155,7 +170,7 @@ export default function EntrySheet({
                   : 'border-gray-300 text-gray-500')
               }
             >
-              {k === 'event' ? '予定' : '期間タスク'}
+              {k === 'event' ? '予定' : 'TODO'}
             </button>
           ))}
         </div>
@@ -183,29 +198,55 @@ export default function EntrySheet({
             onChange={(e) => setAllDay(e.target.checked)}
             className="h-5 w-5"
           />
-          終日
+          終日・時間未定（日付だけ）
         </label>
 
-        <label className={label}>
-          開始
-          <input
-            type="datetime-local"
-            value={startLocal}
-            onChange={(e) => setStartLocal(e.target.value)}
-            className={field}
-          />
-        </label>
-
-        {!allDay && (
-          <label className={label}>
-            終了
-            <input
-              type="datetime-local"
-              value={endLocal}
-              onChange={(e) => setEndLocal(e.target.value)}
-              className={field}
-            />
-          </label>
+        {allDay ? (
+          <>
+            <label className={label}>
+              日付
+              <input
+                type="date"
+                value={startLocal.slice(0, 10)}
+                onChange={(e) => {
+                  const d = e.target.value
+                  setStartLocal(`${d}T00:00`)
+                  if (endLocal.slice(0, 10) < d) setEndLocal(`${d}T00:00`)
+                }}
+                className={field}
+              />
+            </label>
+            <label className={label}>
+              終了日（複数日にまたぐ場合のみ・省略可）
+              <input
+                type="date"
+                value={endLocal.slice(0, 10)}
+                onChange={(e) => setEndLocal(`${e.target.value}T00:00`)}
+                className={field}
+              />
+            </label>
+          </>
+        ) : (
+          <>
+            <label className={label}>
+              開始
+              <input
+                type="datetime-local"
+                value={startLocal}
+                onChange={(e) => setStartLocal(e.target.value)}
+                className={field}
+              />
+            </label>
+            <label className={label}>
+              終了
+              <input
+                type="datetime-local"
+                value={endLocal}
+                onChange={(e) => setEndLocal(e.target.value)}
+                className={field}
+              />
+            </label>
+          </>
         )}
 
         {kind === 'task' && (
