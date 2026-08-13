@@ -59,6 +59,34 @@ export function useUpsertCategory() {
   })
 }
 
+/** カテゴリを1件追加し、作成したカテゴリを返す（入力画面からの即時追加用） */
+export function useAddCategoryReturning() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (args: {
+      name: string
+      group_key?: GroupKey
+      color?: string
+    }): Promise<Category> => {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({
+          user_id: user!.id,
+          name: args.name,
+          group_key: args.group_key ?? 'personal',
+          color: args.color ?? GROUP_COLORS.personal,
+          sort_order: 0,
+        })
+        .select('*')
+        .single()
+      if (error) throw error
+      return data as Category
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['categories'] }),
+  })
+}
+
 export function useDeleteCategory() {
   const qc = useQueryClient()
   return useMutation({

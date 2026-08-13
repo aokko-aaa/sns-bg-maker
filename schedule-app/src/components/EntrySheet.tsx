@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import BottomSheet from './BottomSheet'
-import { useCategories } from '@/hooks/useCategories'
+import { useCategories, useAddCategoryReturning } from '@/hooks/useCategories'
 import {
   useDeleteEntry,
   useSaveEntry,
@@ -38,8 +38,20 @@ export default function EntrySheet({
   onSaved,
 }: Props) {
   const { data: categories = [] } = useCategories()
+  const addCat = useAddCategoryReturning()
   const save = useSaveEntry()
   const del = useDeleteEntry()
+
+  async function onAddCategory() {
+    const name = window.prompt('新しいカテゴリ名（例: クライアントA）')
+    if (!name || !name.trim()) return
+    try {
+      const c = await addCat.mutateAsync({ name: name.trim() })
+      setCategoryId(c.id)
+    } catch (e) {
+      setErr('カテゴリ追加に失敗: ' + errMessage(e))
+    }
+  }
 
   const [title, setTitle] = useState('')
   const [kind, setKind] = useState<EntryKind>('event')
@@ -177,18 +189,27 @@ export default function EntrySheet({
 
         <label className={label}>
           カテゴリ
-          <select
-            value={categoryId ?? ''}
-            onChange={(e) => setCategoryId(e.target.value || null)}
-            className={field}
-          >
-            <option value="">（未分類）</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="mt-1 flex gap-2">
+            <select
+              value={categoryId ?? ''}
+              onChange={(e) => setCategoryId(e.target.value || null)}
+              className="min-h-tap flex-1 rounded-lg border border-gray-300 px-3 text-base"
+            >
+              <option value="">（未分類）</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={onAddCategory}
+              className="min-h-tap shrink-0 rounded-lg border border-group-work px-3 text-sm font-medium text-group-work"
+            >
+              ＋追加
+            </button>
+          </div>
         </label>
 
         <label className="flex items-center gap-2 text-sm text-gray-700">
