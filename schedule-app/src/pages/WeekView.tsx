@@ -45,8 +45,8 @@ export default function WeekView() {
 
   const groupOf = (e: Entry) =>
     (e.category_id ? catMap.get(e.category_id)?.group_key : null) ?? 'other'
-  const colorOf = (e: Entry) =>
-    (e.category_id && catMap.get(e.category_id)?.color) || GROUP_COLORS.other
+  // 予定の色は大分類の色に統一
+  const colorOf = (e: Entry) => GROUP_COLORS[groupOf(e)]
 
   const visible = useMemo(
     () =>
@@ -71,7 +71,12 @@ export default function WeekView() {
       []
     for (const c of categories) {
       if (byCat.has(c.id))
-        ordered.push({ key: c.id, name: c.name, color: c.color, items: byCat.get(c.id)! })
+        ordered.push({
+          key: c.id,
+          name: c.name,
+          color: GROUP_COLORS[c.group_key],
+          items: byCat.get(c.id)!,
+        })
     }
     if (byCat.has('other'))
       ordered.push({ key: 'other', name: '未分類', color: GROUP_COLORS.other, items: byCat.get('other')! })

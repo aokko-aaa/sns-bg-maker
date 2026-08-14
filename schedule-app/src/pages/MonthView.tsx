@@ -43,8 +43,8 @@ export default function MonthView() {
 
   const groupOf = (e: Entry) =>
     (e.category_id ? catMap.get(e.category_id)?.group_key : null) ?? 'other'
-  const colorOf = (e: Entry) =>
-    (e.category_id && catMap.get(e.category_id)?.color) || GROUP_COLORS.other
+  // 予定の色は大分類の色に統一
+  const colorOf = (e: Entry) => GROUP_COLORS[groupOf(e)]
 
   const visible = useMemo(
     () =>

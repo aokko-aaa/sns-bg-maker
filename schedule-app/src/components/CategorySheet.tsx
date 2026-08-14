@@ -6,7 +6,7 @@ import {
   useUpsertCategory,
 } from '@/hooks/useCategories'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
-import { CATEGORY_PALETTE as PALETTE } from '@/lib/palette'
+import { GROUP_COLORS } from '@/lib/palette'
 import type { Category, GroupKey } from '@/types/database'
 
 const GROUPS: GroupKey[] = ['work', 'family', 'personal']
@@ -24,20 +24,8 @@ export default function CategorySheet({
 
   const [name, setName] = useState('')
   const [group, setGroup] = useState<GroupKey>('work')
-  const [color, setColor] = useState(PALETTE[0])
-  const [editColorId, setEditColorId] = useState<string | null>(null)
 
-  async function recolor(c: Category, newColor: string) {
-    await upsert.mutateAsync({
-      id: c.id,
-      name: c.name,
-      group_key: c.group_key,
-      color: newColor,
-      sort_order: c.sort_order,
-    })
-    setEditColorId(null)
-  }
-
+  // 色は大分類で決まるため、大分類変更時に色も揃える
   async function cycleGroup(c: Category) {
     const order: GroupKey[] = ['work', 'family', 'personal']
     const next = order[(order.indexOf(c.group_key) + 1) % order.length]!
@@ -45,19 +33,19 @@ export default function CategorySheet({
       id: c.id,
       name: c.name,
       group_key: next,
-      color: c.color,
+      color: GROUP_COLORS[next],
       sort_order: c.sort_order,
     })
   }
 
   async function rename(c: Category) {
-    const name = window.prompt('カテゴリ名を変更', c.name)
-    if (!name || !name.trim() || name.trim() === c.name) return
+    const newName = window.prompt('カテゴリ名を変更', c.name)
+    if (!newName || !newName.trim() || newName.trim() === c.name) return
     await upsert.mutateAsync({
       id: c.id,
-      name: name.trim(),
+      name: newName.trim(),
       group_key: c.group_key,
-      color: c.color,
+      color: GROUP_COLORS[c.group_key],
       sort_order: c.sort_order,
     })
   }
@@ -67,7 +55,7 @@ export default function CategorySheet({
     await upsert.mutateAsync({
       name: name.trim(),
       group_key: group,
-      color,
+      color: GROUP_COLORS[group],
       sort_order: categories.length,
     })
     setName('')
@@ -76,75 +64,55 @@ export default function CategorySheet({
   return (
     <BottomSheet open={open} onClose={onClose} title="カテゴリ管理">
       <div className="flex flex-col gap-4">
+        <p className="text-xs text-gray-500">
+          色は大分類（Work / Family / Personal）ごとに自動で揃います。
+        </p>
         <ul className="flex flex-col gap-1">
           {categories.map((c) => (
             <li
               key={c.id}
-              className="rounded-lg border border-gray-100 px-2 py-2"
+              className="flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-2"
             >
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    setEditColorId((id) => (id === c.id ? null : c.id))
-                  }
-                  className="h-5 w-5 shrink-0 rounded-full ring-offset-1"
-                  style={{ backgroundColor: c.color }}
-                  aria-label="色を変更"
-                  title="色を変更"
-                />
-                <button
-                  onClick={() => rename(c)}
-                  className="flex-1 text-left text-sm text-gray-800"
-                  title="タップで名前を変更"
-                >
-                  {c.name}
-                </button>
-                <button
-                  onClick={() => cycleGroup(c)}
-                  className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-500"
-                  title="タップで大分類を変更"
-                >
-                  {GROUP_LABELS[c.group_key]} ▸
-                </button>
-                <button
-                  onClick={() => del.mutate(c.id)}
-                  className="min-h-tap px-2 text-sm text-red-500"
-                  aria-label="削除"
-                >
-                  削除
-                </button>
-              </div>
-              {/* 色の変更パレット */}
-              {editColorId === c.id && (
-                <div className="mt-2 flex flex-wrap gap-2 pl-7">
-                  {PALETTE.map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => recolor(c, p)}
-                      className="h-7 w-7 rounded-full"
-                      style={{
-                        backgroundColor: p,
-                        outline: c.color === p ? '2px solid #333' : 'none',
-                        outlineOffset: 2,
-                      }}
-                      aria-label={`色 ${p}`}
-                    />
-                  ))}
-                </div>
-              )}
+              <span
+                className="h-4 w-4 shrink-0 rounded-full"
+                style={{ backgroundColor: GROUP_COLORS[c.group_key] }}
+              />
+              <button
+                onClick={() => rename(c)}
+                className="flex-1 text-left text-sm text-gray-800"
+                title="タップで名前を変更"
+              >
+                {c.name}
+              </button>
+              <button
+                onClick={() => cycleGroup(c)}
+                className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-500"
+                title="タップで大分類を変更"
+              >
+                {GROUP_LABELS[c.group_key]} ▸
+              </button>
+              <button
+                onClick={() => del.mutate(c.id)}
+                className="min-h-tap px-2 text-sm text-red-500"
+                aria-label="削除"
+              >
+                削除
+              </button>
             </li>
           ))}
         </ul>
 
         <div className="rounded-lg bg-gray-50 p-3">
-          <p className="mb-2 text-sm font-medium text-gray-700">追加</p>
+          <p className="mb-2 text-sm font-medium text-gray-700">
+            中分類を追加
+          </p>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="カテゴリ名（例: クライアントA）"
+            placeholder="名前（例: A社）"
             className="min-h-tap mb-2 w-full rounded-lg border border-gray-300 px-3 text-base"
           />
-          <div className="mb-2 flex gap-2">
+          <div className="mb-3 flex gap-2">
             {GROUPS.map((g) => (
               <button
                 key={g}
@@ -152,27 +120,17 @@ export default function CategorySheet({
                 className={
                   'min-h-tap flex-1 rounded-lg border text-sm ' +
                   (group === g
-                    ? 'border-group-work bg-group-work/10 font-medium text-group-work'
+                    ? 'font-medium text-white'
                     : 'border-gray-300 text-gray-500')
+                }
+                style={
+                  group === g
+                    ? { backgroundColor: GROUP_COLORS[g], borderColor: GROUP_COLORS[g] }
+                    : undefined
                 }
               >
                 {GROUP_LABELS[g]}
               </button>
-            ))}
-          </div>
-          <div className="mb-3 flex gap-2">
-            {PALETTE.map((p) => (
-              <button
-                key={p}
-                onClick={() => setColor(p)}
-                className="h-8 w-8 rounded-full"
-                style={{
-                  backgroundColor: p,
-                  outline: color === p ? '2px solid #333' : 'none',
-                  outlineOffset: 2,
-                }}
-                aria-label={`色 ${p}`}
-              />
             ))}
           </div>
           <button
