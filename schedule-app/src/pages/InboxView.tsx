@@ -86,7 +86,7 @@ export default function InboxView() {
             }
             aria-label="音声入力"
           >
-            {dictation.listening ? '⏹' : '🎤'}
+            {dictation.listening ? '⏹' : '🎙️'}
           </button>
         </div>
         {dictation.partial && (

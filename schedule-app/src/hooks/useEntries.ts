@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { formatInTimeZone } from 'date-fns-tz'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import { endOfDayJst, startOfDayJst } from '@/lib/dates'
+import { endOfDayJst, jstLocalToIso, startOfDayJst } from '@/lib/dates'
+import { TZ } from '@/lib/time'
 import type { Entry } from '@/types/database'
 
 export type EntryInput = Omit<
@@ -90,6 +92,55 @@ export function useBulkAddEntries() {
         inbox_id: null,
       }))
       const { error } = await supabase.from('entries').insert(payload)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['entries'] }),
+  })
+}
+
+/** 期限切れ（過去）で未完了のタスクを取得（持ち越し候補） */
+export function useOverdueTasks() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['entries', 'overdue', user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<Entry[]> => {
+      const todayStart = startOfDayJst(new Date()).toISOString()
+      const { data, error } = await supabase
+        .from('entries')
+        .select('*')
+        .eq('kind', 'task')
+        .lt('progress', 100)
+        .lt('ends_at', todayStart)
+        .order('ends_at', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
+/** タスクを今日へ持ち越す（時刻・所要時間は維持、終日は今日の日付に） */
+export function useCarryOverToday() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (e: Entry) => {
+      const durMs =
+        new Date(e.ends_at).getTime() - new Date(e.starts_at).getTime()
+      const today = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd')
+      const hhmm = e.all_day
+        ? '00:00'
+        : formatInTimeZone(new Date(e.starts_at), TZ, 'HH:mm')
+      const startsIso = jstLocalToIso(`${today}T${hhmm}`)
+      const endsIso = new Date(new Date(startsIso).getTime() + durMs).toISOString()
+      const { error } = await supabase
+        .from('entries')
+        .update({
+          starts_at: startsIso,
+          ends_at: endsIso,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', e.id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['entries'] }),

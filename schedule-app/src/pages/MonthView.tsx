@@ -182,28 +182,22 @@ export default function MonthView() {
               </p>
             )}
             {entriesForDay(selected).map((e) => {
-              const done = e.kind === 'task' && (e.progress ?? 0) >= 100
+              const done = (e.progress ?? 0) >= 100
               return (
                 <div
                   key={e.id}
                   className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2"
                 >
-                  {e.kind === 'task' ? (
-                    <button
-                      onClick={() =>
-                        setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
-                      }
-                      className="shrink-0 text-lg leading-none text-gray-500"
-                      aria-label={done ? '未完了に戻す' : '完了にする'}
-                    >
-                      {done ? '☑' : '☐'}
-                    </button>
-                  ) : (
-                    <span
-                      className="h-3 w-3 shrink-0 rounded-full"
-                      style={{ backgroundColor: colorOf(e) }}
-                    />
-                  )}
+                  <button
+                    onClick={() =>
+                      setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
+                    }
+                    className="shrink-0 text-lg leading-none"
+                    style={{ color: colorOf(e) }}
+                    aria-label={done ? '未完了に戻す' : '完了にする'}
+                  >
+                    {done ? '☑' : '☐'}
+                  </button>
                   <button
                     onClick={() => {
                       setEditing(e)

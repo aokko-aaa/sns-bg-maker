@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useEntriesForDay, useSetProgress } from '@/hooks/useEntries'
+import {
+  useEntriesForDay,
+  useSetProgress,
+  useOverdueTasks,
+  useCarryOverToday,
+} from '@/hooks/useEntries'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter } from '@/hooks/useGroupFilter'
 import {
   addDays,
   fmtDateLabel,
   fmtHm,
+  fmtMd,
   isoToJstLocal,
   minutesFromDayStart,
 } from '@/lib/dates'
@@ -48,6 +54,8 @@ export default function DayView() {
   const { data: categories = [] } = useCategories()
   const { active } = useGroupFilter()
   const setProgress = useSetProgress()
+  const { data: overdue = [] } = useOverdueTasks()
+  const carryOver = useCarryOverToday()
 
   const catMap = useMemo(() => {
     const m = new Map<string, Category>()
@@ -171,7 +179,7 @@ export default function DayView() {
     const height = (b.heightMin / 60) * HOUR_H - 2
     const bg = colorOf(e)
     const ink = contrastText(bg)
-    const done = e.kind === 'task' && (e.progress ?? 0) >= 100
+    const done = (e.progress ?? 0) >= 100
     return (
       <div
         className="absolute overflow-hidden rounded-md shadow-sm"
@@ -196,20 +204,18 @@ export default function DayView() {
             {b.band ? '終日' : fmtHm(e.starts_at)}
           </div>
         </button>
-        {e.kind === 'task' && (
-          <button
-            onClick={(ev) => {
-              ev.stopPropagation()
-              setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
-            }}
-            className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded text-[13px]"
-            style={{ color: ink }}
-            aria-label={done ? '未完了に戻す' : '完了にする'}
-            title={done ? '未完了に戻す' : '完了にする'}
-          >
-            {done ? '☑' : '☐'}
-          </button>
-        )}
+        <button
+          onClick={(ev) => {
+            ev.stopPropagation()
+            setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
+          }}
+          className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded text-[13px]"
+          style={{ color: ink }}
+          aria-label={done ? '未完了に戻す' : '完了にする'}
+          title={done ? '未完了に戻す' : '完了にする'}
+        >
+          {done ? '☑' : '☐'}
+        </button>
       </div>
     )
   }
@@ -277,6 +283,41 @@ export default function DayView() {
           </button>
         </div>
       </div>
+
+      {/* 持ち越し（期限切れ未完了タスク） — 今日のみ */}
+      {isToday && overdue.length > 0 && (
+        <div className="border-b border-amber-100 bg-amber-50 px-2 py-1.5">
+          <p className="mb-1 text-[11px] font-medium text-amber-700">
+            持ち越し（未完了 {overdue.length}）
+          </p>
+          <div className="flex max-h-28 flex-col gap-1 overflow-y-auto">
+            {overdue.map((e) => (
+              <div
+                key={e.id}
+                className="flex items-center gap-2 rounded bg-white px-2 py-1 text-xs"
+              >
+                <button
+                  onClick={() => setProgress.mutate({ id: e.id, progress: 100 })}
+                  className="shrink-0 text-base leading-none text-gray-500"
+                  aria-label="完了にする"
+                >
+                  ☐
+                </button>
+                <span className="flex-1 truncate text-gray-800">{e.title}</span>
+                <span className="shrink-0 text-gray-400">
+                  {fmtMd(new Date(e.starts_at))}
+                </span>
+                <button
+                  onClick={() => carryOver.mutate(e)}
+                  className="shrink-0 rounded bg-group-work px-2 py-0.5 font-medium text-white"
+                >
+                  →今日
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* レーンモードのヘッダ（種類ラベル） */}
       {mode === 'lanes' && (
