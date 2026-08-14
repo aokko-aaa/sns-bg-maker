@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { useEntriesForRange } from '@/hooks/useEntries'
+import { useEntriesForRange, useSetProgress } from '@/hooks/useEntries'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter } from '@/hooks/useGroupFilter'
 import {
@@ -34,6 +34,7 @@ export default function MonthView() {
   const { data: entries = [] } = useEntriesForRange(rangeStart, rangeEnd)
   const { data: categories = [] } = useCategories()
   const { active } = useGroupFilter()
+  const setProgress = useSetProgress()
 
   const catMap = useMemo(() => {
     const m = new Map<string, Category>()
@@ -180,28 +181,52 @@ export default function MonthView() {
                 予定はありません
               </p>
             )}
-            {entriesForDay(selected).map((e) => (
-              <button
-                key={e.id}
-                onClick={() => {
-                  setEditing(e)
-                  setDefaultStart(undefined)
-                  setSheetOpen(true)
-                }}
-                className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2 text-left"
-              >
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: colorOf(e) }}
-                />
-                <span className="flex-1 truncate text-sm text-gray-800">
-                  {e.title}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {e.all_day ? '終日' : fmtHm(e.starts_at)}
-                </span>
-              </button>
-            ))}
+            {entriesForDay(selected).map((e) => {
+              const done = e.kind === 'task' && (e.progress ?? 0) >= 100
+              return (
+                <div
+                  key={e.id}
+                  className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2"
+                >
+                  {e.kind === 'task' ? (
+                    <button
+                      onClick={() =>
+                        setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
+                      }
+                      className="shrink-0 text-lg leading-none text-gray-500"
+                      aria-label={done ? '未完了に戻す' : '完了にする'}
+                    >
+                      {done ? '☑' : '☐'}
+                    </button>
+                  ) : (
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: colorOf(e) }}
+                    />
+                  )}
+                  <button
+                    onClick={() => {
+                      setEditing(e)
+                      setDefaultStart(undefined)
+                      setSheetOpen(true)
+                    }}
+                    className="flex flex-1 items-center gap-2 overflow-hidden text-left"
+                  >
+                    <span
+                      className={
+                        'flex-1 truncate text-sm text-gray-800 ' +
+                        (done ? 'text-gray-400 line-through' : '')
+                      }
+                    >
+                      {e.title}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {e.all_day ? '終日' : fmtHm(e.starts_at)}
+                    </span>
+                  </button>
+                </div>
+              )
+            })}
             <button
               onClick={addOnSelected}
               className="min-h-tap mt-2 rounded-lg bg-group-work font-medium text-white"

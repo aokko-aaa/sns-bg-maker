@@ -96,6 +96,21 @@ export function useBulkAddEntries() {
   })
 }
 
+/** TODO の完了/未完（progress 0↔100）を切り替える */
+export function useSetProgress() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (args: { id: string; progress: number }) => {
+      const { error } = await supabase
+        .from('entries')
+        .update({ progress: args.progress, updated_at: new Date().toISOString() })
+        .eq('id', args.id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['entries'] }),
+  })
+}
+
 export function useDeleteEntry() {
   const qc = useQueryClient()
   return useMutation({

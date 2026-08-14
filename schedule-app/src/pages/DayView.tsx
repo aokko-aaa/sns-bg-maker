@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useEntriesForDay } from '@/hooks/useEntries'
+import { useEntriesForDay, useSetProgress } from '@/hooks/useEntries'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter } from '@/hooks/useGroupFilter'
 import {
@@ -9,7 +9,7 @@ import {
   isoToJstLocal,
   minutesFromDayStart,
 } from '@/lib/dates'
-import { isBandEntry, layoutTimed } from '@/lib/dayLayout'
+import { isBandEntry, layoutDay, type TimedBlock } from '@/lib/dayLayout'
 import EntrySheet from '@/components/EntrySheet'
 import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry, GroupKey } from '@/types/database'
@@ -47,6 +47,7 @@ export default function DayView() {
   const { data: entries = [], isLoading } = useEntriesForDay(day)
   const { data: categories = [] } = useCategories()
   const { active } = useGroupFilter()
+  const setProgress = useSetProgress()
 
   const catMap = useMemo(() => {
     const m = new Map<string, Category>()
@@ -72,16 +73,13 @@ export default function DayView() {
     [entries, catMap, active]
   )
 
-  const bandEntries = visible.filter((e) => isBandEntry(e, day))
-
   // レーン一覧: 有効なグループ + 未分類（該当があれば）
   const lanes: LaneKey[] = useMemo(() => {
     const ks: LaneKey[] = GROUP_ORDER.filter((g) => active.includes(g))
-    if (visible.some((e) => groupOf(e) === 'other' && !isBandEntry(e, day)))
-      ks.push('other')
+    if (visible.some((e) => groupOf(e) === 'other')) ks.push('other')
     return ks
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, visible, day])
+  }, [active, visible])
 
   // その日の最初の予定が見える位置へスクロール（無ければ 6:00）
   useEffect(() => {
@@ -167,40 +165,52 @@ export default function DayView() {
     </>
   )
 
-  function Block({
-    e,
-    left,
-    width,
-  }: {
-    e: Entry
-    left: string
-    width: string
-  }) {
-    const top = (minutesFromDayStart(e.starts_at, day) / 60) * HOUR_H
-    const endMin = minutesFromDayStart(e.ends_at, day)
-    const h = Math.max(
-      15,
-      endMin - minutesFromDayStart(e.starts_at, day)
-    )
+  function Block({ b, left, width }: { b: TimedBlock; left: string; width: string }) {
+    const e = b.entry
+    const top = (b.topMin / 60) * HOUR_H
+    const height = (b.heightMin / 60) * HOUR_H - 2
+    const bg = colorOf(e)
+    const ink = contrastText(bg)
+    const done = e.kind === 'task' && (e.progress ?? 0) >= 100
     return (
-      <button
-        onClick={(ev) => {
-          ev.stopPropagation()
-          openEdit(e)
-        }}
-        className="absolute overflow-hidden rounded-md px-1 py-0.5 text-left text-[13px] leading-tight shadow-sm"
-        style={{
-          top,
-          height: (h / 60) * HOUR_H - 2,
-          left,
-          width,
-          backgroundColor: colorOf(e),
-          color: contrastText(colorOf(e)),
-        }}
+      <div
+        className="absolute overflow-hidden rounded-md shadow-sm"
+        style={{ top, height, left, width, backgroundColor: bg, opacity: done ? 0.5 : 1 }}
       >
-        <div className="truncate font-medium">{e.title}</div>
-        <div className="truncate opacity-90">{fmtHm(e.starts_at)}</div>
-      </button>
+        <button
+          onClick={(ev) => {
+            ev.stopPropagation()
+            openEdit(e)
+          }}
+          className="h-full w-full px-1 py-0.5 text-left text-[13px] leading-tight"
+          style={{ color: ink }}
+        >
+          <div
+            className={
+              'truncate pr-4 font-medium ' + (done ? 'line-through' : '')
+            }
+          >
+            {e.title}
+          </div>
+          <div className="truncate text-[11px] opacity-90">
+            {b.band ? '終日' : fmtHm(e.starts_at)}
+          </div>
+        </button>
+        {e.kind === 'task' && (
+          <button
+            onClick={(ev) => {
+              ev.stopPropagation()
+              setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
+            }}
+            className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded text-[13px]"
+            style={{ color: ink }}
+            aria-label={done ? '未完了に戻す' : '完了にする'}
+            title={done ? '未完了に戻す' : '完了にする'}
+          >
+            {done ? '☑' : '☐'}
+          </button>
+        )}
+      </div>
     )
   }
 
@@ -268,25 +278,6 @@ export default function DayView() {
         </div>
       </div>
 
-      {/* 終日・日またぎの帯 */}
-      {bandEntries.length > 0 && (
-        <div className="flex flex-col gap-1 border-b border-gray-100 bg-gray-50 px-2 py-1">
-          {bandEntries.map((e) => (
-            <button
-              key={e.id}
-              onClick={() => openEdit(e)}
-              className="truncate rounded px-2 py-1 text-left text-xs"
-              style={{
-                backgroundColor: colorOf(e),
-                color: contrastText(colorOf(e)),
-              }}
-            >
-              {e.all_day ? '終日' : '期間'}・{e.title}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* レーンモードのヘッダ（種類ラベル） */}
       {mode === 'lanes' && (
         <div className="flex border-b border-gray-100 text-center text-xs font-medium">
@@ -310,10 +301,8 @@ export default function DayView() {
 
           {mode === 'lanes' ? (
             lanes.map((k, li) => {
-              const laneEntries = visible.filter(
-                (e) => groupOf(e) === k && !isBandEntry(e, day)
-              )
-              const blocks = layoutTimed(laneEntries, day)
+              const laneEntries = visible.filter((e) => groupOf(e) === k)
+              const blocks = layoutDay(laneEntries, day)
               const n = lanes.length
               return (
                 <div key={k}>
@@ -335,7 +324,7 @@ export default function DayView() {
                   {blocks.map((b) => (
                     <Block
                       key={b.entry.id}
-                      e={b.entry}
+                      b={b}
                       left={`calc(${GUT} + (${li} + ${b.left}) * (100% - ${GUT}) / ${n} + 1px)`}
                       width={`calc(${b.width} * (100% - ${GUT}) / ${n} - 2px)`}
                     />
@@ -357,10 +346,10 @@ export default function DayView() {
                   openNew((y / HOUR_H) * 60)
                 }}
               />
-              {layoutTimed(visible, day).map((b) => (
+              {layoutDay(visible, day).map((b) => (
                 <Block
                   key={b.entry.id}
-                  e={b.entry}
+                  b={b}
                   left={`calc(${GUT} + ${b.left} * (100% - ${GUT}) + 1px)`}
                   width={`calc(${b.width} * (100% - ${GUT}) - 2px)`}
                 />
