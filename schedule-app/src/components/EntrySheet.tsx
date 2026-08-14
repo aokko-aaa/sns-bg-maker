@@ -44,19 +44,9 @@ export default function EntrySheet({
   const save = useSaveEntry()
   const del = useDeleteEntry()
 
-  async function onAddCategory() {
-    const name = window.prompt('新しいカテゴリ名（例: クライアントA）')
-    if (!name || !name.trim()) return
-    try {
-      const c = await addCat.mutateAsync({ name: name.trim() })
-      setCategoryId(c.id)
-    } catch (e) {
-      setErr('カテゴリ追加に失敗: ' + errMessage(e))
-    }
-  }
-
   const [title, setTitle] = useState('')
   const [kind, setKind] = useState<EntryKind>('event')
+  const [group, setGroup] = useState<GroupKey>('work')
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [allDay, setAllDay] = useState(false)
   const [startLocal, setStartLocal] = useState('')
@@ -65,12 +55,37 @@ export default function EntrySheet({
   const [notes, setNotes] = useState('')
   const [err, setErr] = useState<string | null>(null)
 
+  // カテゴリ追加（選んでいる大分類の中に作る → すぐ選択）
+  async function onAddCategory() {
+    const name = window.prompt(
+      `「${GROUP_LABELS[group]}」に追加する中分類の名前（例: A社）`
+    )
+    if (!name || !name.trim()) return
+    try {
+      const c = await addCat.mutateAsync({ name: name.trim(), group_key: group })
+      setCategoryId(c.id)
+    } catch (e) {
+      setErr('カテゴリ追加に失敗: ' + errMessage(e))
+    }
+  }
+
+  // 大分類を変えたら、その大分類の先頭の中分類を選び直す
+  function selectGroup(g: GroupKey) {
+    setGroup(g)
+    const first = categories.find((c) => c.group_key === g)
+    setCategoryId(first?.id ?? null)
+  }
+
   // 開くたびに初期値を流し込む
   useEffect(() => {
     if (!open) return
     if (entry) {
+      const cat = entry.category_id
+        ? categories.find((c) => c.id === entry.category_id)
+        : undefined
       setTitle(entry.title)
       setKind(entry.kind)
+      setGroup(cat?.group_key ?? 'work')
       setCategoryId(entry.category_id)
       setAllDay(entry.all_day)
       setStartLocal(isoToJstLocal(entry.starts_at))
@@ -82,9 +97,13 @@ export default function EntrySheet({
       // 開始の1時間後をデフォルト終了に（要件 6-4: event は60分）
       const endDate = new Date(jstLocalToIso(base))
       endDate.setHours(endDate.getHours() + 1)
+      const dc = defaultCategoryId
+        ? categories.find((c) => c.id === defaultCategoryId)
+        : categories[0]
       setTitle(defaultTitle ?? '')
       setKind('event')
-      setCategoryId(defaultCategoryId ?? categories[0]?.id ?? null)
+      setGroup(dc?.group_key ?? 'work')
+      setCategoryId(dc?.id ?? null)
       setAllDay(false)
       setStartLocal(base)
       setEndLocal(isoToJstLocal(endDate.toISOString()))
@@ -189,28 +208,47 @@ export default function EntrySheet({
           ))}
         </div>
 
+        {/* 大分類 */}
+        <div className={label}>
+          大分類
+          <div className="mt-1 flex gap-2">
+            {(['work', 'family', 'personal'] as GroupKey[]).map((g) => (
+              <button
+                key={g}
+                type="button"
+                onClick={() => selectGroup(g)}
+                className={
+                  'min-h-tap flex-1 rounded-lg border text-sm ' +
+                  (group === g
+                    ? 'border-group-work bg-group-work/10 font-medium text-group-work'
+                    : 'border-gray-300 text-gray-500')
+                }
+              >
+                {GROUP_LABELS[g]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 中分類（選んだ大分類の中のカテゴリ） */}
         <label className={label}>
-          カテゴリ
+          中分類（カテゴリ）
           <div className="mt-1 flex gap-2">
             <select
               value={categoryId ?? ''}
               onChange={(e) => setCategoryId(e.target.value || null)}
               className="min-h-tap flex-1 rounded-lg border border-gray-300 px-3 text-base"
             >
-              <option value="">（未分類）</option>
-              {(['work', 'family', 'personal'] as GroupKey[]).map((g) => {
-                const cs = categories.filter((c) => c.group_key === g)
-                if (cs.length === 0) return null
-                return (
-                  <optgroup key={g} label={GROUP_LABELS[g]}>
-                    {cs.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )
-              })}
+              {categories.filter((c) => c.group_key === group).length === 0 && (
+                <option value="">（まだありません）</option>
+              )}
+              {categories
+                .filter((c) => c.group_key === group)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
             </select>
             <button
               type="button"

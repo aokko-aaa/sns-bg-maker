@@ -38,6 +38,18 @@ export default function CategorySheet({
     setEditColorId(null)
   }
 
+  async function cycleGroup(c: Category) {
+    const order: GroupKey[] = ['work', 'family', 'personal']
+    const next = order[(order.indexOf(c.group_key) + 1) % order.length]!
+    await upsert.mutateAsync({
+      id: c.id,
+      name: c.name,
+      group_key: next,
+      color: c.color,
+      sort_order: c.sort_order,
+    })
+  }
+
   async function rename(c: Category) {
     const name = window.prompt('カテゴリ名を変更', c.name)
     if (!name || !name.trim() || name.trim() === c.name) return
@@ -87,9 +99,13 @@ export default function CategorySheet({
                 >
                   {c.name}
                 </button>
-                <span className="text-xs text-gray-400">
-                  {GROUP_LABELS[c.group_key]}
-                </span>
+                <button
+                  onClick={() => cycleGroup(c)}
+                  className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-500"
+                  title="タップで大分類を変更"
+                >
+                  {GROUP_LABELS[c.group_key]} ▸
+                </button>
                 <button
                   onClick={() => del.mutate(c.id)}
                   className="min-h-tap px-2 text-sm text-red-500"
