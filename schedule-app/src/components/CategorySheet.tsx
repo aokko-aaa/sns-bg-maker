@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import BottomSheet from './BottomSheet'
 import {
   useCategories,
@@ -22,125 +21,121 @@ export default function CategorySheet({
   const upsert = useUpsertCategory()
   const del = useDeleteCategory()
 
-  const [name, setName] = useState('')
-  const [group, setGroup] = useState<GroupKey>('work')
-
-  // 色は大分類で決まるため、大分類変更時に色も揃える
-  async function cycleGroup(c: Category) {
-    const order: GroupKey[] = ['work', 'family', 'personal']
-    const next = order[(order.indexOf(c.group_key) + 1) % order.length]!
-    await upsert.mutateAsync({
-      id: c.id,
-      name: c.name,
-      group_key: next,
-      color: GROUP_COLORS[next],
-      sort_order: c.sort_order,
-    })
-  }
-
-  async function rename(c: Category) {
-    const newName = window.prompt('カテゴリ名を変更', c.name)
-    if (!newName || !newName.trim() || newName.trim() === c.name) return
-    await upsert.mutateAsync({
-      id: c.id,
-      name: newName.trim(),
-      group_key: c.group_key,
-      color: GROUP_COLORS[c.group_key],
-      sort_order: c.sort_order,
-    })
-  }
-
-  async function add() {
-    if (!name.trim()) return
+  async function addTo(group: GroupKey) {
+    const name = window.prompt(`「${GROUP_LABELS[group]}」に追加する名前（例: A社）`)
+    if (!name || !name.trim()) return
     await upsert.mutateAsync({
       name: name.trim(),
       group_key: group,
       color: GROUP_COLORS[group],
       sort_order: categories.length,
     })
-    setName('')
+  }
+
+  async function rename(c: Category) {
+    const name = window.prompt('名前を変更', c.name)
+    if (!name || !name.trim() || name.trim() === c.name) return
+    await upsert.mutateAsync({
+      id: c.id,
+      name: name.trim(),
+      group_key: c.group_key,
+      color: GROUP_COLORS[c.group_key],
+      sort_order: c.sort_order,
+    })
+  }
+
+  async function move(c: Category, group: GroupKey) {
+    if (group === c.group_key) return
+    await upsert.mutateAsync({
+      id: c.id,
+      name: c.name,
+      group_key: group,
+      color: GROUP_COLORS[group],
+      sort_order: c.sort_order,
+    })
   }
 
   return (
     <BottomSheet open={open} onClose={onClose} title="カテゴリ管理">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <p className="text-xs text-gray-500">
-          色は大分類（Work / Family / Personal）ごとに自動で揃います。
+          大分類（Work / Family / Personal）ごとに中分類を整理できます。色は大分類で自動。
         </p>
-        <ul className="flex flex-col gap-1">
-          {categories.map((c) => (
-            <li
-              key={c.id}
-              className="flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-2"
-            >
-              <span
-                className="h-4 w-4 shrink-0 rounded-full"
-                style={{ backgroundColor: GROUP_COLORS[c.group_key] }}
-              />
-              <button
-                onClick={() => rename(c)}
-                className="flex-1 text-left text-sm text-gray-800"
-                title="タップで名前を変更"
-              >
-                {c.name}
-              </button>
-              <button
-                onClick={() => cycleGroup(c)}
-                className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-500"
-                title="タップで大分類を変更"
-              >
-                {GROUP_LABELS[c.group_key]} ▸
-              </button>
-              <button
-                onClick={() => del.mutate(c.id)}
-                className="min-h-tap px-2 text-sm text-red-500"
-                aria-label="削除"
-              >
-                削除
-              </button>
-            </li>
-          ))}
-        </ul>
 
-        <div className="rounded-lg bg-gray-50 p-3">
-          <p className="mb-2 text-sm font-medium text-gray-700">
-            中分類を追加
-          </p>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="名前（例: A社）"
-            className="min-h-tap mb-2 w-full rounded-lg border border-gray-300 px-3 text-base"
-          />
-          <div className="mb-3 flex gap-2">
-            {GROUPS.map((g) => (
+        {GROUPS.map((g) => {
+          const items = categories.filter((c) => c.group_key === g)
+          return (
+            <section key={g} className="flex flex-col gap-1.5">
+              {/* 大分類の見出し */}
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-3.5 w-3.5 rounded-full"
+                  style={{ backgroundColor: GROUP_COLORS[g] }}
+                />
+                <h3
+                  className="text-sm font-bold"
+                  style={{ color: GROUP_COLORS[g] }}
+                >
+                  {GROUP_LABELS[g]}
+                </h3>
+                <span className="text-xs text-gray-400">
+                  {items.length}件
+                </span>
+              </div>
+
+              {/* 中分類 */}
+              {items.length === 0 && (
+                <p className="pl-6 text-xs text-gray-400">
+                  まだありません
+                </p>
+              )}
+              {items.map((c) => (
+                <div
+                  key={c.id}
+                  className="ml-6 flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-1.5"
+                >
+                  <button
+                    onClick={() => rename(c)}
+                    className="flex-1 text-left text-sm text-gray-800"
+                    title="タップで名前を変更"
+                  >
+                    {c.name}
+                  </button>
+                  {/* 移動先（別の大分類） */}
+                  <select
+                    value={c.group_key}
+                    onChange={(e) => move(c, e.target.value as GroupKey)}
+                    className="rounded-md border border-gray-200 bg-white px-1 py-0.5 text-xs text-gray-500"
+                    title="別の大分類へ移動"
+                  >
+                    {GROUPS.map((gg) => (
+                      <option key={gg} value={gg}>
+                        {GROUP_LABELS[gg]}へ
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => {
+                      if (confirm(`「${c.name}」を削除しますか？`)) del.mutate(c.id)
+                    }}
+                    className="px-1 text-sm text-red-500"
+                    aria-label="削除"
+                  >
+                    削除
+                  </button>
+                </div>
+              ))}
+
+              {/* 追加 */}
               <button
-                key={g}
-                onClick={() => setGroup(g)}
-                className={
-                  'min-h-tap flex-1 rounded-lg border text-sm ' +
-                  (group === g
-                    ? 'font-medium text-white'
-                    : 'border-gray-300 text-gray-500')
-                }
-                style={
-                  group === g
-                    ? { backgroundColor: GROUP_COLORS[g], borderColor: GROUP_COLORS[g] }
-                    : undefined
-                }
+                onClick={() => addTo(g)}
+                className="ml-6 mt-0.5 self-start rounded-lg border border-dashed border-gray-300 px-3 py-1 text-xs text-gray-500"
               >
-                {GROUP_LABELS[g]}
+                ＋ {GROUP_LABELS[g]}に追加
               </button>
-            ))}
-          </div>
-          <button
-            onClick={add}
-            disabled={upsert.isPending}
-            className="min-h-tap w-full rounded-lg bg-group-work font-medium text-white disabled:opacity-50"
-          >
-            追加
-          </button>
-        </div>
+            </section>
+          )
+        })}
       </div>
     </BottomSheet>
   )

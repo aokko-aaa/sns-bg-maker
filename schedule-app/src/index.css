@@ -49,13 +49,24 @@ h3,
   padding-top: env(safe-area-inset-top);
 }
 
-/* 背景画像。public/bg.png を置くと表示される（無ければ淡色の下地のまま） */
-.app-bg {
-  background-color: #f2f6fb; /* 画像が無いときのフォールバック */
-  background-image: url('/bg.png');
+/* 背景レイヤー（画面全体・固定）。CSS変数で画像とヴェールを切替 */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-color: #f2f6fb;
+  background-image: var(--bg-img, url('/bg.png'));
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
+}
+/* 読みやすさ用の白のせ（画像に応じて自動/手動で不透明度を調整） */
+.bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: var(--bg-veil, 0.15);
 }
 /* 背景が敷かれても読みやすいよう、コンテンツ面は半透明の白ベースに */
 .surface-translucent {
