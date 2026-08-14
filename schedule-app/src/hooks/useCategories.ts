@@ -91,6 +91,12 @@ export function useDeleteCategory() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      // このカテゴリの予定を先に「未分類」にする（外部キー制約で削除できない問題を回避）
+      const { error: e1 } = await supabase
+        .from('entries')
+        .update({ category_id: null })
+        .eq('category_id', id)
+      if (e1) throw e1
       const { error } = await supabase.from('categories').delete().eq('id', id)
       if (error) throw error
     },

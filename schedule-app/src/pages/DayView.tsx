@@ -182,39 +182,35 @@ export default function DayView() {
     const done = (e.progress ?? 0) >= 100
     return (
       <div
-        className="absolute overflow-hidden rounded-md shadow-sm"
+        className="absolute flex items-start gap-0.5 overflow-hidden rounded-md px-0.5 py-0.5 shadow-sm"
         style={{ top, height, left, width, backgroundColor: bg, opacity: done ? 0.5 : 1 }}
       >
         <button
           onClick={(ev) => {
             ev.stopPropagation()
-            openEdit(e)
-          }}
-          className="h-full w-full px-1 py-0.5 text-left text-[13px] leading-tight"
-          style={{ color: ink }}
-        >
-          <div
-            className={
-              'truncate pr-4 font-medium ' + (done ? 'line-through' : '')
-            }
-          >
-            {e.title}
-          </div>
-          <div className="truncate text-[11px] opacity-90">
-            {b.band ? '終日' : fmtHm(e.starts_at)}
-          </div>
-        </button>
-        <button
-          onClick={(ev) => {
-            ev.stopPropagation()
             setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
           }}
-          className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded text-[13px]"
+          className="shrink-0 text-[13px] leading-tight"
           style={{ color: ink }}
           aria-label={done ? '未完了に戻す' : '完了にする'}
           title={done ? '未完了に戻す' : '完了にする'}
         >
           {done ? '☑' : '☐'}
+        </button>
+        <button
+          onClick={(ev) => {
+            ev.stopPropagation()
+            openEdit(e)
+          }}
+          className="min-w-0 flex-1 text-left text-[13px] leading-tight"
+          style={{ color: ink }}
+        >
+          <div className={'truncate font-medium ' + (done ? 'line-through' : '')}>
+            {e.title}
+          </div>
+          <div className="truncate text-[11px] opacity-90">
+            {b.band ? '終日' : fmtHm(e.starts_at)}
+          </div>
         </button>
       </div>
     )

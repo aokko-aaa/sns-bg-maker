@@ -6,6 +6,7 @@ import {
 } from '@/hooks/useCategories'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
 import { GROUP_COLORS } from '@/lib/palette'
+import { errMessage } from '@/lib/errors'
 import type { Category, GroupKey } from '@/types/database'
 
 const GROUPS: GroupKey[] = ['work', 'family', 'personal']
@@ -115,8 +116,14 @@ export default function CategorySheet({
                     ))}
                   </select>
                   <button
-                    onClick={() => {
-                      if (confirm(`「${c.name}」を削除しますか？`)) del.mutate(c.id)
+                    onClick={async () => {
+                      if (!confirm(`「${c.name}」を削除しますか？\n（この中分類の予定は未分類になります）`))
+                        return
+                      try {
+                        await del.mutateAsync(c.id)
+                      } catch (e) {
+                        alert('削除に失敗: ' + errMessage(e))
+                      }
                     }}
                     className="px-1 text-sm text-red-500"
                     aria-label="削除"
