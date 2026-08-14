@@ -5,7 +5,8 @@ import { useBulkAddEntries } from '@/hooks/useEntries'
 import { parseBulk } from '@/lib/parseBulk'
 import { fmtHm } from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
-import type { EntryKind } from '@/types/database'
+import { GROUP_LABELS } from '@/hooks/useGroupFilter'
+import type { EntryKind, GroupKey } from '@/types/database'
 
 const PLACEHOLDER = `例（1行に1件）:
 2026/08/17 08:30-12:00
@@ -110,11 +111,19 @@ export default function BulkAddSheet({
             className={field + ' mt-1'}
           >
             <option value="">（未分類）</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+            {(['work', 'family', 'personal'] as GroupKey[]).map((g) => {
+              const cs = categories.filter((c) => c.group_key === g)
+              if (cs.length === 0) return null
+              return (
+                <optgroup key={g} label={GROUP_LABELS[g]}>
+                  {cs.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )
+            })}
           </select>
         </label>
 
