@@ -56,7 +56,8 @@ export function monthGrid(anchor: Date): Array<{
 }> {
   const ym = formatInTimeZone(anchor, TZ, 'yyyy-MM')
   const first = fromZonedTime(`${ym}-01T00:00:00`, TZ)
-  const firstDow = Number(formatInTimeZone(first, TZ, 'c')) % 7 // 0=日..6=土
+  // 'i' は ISO 曜日(月=1..日=7)。%7 で 日=0..土=6 に変換（'c' はロケール依存でズレる）
+  const firstDow = Number(formatInTimeZone(first, TZ, 'i')) % 7 // 0=日..6=土
   const gridStart = addDays(first, -firstDow)
   return Array.from({ length: 42 }, (_, i) => {
     const date = addDays(gridStart, i)
@@ -86,7 +87,7 @@ export function entryOverlapsDay(
 
 /** その週の日曜0:00(JST)の instant */
 export function startOfWeekJst(d: Date): Date {
-  const dow = Number(formatInTimeZone(d, TZ, 'c')) % 7 // 0=日..6=土
+  const dow = Number(formatInTimeZone(d, TZ, 'i')) % 7 // 0=日..6=土（ISO曜日を変換）
   return addDays(startOfDayJst(d), -dow)
 }
 
