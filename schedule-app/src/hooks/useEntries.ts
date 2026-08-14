@@ -147,6 +147,25 @@ export function useCarryOverToday() {
   })
 }
 
+/** TODO のチェックリスト(notes)と完了率(progress)を更新する */
+export function useUpdateChecklist() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (args: { id: string; notes: string; progress: number }) => {
+      const { error } = await supabase
+        .from('entries')
+        .update({
+          notes: args.notes,
+          progress: args.progress,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', args.id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['entries'] }),
+  })
+}
+
 /** TODO の完了/未完（progress 0↔100）を切り替える */
 export function useSetProgress() {
   const qc = useQueryClient()

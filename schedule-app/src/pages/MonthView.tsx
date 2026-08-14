@@ -1,5 +1,10 @@
 import { useMemo, useRef, useState } from 'react'
-import { useEntriesForRange, useSetProgress } from '@/hooks/useEntries'
+import { useEntriesForRange, useUpdateChecklist } from '@/hooks/useEntries'
+import {
+  parseChecklist,
+  serializeChecklist,
+  checklistProgress,
+} from '@/lib/checklist'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter } from '@/hooks/useGroupFilter'
 import {
@@ -34,7 +39,7 @@ export default function MonthView() {
   const { data: entries = [] } = useEntriesForRange(rangeStart, rangeEnd)
   const { data: categories = [] } = useCategories()
   const { active } = useGroupFilter()
-  const setProgress = useSetProgress()
+  const updateChecklist = useUpdateChecklist()
 
   const catMap = useMemo(() => {
     const m = new Map<string, Category>()
@@ -182,42 +187,69 @@ export default function MonthView() {
               </p>
             )}
             {entriesForDay(selected).map((e) => {
-              const done = (e.progress ?? 0) >= 100
+              const isTask = e.kind === 'task'
+              const items = isTask ? parseChecklist(e.notes) : []
+              const toggle = (idx: number) => {
+                const next = items.map((x, i) =>
+                  i === idx ? { ...x, done: !x.done } : x
+                )
+                updateChecklist.mutate({
+                  id: e.id,
+                  notes: serializeChecklist(next),
+                  progress: checklistProgress(next),
+                })
+              }
               return (
                 <div
                   key={e.id}
-                  className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2"
+                  className="rounded-lg border border-gray-100 px-3 py-2"
                 >
-                  <button
-                    onClick={() =>
-                      setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
-                    }
-                    className="shrink-0 text-lg leading-none"
-                    style={{ color: colorOf(e) }}
-                    aria-label={done ? '未完了に戻す' : '完了にする'}
-                  >
-                    {done ? '☑' : '☐'}
-                  </button>
                   <button
                     onClick={() => {
                       setEditing(e)
                       setDefaultStart(undefined)
                       setSheetOpen(true)
                     }}
-                    className="flex flex-1 items-center gap-2 overflow-hidden text-left"
+                    className="flex w-full items-center gap-2 overflow-hidden text-left"
                   >
                     <span
-                      className={
-                        'flex-1 truncate text-sm text-gray-800 ' +
-                        (done ? 'text-gray-400 line-through' : '')
-                      }
-                    >
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: colorOf(e) }}
+                    />
+                    <span className="flex-1 truncate text-sm font-medium text-gray-800">
                       {e.title}
                     </span>
                     <span className="text-xs text-gray-400">
-                      {e.all_day ? '終日' : fmtHm(e.starts_at)}
+                      {isTask
+                        ? `${items.filter((i) => i.done).length}/${items.length}`
+                        : e.all_day
+                          ? '終日'
+                          : fmtHm(e.starts_at)}
                     </span>
                   </button>
+                  {/* TODO のチェックリスト */}
+                  {isTask && items.length > 0 && (
+                    <div className="mt-1 flex flex-col gap-1 pl-5">
+                      {items.map((it, i) => (
+                        <button
+                          key={i}
+                          onClick={() => toggle(i)}
+                          className="flex items-start gap-2 text-left text-sm"
+                        >
+                          <span className="shrink-0 text-group-work">
+                            {it.done ? '☑' : '☐'}
+                          </span>
+                          <span
+                            className={
+                              it.done ? 'text-gray-400 line-through' : 'text-gray-700'
+                            }
+                          >
+                            {it.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
             })}

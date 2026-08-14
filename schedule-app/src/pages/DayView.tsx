@@ -4,7 +4,13 @@ import {
   useSetProgress,
   useOverdueTasks,
   useCarryOverToday,
+  useUpdateChecklist,
 } from '@/hooks/useEntries'
+import {
+  parseChecklist,
+  serializeChecklist,
+  checklistProgress,
+} from '@/lib/checklist'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter } from '@/hooks/useGroupFilter'
 import {
@@ -54,6 +60,7 @@ export default function DayView() {
   const { data: categories = [] } = useCategories()
   const { active } = useGroupFilter()
   const setProgress = useSetProgress()
+  const updateChecklist = useUpdateChecklist()
   const { data: overdue = [] } = useOverdueTasks()
   const carryOver = useCarryOverToday()
 
@@ -179,39 +186,60 @@ export default function DayView() {
     const height = (b.heightMin / 60) * HOUR_H - 2
     const bg = colorOf(e)
     const ink = contrastText(bg)
-    const done = (e.progress ?? 0) >= 100
+    const isTask = e.kind === 'task'
+    const items = isTask ? parseChecklist(e.notes) : []
+
+    const toggleItem = (idx: number) => {
+      const next = items.map((x, i) =>
+        i === idx ? { ...x, done: !x.done } : x
+      )
+      updateChecklist.mutate({
+        id: e.id,
+        notes: serializeChecklist(next),
+        progress: checklistProgress(next),
+      })
+    }
+
     return (
       <div
-        className="absolute flex items-start gap-0.5 overflow-hidden rounded-md px-0.5 py-0.5 shadow-sm"
-        style={{ top, height, left, width, backgroundColor: bg, opacity: done ? 0.5 : 1 }}
+        className="absolute flex flex-col overflow-hidden rounded-md px-1 py-0.5 shadow-sm"
+        style={{ top, height, left, width, backgroundColor: bg }}
       >
-        <button
-          onClick={(ev) => {
-            ev.stopPropagation()
-            setProgress.mutate({ id: e.id, progress: done ? 0 : 100 })
-          }}
-          className="shrink-0 text-[13px] leading-tight"
-          style={{ color: ink }}
-          aria-label={done ? '未完了に戻す' : '完了にする'}
-          title={done ? '未完了に戻す' : '完了にする'}
-        >
-          {done ? '☑' : '☐'}
-        </button>
         <button
           onClick={(ev) => {
             ev.stopPropagation()
             openEdit(e)
           }}
-          className="min-w-0 flex-1 text-left text-[13px] leading-tight"
+          className="text-left leading-tight"
           style={{ color: ink }}
         >
-          <div className={'truncate font-medium ' + (done ? 'line-through' : '')}>
-            {e.title}
-          </div>
-          <div className="truncate text-[11px] opacity-90">
-            {b.band ? '終日' : fmtHm(e.starts_at)}
-          </div>
+          <div className="truncate text-[13px] font-medium">{e.title}</div>
+          {!isTask && (
+            <div className="truncate text-[11px] opacity-90">
+              {b.band ? '終日' : fmtHm(e.starts_at)}
+            </div>
+          )}
         </button>
+        {isTask && items.length > 0 && (
+          <div className="mt-0.5 flex flex-col gap-0.5 overflow-hidden">
+            {items.map((it, i) => (
+              <button
+                key={i}
+                onClick={(ev) => {
+                  ev.stopPropagation()
+                  toggleItem(i)
+                }}
+                className="flex w-full items-start gap-1 text-left text-[12px] leading-tight"
+                style={{ color: ink }}
+              >
+                <span className="shrink-0">{it.done ? '☑' : '☐'}</span>
+                <span className={'truncate ' + (it.done ? 'line-through opacity-70' : '')}>
+                  {it.text}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     )
   }

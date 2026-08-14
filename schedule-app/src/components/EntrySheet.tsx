@@ -10,6 +10,12 @@ import {
 } from '@/hooks/useEntries'
 import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
+import {
+  checklistProgress,
+  parseChecklist,
+  serializeChecklist,
+  type ChecklistItem,
+} from '@/lib/checklist'
 import type { Entry, EntryKind } from '@/types/database'
 
 interface Props {
@@ -51,8 +57,8 @@ export default function EntrySheet({
   const [allDay, setAllDay] = useState(false)
   const [startLocal, setStartLocal] = useState('')
   const [endLocal, setEndLocal] = useState('')
-  const [progress, setProgress] = useState(0)
   const [notes, setNotes] = useState('')
+  const [items, setItems] = useState<ChecklistItem[]>([])
   const [err, setErr] = useState<string | null>(null)
 
   // カテゴリ追加（選んでいる大分類の中に作る → すぐ選択）
@@ -90,8 +96,13 @@ export default function EntrySheet({
       setAllDay(entry.all_day)
       setStartLocal(isoToJstLocal(entry.starts_at))
       setEndLocal(isoToJstLocal(entry.ends_at))
-      setProgress(entry.progress ?? 0)
-      setNotes(entry.notes ?? '')
+      if (entry.kind === 'task') {
+        setItems(parseChecklist(entry.notes))
+        setNotes('')
+      } else {
+        setItems([])
+        setNotes(entry.notes ?? '')
+      }
     } else {
       const base = defaultStartLocal ?? isoToJstLocal(new Date().toISOString())
       // 開始の1時間後をデフォルト終了に（要件 6-4: event は60分）
@@ -107,8 +118,8 @@ export default function EntrySheet({
       setAllDay(false)
       setStartLocal(base)
       setEndLocal(isoToJstLocal(endDate.toISOString()))
-      setProgress(0)
       setNotes('')
+      setItems([])
     }
     setErr(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,8 +160,11 @@ export default function EntrySheet({
       starts_at: startsIso,
       ends_at: endsIso,
       all_day: allDay,
-      progress: kind === 'task' ? progress : 0,
-      notes: notes.trim() || null,
+      progress: kind === 'task' ? checklistProgress(items) : 0,
+      notes:
+        kind === 'task'
+          ? serializeChecklist(items) || null
+          : notes.trim() || null,
       source: entry ? entry.source : inboxId ? 'inbox' : 'manual',
       inbox_id: entry ? entry.inbox_id : inboxId ?? null,
     }
@@ -318,29 +332,75 @@ export default function EntrySheet({
           </>
         )}
 
-        {kind === 'task' && (
+        {kind === 'task' ? (
+          /* TODO: チェックリスト（1枠に複数項目） */
+          <div className={label}>
+            やること（チェックリスト）
+            <div className="mt-1 flex flex-col gap-1.5">
+              {items.map((it, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setItems((prev) =>
+                        prev.map((x, j) =>
+                          j === i ? { ...x, done: !x.done } : x
+                        )
+                      )
+                    }
+                    className="shrink-0 text-lg leading-none text-group-work"
+                    aria-label={it.done ? '未完了に戻す' : '完了にする'}
+                  >
+                    {it.done ? '☑' : '☐'}
+                  </button>
+                  <input
+                    value={it.text}
+                    onChange={(e) =>
+                      setItems((prev) =>
+                        prev.map((x, j) =>
+                          j === i ? { ...x, text: e.target.value } : x
+                        )
+                      )
+                    }
+                    placeholder="項目を入力"
+                    className={
+                      'min-h-tap flex-1 rounded-lg border border-gray-300 px-2 text-base ' +
+                      (it.done ? 'text-gray-400 line-through' : '')
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setItems((prev) => prev.filter((_, j) => j !== i))
+                    }
+                    className="shrink-0 px-1 text-gray-400"
+                    aria-label="削除"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  setItems((prev) => [...prev, { text: '', done: false }])
+                }
+                className="min-h-tap self-start rounded-lg border border-dashed border-gray-300 px-3 text-sm text-gray-500"
+              >
+                ＋ 項目を追加
+              </button>
+            </div>
+          </div>
+        ) : (
           <label className={label}>
-            進捗: {progress}%
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={progress}
-              onChange={(e) => setProgress(Number(e.target.value))}
-              className="mt-1 w-full"
+            メモ
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className={field + ' min-h-[72px] py-2'}
             />
           </label>
         )}
-
-        <label className={label}>
-          メモ
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className={field + ' min-h-[72px] py-2'}
-          />
-        </label>
 
         {err && <p className="text-sm text-red-600">{err}</p>}
 
