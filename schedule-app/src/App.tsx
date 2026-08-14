@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomTabBar from '@/components/BottomTabBar'
 import GroupFilterBar from '@/components/GroupFilterBar'
 import CategorySheet from '@/components/CategorySheet'
+import BulkAddSheet from '@/components/BulkAddSheet'
 import DayView from '@/pages/DayView'
 import WeekView from '@/pages/WeekView'
 import MonthView from '@/pages/MonthView'
@@ -21,6 +22,7 @@ export default function App() {
   const { session, loading } = useAuth()
   const { pathname } = useLocation()
   const [catOpen, setCatOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
 
   const title = TITLES[pathname] ?? 'スケジュール'
   const showFilter = pathname !== '/inbox'
@@ -40,13 +42,23 @@ export default function App() {
       <header className="pt-safe surface-translucent border-b border-white/40">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-base font-bold text-gray-800">{title}</h1>
-          <button
-            onClick={() => setCatOpen(true)}
-            className="min-h-tap min-w-tap text-lg text-gray-500"
-            aria-label="カテゴリ管理"
-          >
-            ⚙
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setBulkOpen(true)}
+              className="min-h-tap min-w-tap text-lg text-gray-500"
+              aria-label="表から一括追加"
+              title="表から一括追加"
+            >
+              📋
+            </button>
+            <button
+              onClick={() => setCatOpen(true)}
+              className="min-h-tap min-w-tap text-lg text-gray-500"
+              aria-label="カテゴリ管理"
+            >
+              ⚙
+            </button>
+          </div>
         </div>
         {showFilter && <GroupFilterBar />}
       </header>
@@ -65,6 +77,7 @@ export default function App() {
       <BottomTabBar />
 
       <CategorySheet open={catOpen} onClose={() => setCatOpen(false)} />
+      <BulkAddSheet open={bulkOpen} onClose={() => setBulkOpen(false)} />
     </div>
   )
 }

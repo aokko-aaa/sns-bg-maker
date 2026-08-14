@@ -66,6 +66,36 @@ export function useSaveEntry() {
   })
 }
 
+export type BulkEntryInput = {
+  title: string
+  category_id: string | null
+  kind: Entry['kind']
+  starts_at: string
+  ends_at: string
+  all_day: boolean
+}
+
+/** 複数の予定をまとめて登録（貼り付け一括追加用） */
+export function useBulkAddEntries() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (rows: BulkEntryInput[]) => {
+      const payload = rows.map((r) => ({
+        ...r,
+        user_id: user!.id,
+        progress: 0,
+        notes: null,
+        source: 'manual' as const,
+        inbox_id: null,
+      }))
+      const { error } = await supabase.from('entries').insert(payload)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['entries'] }),
+  })
+}
+
 export function useDeleteEntry() {
   const qc = useQueryClient()
   return useMutation({
