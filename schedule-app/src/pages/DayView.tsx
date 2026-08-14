@@ -83,10 +83,20 @@ export default function DayView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, visible, day])
 
-  // 初期スクロールを 6:00 に
+  // その日の最初の予定が見える位置へスクロール（無ければ 6:00）
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = START_HOUR * HOUR_H
-  }, [])
+    if (!scrollRef.current) return
+    const timed = visible.filter((e) => !isBandEntry(e, day))
+    let targetMin = START_HOUR * 60
+    if (timed.length > 0) {
+      const earliest = Math.min(
+        ...timed.map((e) => minutesFromDayStart(e.starts_at, day))
+      )
+      targetMin = Math.max(0, earliest - 60) // 1時間前を上端に
+    }
+    scrollRef.current.scrollTop = (targetMin / 60) * HOUR_H
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [day, entries])
 
   // 現在時刻の線を更新
   useEffect(() => {
@@ -196,7 +206,7 @@ export default function DayView() {
 
   return (
     <div
-      className="flex flex-1 flex-col"
+      className="flex min-h-0 flex-1 flex-col"
       onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
       onTouchEnd={(e) => {
         if (touchX.current == null) return
@@ -294,7 +304,7 @@ export default function DayView() {
       )}
 
       {/* タイムライン本体 */}
-      <div ref={scrollRef} className="relative flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto">
         <div className="relative" style={{ height: 24 * HOUR_H }}>
           {HourGrid}
 

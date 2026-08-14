@@ -63,7 +63,7 @@ export default function App() {
         {showFilter && <GroupFilterBar />}
       </header>
 
-      <main className="relative flex flex-1 flex-col overflow-hidden">
+      <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <Routes>
           <Route path="/" element={<Navigate to="/day" replace />} />
           <Route path="/day" element={<DayView />} />
