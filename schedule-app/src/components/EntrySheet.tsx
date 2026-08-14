@@ -126,7 +126,13 @@ export default function EntrySheet({
   }, [open, entry])
 
   async function onSave() {
-    if (!title.trim()) {
+    // TODO はタイトル任意（空なら先頭項目 or 'TODO'）。予定は必須
+    let finalTitle = title.trim()
+    if (kind === 'task') {
+      if (!finalTitle) {
+        finalTitle = items.find((i) => i.text.trim())?.text.trim() || 'TODO'
+      }
+    } else if (!finalTitle) {
       setErr('タイトルを入力してください')
       return
     }
@@ -154,7 +160,7 @@ export default function EntrySheet({
     }
     const payload: EntryInput = {
       id: entry?.id,
-      title: title.trim(),
+      title: finalTitle,
       category_id: categoryId,
       kind,
       starts_at: startsIso,
@@ -193,34 +199,39 @@ export default function EntrySheet({
     'mt-1 min-h-tap w-full rounded-lg border border-gray-300 px-3 text-base'
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={entry ? '予定を編集' : '予定を追加'}>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={`${kind === 'task' ? 'TODO' : '予定'}を${entry ? '編集' : '追加'}`}
+    >
       <div className="flex flex-col gap-3">
-        <label className={label}>
-          タイトル
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={field}
-            placeholder="例: 歯医者"
-          />
-        </label>
-
-        <div className="flex gap-2">
+        {/* 予定 / TODO 切り替え（一番上） */}
+        <div className="flex overflow-hidden rounded-xl border border-gray-200">
           {(['event', 'task'] as EntryKind[]).map((k) => (
             <button
               key={k}
               onClick={() => setKind(k)}
               className={
-                'min-h-tap flex-1 rounded-lg border text-sm ' +
+                'min-h-tap flex-1 text-sm font-medium ' +
                 (kind === k
-                  ? 'border-group-work bg-group-work/10 font-medium text-group-work'
-                  : 'border-gray-300 text-gray-500')
+                  ? 'bg-group-work text-white'
+                  : 'bg-white text-gray-500')
               }
             >
-              {k === 'event' ? '予定' : 'TODO'}
+              {k === 'event' ? '📅 予定' : '✓ TODO'}
             </button>
           ))}
         </div>
+
+        <label className={label}>
+          {kind === 'task' ? 'タイトル（任意）' : 'タイトル'}
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={field}
+            placeholder={kind === 'task' ? '例: 買い物リスト（空でもOK）' : '例: 歯医者'}
+          />
+        </label>
 
         {/* 大分類 */}
         <div className={label}>

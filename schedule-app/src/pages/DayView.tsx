@@ -188,6 +188,8 @@ export default function DayView() {
     const ink = contrastText(bg)
     const isTask = e.kind === 'task'
     const items = isTask ? parseChecklist(e.notes) : []
+    // TODOでタイトルが先頭項目と同じ（自動流用）なら見出しは省く
+    const showTitle = !isTask || items.length === 0 || e.title !== items[0]?.text
 
     const toggleItem = (idx: number) => {
       const next = items.map((x, i) =>
@@ -204,22 +206,30 @@ export default function DayView() {
       <div
         className="absolute flex flex-col overflow-hidden rounded-md px-1 py-0.5 shadow-sm"
         style={{ top, height, left, width, backgroundColor: bg }}
+        onClick={(ev) => {
+          ev.stopPropagation()
+          openEdit(e)
+        }}
       >
-        <button
-          onClick={(ev) => {
-            ev.stopPropagation()
-            openEdit(e)
-          }}
-          className="text-left leading-tight"
-          style={{ color: ink }}
-        >
-          <div className="truncate text-[13px] font-medium">{e.title}</div>
-          {!isTask && (
-            <div className="truncate text-[11px] opacity-90">
-              {b.band ? '終日' : fmtHm(e.starts_at)}
-            </div>
-          )}
-        </button>
+        {(showTitle || !isTask) && (
+          <button
+            onClick={(ev) => {
+              ev.stopPropagation()
+              openEdit(e)
+            }}
+            className="text-left leading-tight"
+            style={{ color: ink }}
+          >
+            {showTitle && (
+              <div className="truncate text-[13px] font-medium">{e.title}</div>
+            )}
+            {!isTask && (
+              <div className="truncate text-[11px] opacity-90">
+                {b.band ? '終日' : fmtHm(e.starts_at)}
+              </div>
+            )}
+          </button>
+        )}
         {isTask && items.length > 0 && (
           <div className="mt-0.5 flex flex-col gap-0.5 overflow-hidden">
             {items.map((it, i) => (

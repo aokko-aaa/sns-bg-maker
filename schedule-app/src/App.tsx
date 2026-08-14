@@ -59,7 +59,7 @@ export default function App() {
               aria-label="背景の設定"
               title="背景の設定"
             >
-              🖼
+              🎨
             </button>
             <button
               onClick={() => setBulkOpen(true)}
