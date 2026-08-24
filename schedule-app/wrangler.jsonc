@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Vite でビルドした SPA を Cloudflare Workers の静的アセットとして配信する。
+  // ビルド成果物（dist）を配るだけなので Worker スクリプト（main）は不要。
+  "name": "schedule-app",
+  "compatibility_date": "2026-08-24",
+  "assets": {
+    "directory": "./dist",
+    // react-router のクライアントルーティング用。存在しないパスは index.html に返す。
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

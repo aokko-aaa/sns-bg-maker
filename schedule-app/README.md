@@ -50,6 +50,56 @@ npm run build && npm run preview
 | `npm run preview` | ビルド成果物のプレビュー |
 | `npm run typecheck` | 型チェックのみ |
 | `node scripts/gen-icons.mjs` | PWA アイコン再生成（依存なし） |
+| `npm run cf:whoami` | Cloudflare の認証状態を確認 |
+| `npm run cf:login` | Cloudflare に OAuth ログイン（ブラウザが開けるローカル環境のみ） |
+| `npm run cf:dev` | ビルド済み `dist` を Workers ランタイムでローカル配信 |
+| `npm run cf:deploy` | ビルド + Cloudflare Workers へデプロイ |
+
+## Cloudflare へのデプロイ
+
+静的アセット配信の Workers（`wrangler.jsonc`）として配信する。SPA なので
+存在しないパスは `index.html` にフォールバックする設定にしてある。
+
+### 1. 認証
+
+**ローカル PC（ブラウザが開ける環境）**
+
+```bash
+npm run cf:login    # wrangler login。ブラウザで OAuth 承認
+npm run cf:whoami   # アカウントが表示されれば成功
+```
+
+**CI / リモートコンテナ（ブラウザが開けない環境）**
+
+`wrangler login` は localhost へのコールバックを待つため使えない。
+API トークンを環境変数で渡す。
+
+1. https://dash.cloudflare.com/profile/api-tokens → **Create Token**
+2. テンプレート **Edit Cloudflare Workers** を選択（必要な権限が揃う）
+3. 発行されたトークンを環境変数に設定する
+
+```bash
+export CLOUDFLARE_API_TOKEN=<発行したトークン>
+export CLOUDFLARE_ACCOUNT_ID=<アカウントID>   # 複数アカウント所属時のみ必須
+npx wrangler whoami
+```
+
+トークンはリポジトリにコミットしない（`.env*` は `.gitignore` 済み）。
+GitHub Actions で使う場合は Repository secrets に登録する。
+
+### 2. デプロイ
+
+```bash
+npm run cf:deploy
+```
+
+初回はワーカー名 `schedule-app` で `*.workers.dev` のサブドメインが払い出される。
+独自ドメインを使う場合は `wrangler.jsonc` に `routes` を追加する。
+
+### 3. 環境変数について
+
+`VITE_` 変数はビルド時にバンドルへ埋め込まれるため、Cloudflare 側ではなく
+**ビルドを実行する環境の `.env`** に設定しておく必要がある。
 
 ## 実装フェーズ
 
