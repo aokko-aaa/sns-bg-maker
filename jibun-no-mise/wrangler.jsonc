@@ -4,8 +4,12 @@
   "name": "jibun-no-mise",
   "compatibility_date": "2026-08-24",
   "assets": {
-    "directory": "./public"
+    "directory": "./public",
+    // 準備中の間は、どのURLで来ても準備中ページを見せる。
+    // 素っ気ない404を出すより店先として自然なため。ページが増えたら "none" に戻す。
+    "not_found_handling": "single-page-application"
   },
+  // 罠帖 A-9「静かに壊れる」対策。ログを残せる状態にしておく。
   "observability": {
     "enabled": true
   }
