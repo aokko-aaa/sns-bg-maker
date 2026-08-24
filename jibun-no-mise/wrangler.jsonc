@@ -1,0 +1,12 @@
+{
+  "$schema": "../schedule-app/node_modules/wrangler/config-schema.json",
+  // 屋号「じぶんの店」の開店準備中ページ。静的アセットを配るだけなので main は不要。
+  "name": "jibun-no-mise",
+  "compatibility_date": "2026-08-24",
+  "assets": {
+    "directory": "./public"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
