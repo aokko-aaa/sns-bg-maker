@@ -1,0 +1,6 @@
+node_modules
+.wrangler
+tail.log
+
+# 『Cloudflareの教科書』教材一式（購入者特典・再配布不可）。このリポジトリは public なのでコミットしない。
+kyokasho/

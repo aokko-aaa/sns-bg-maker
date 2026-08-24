@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-WRANGLER="npx --prefix ../schedule-app wrangler"
+WRANGLER="npx wrangler"
 EXPECTED="ただいま開店準備中です。"
 
 echo "==> 認証の確認"

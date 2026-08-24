@@ -1,5 +1,5 @@
 {
-  "$schema": "../schedule-app/node_modules/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   // 屋号「じぶんの店」。道場（『Cloudflareの教科書』第1部）で育てていく店。
   // いまは第1章の準備中ページのみ。静的アセットを配るだけなので main は不要。
   // 第4章でお便り箱を付けるとき、受け口のために main（Workerスクリプト）を足す。

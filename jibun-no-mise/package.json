@@ -1,0 +1,16 @@
+{
+  "name": "jibun-no-mise",
+  "private": true,
+  "version": "0.0.0",
+  "description": "屋号「じぶんの店」— Cloudflare Workers で配信する静的サイト",
+  "scripts": {
+    "deploy": "./deploy.sh",
+    "whoami": "wrangler whoami",
+    "login": "wrangler login",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail --format json > tail.log"
+  },
+  "devDependencies": {
+    "wrangler": "^4.125.0"
+  }
+}

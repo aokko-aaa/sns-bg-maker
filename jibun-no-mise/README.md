@@ -13,8 +13,7 @@ cd jibun-no-mise
 `deploy.sh` は「デプロイ → 数秒待つ → 実際にHTTPで叩いて中身を確認」までを一続きで行う。
 罠帖 G-5（pushしただけでは本番は変わらない）と A-1（公開直後は行き渡るまでずれる）への備え。
 
-wrangler 本体は `schedule-app/node_modules` のものを使う（このフォルダに `package.json` は置いていない）。
-未インストールなら先に `cd ../schedule-app && npm install`。
+初回だけ `npm install`（wrangler が入る）。
 
 手で叩くなら:
 
