@@ -1,13 +1,16 @@
 {
   "$schema": "../schedule-app/node_modules/wrangler/config-schema.json",
-  // 屋号「じぶんの店」の開店準備中ページ。静的アセットを配るだけなので main は不要。
+  // 屋号「じぶんの店」。道場（『Cloudflareの教科書』第1部）で育てていく店。
+  // いまは第1章の準備中ページのみ。静的アセットを配るだけなので main は不要。
+  // 第4章でお便り箱を付けるとき、受け口のために main（Workerスクリプト）を足す。
   "name": "jibun-no-mise",
   "compatibility_date": "2026-08-24",
   "assets": {
-    "directory": "./public",
-    // 準備中の間は、どのURLで来ても準備中ページを見せる。
-    // 素っ気ない404を出すより店先として自然なため。ページが増えたら "none" に戻す。
-    "not_found_handling": "single-page-application"
+    "directory": "./public"
+    // not_found_handling は既定（none）のまま。
+    // 「全URLで準備中ページを返す」設定も検討したが、第4章でお便り箱の受け口
+    // （/api/... など）を足したとき、その受け口へのリクエストまでHTMLで
+    // 応えてしまい「フォームだけ通らない」型の静かな故障になりうるため見送った。
   },
   // 罠帖 A-9「静かに壊れる」対策。ログを残せる状態にしておく。
   "observability": {
