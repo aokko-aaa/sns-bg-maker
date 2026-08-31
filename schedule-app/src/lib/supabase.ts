@@ -1,28 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
-// 設計原則 2-3: フロントに置いてよいのは anon key と URL のみ。
-// Anthropic API キーは絶対にここに置かず、Edge Function の Secret で扱う。
-const url = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// 設計原則 2-3: フロントに置いてよいのは anon(publishable) key と URL のみ。
+// これらはブラウザに公開される前提の公開用の値（RLS で守られる）。
+// Anthropic API キーなどの秘密は絶対にここに置かず、Edge Function の Secret で扱う。
+//
+// 環境変数(.env / Vercel)があればそれを優先。無ければ下のフォールバックを使うので、
+// Vercel 側で環境変数を設定しなくても本番で接続できる。
+const FALLBACK_URL = 'https://yshnutsgkoxadwjhhtlp.supabase.co'
+const FALLBACK_ANON_KEY = 'sb_publishable_juKioD-UgFHqwled9wXi1Q__O6h0fFN'
 
-/** 環境変数が未設定でもアプリ全体が落ちないよう、接続可否を明示的に持つ */
+const url = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_ANON_KEY
+
 export const isSupabaseConfigured = Boolean(url && anonKey)
 
-if (!isSupabaseConfigured) {
-  // 開発時に気づけるよう警告のみ（本番ビルドは設定済み前提）
-  console.warn(
-    '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY が未設定です。.env を確認してください。'
-  )
-}
-
-export const supabase = createClient<Database>(
-  url ?? 'http://localhost',
-  anonKey ?? 'public-anon-key',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  }
-)
+export const supabase = createClient<Database>(url, anonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+})
