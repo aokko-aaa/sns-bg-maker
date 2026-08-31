@@ -19,7 +19,7 @@ const TITLES: Record<string, string> = {
   '/day': 'Daily',
   '/week': 'Weekly',
   '/month': 'Monthly',
-  '/inbox': 'Inbox',
+  '/inbox': '音声入力',
   '/report': '稼働時間',
 }
 

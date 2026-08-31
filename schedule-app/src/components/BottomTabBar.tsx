@@ -6,7 +6,7 @@ const TABS = [
   { to: '/week', label: '週', icon: '▤' },
   { to: '/month', label: '月', icon: '▦' },
   { to: '/report', label: '稼働', icon: '⏱' },
-  { to: '/inbox', label: '受信箱', icon: '✉' },
+  { to: '/inbox', label: '音声入力', icon: '🎙️' },
 ] as const
 
 export default function BottomTabBar() {

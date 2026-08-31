@@ -4,6 +4,7 @@ import {
   useInboxItems,
   useAutoParseInbox,
   useUpdateInboxStatus,
+  useDeleteInbox,
 } from '@/hooks/useInbox'
 import { useCategories } from '@/hooks/useCategories'
 import { useDictation } from '@/hooks/useDictation'
@@ -23,6 +24,8 @@ const STATUS_LABEL: Record<string, string> = {
 export default function InboxView() {
   const [text, setText] = useState('')
   const { data: items = [], isLoading } = useInboxItems()
+  // 破棄済みは表示しない（削除し損ねた古いものも隠す）
+  const visibleItems = items.filter((i) => i.status !== 'dismissed')
   const add = useAddInbox()
   const dictation = useDictation()
 
@@ -114,14 +117,14 @@ export default function InboxView() {
         {isLoading && (
           <p className="text-center text-sm text-gray-400">読み込み中…</p>
         )}
-        {!isLoading && items.length === 0 && (
+        {!isLoading && visibleItems.length === 0 && (
           <p className="pt-8 text-center text-sm text-gray-400">
             まだつぶやきはありません。
             <br />
             上の欄に思いついた予定を投げ込んでみてください。
           </p>
         )}
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <InboxCard key={item.id} item={item} />
         ))}
       </div>
@@ -132,8 +135,15 @@ export default function InboxView() {
 function InboxCard({ item }: { item: InboxItem }) {
   const parse = useAutoParseInbox()
   const setStatus = useUpdateInboxStatus()
+  const del = useDeleteInbox()
   const save = useSaveEntry()
   const { data: categories = [] } = useCategories()
+
+  function discard() {
+    if (confirm('このつぶやきを削除しますか？（元に戻せません）')) {
+      del.mutate(item.id)
+    }
+  }
 
   const [proposals, setProposals] = useState<ParsedInboxItem[]>([])
   const [err, setErr] = useState<string | null>(null)
@@ -229,9 +239,7 @@ function InboxCard({ item }: { item: InboxItem }) {
               メモ
             </button>
             <button
-              onClick={() =>
-                setStatus.mutate({ id: item.id, status: 'dismissed' })
-              }
+              onClick={discard}
               className="min-h-tap flex-1 rounded-lg border border-red-200 text-xs text-red-500"
             >
               破棄
@@ -353,9 +361,7 @@ function InboxCard({ item }: { item: InboxItem }) {
               保留
             </button>
             <button
-              onClick={() =>
-                setStatus.mutate({ id: item.id, status: 'dismissed' })
-              }
+              onClick={discard}
               className="min-h-tap rounded-lg border border-red-200 text-red-500"
             >
               破棄
