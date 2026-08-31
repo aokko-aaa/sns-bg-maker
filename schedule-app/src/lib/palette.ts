@@ -12,9 +12,12 @@ export const GROUP_COLORS: Record<GroupKey | 'other', string> = {
 // 中分類ごとに選べる色。大分類のトーンに馴染む範囲でバリエーションを用意。
 // work=青系 / family=暖色系 / personal=緑系（彩度・明度は既存トーンに合わせる）。
 export const GROUP_SWATCHES: Record<GroupKey, string[]> = {
-  work: ['#5E97D0', '#4C7FB8', '#7FB0DD', '#6AA6C9', '#8E9FD6', '#5FB0C4'],
-  family: ['#E58C74', '#E0A16B', '#D98B9E', '#E8A87C', '#CF8DA7', '#D97D6E'],
-  personal: ['#6FBF9B', '#86C98A', '#58AE97', '#9BC97F', '#5FB6A6', '#7FC2A6'],
+  // 青系: 明るさと色み（水色〜濃紺〜シアン〜青紫）で見分けやすく
+  work: ['#8FC1E8', '#5E97D0', '#34659E', '#45B3C9', '#7C86E0', '#2F8FB8'],
+  // 暖色系: 金〜コーラル〜テラコッタ〜ピンク〜ローズ〜ピーチ
+  family: ['#F0B267', '#E58C74', '#D2604E', '#E4A0C0', '#C96C86', '#E8B98A'],
+  // 緑系: ライム〜ミント〜エメラルド〜オリーブ〜青緑〜リーフ
+  personal: ['#A7D98A', '#6FBF9B', '#3E9E7E', '#B7C95E', '#4FB0A6', '#86C579'],
 }
 
 // カテゴリ追加時に選べる色（背景のトーンに寄せたパステル）
