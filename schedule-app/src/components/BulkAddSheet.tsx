@@ -4,7 +4,7 @@ import { useCategories } from '@/hooks/useCategories'
 import { useBulkAddEntries } from '@/hooks/useEntries'
 import { parseBulk } from '@/lib/parseBulk'
 import { parseIcs } from '@/lib/parseIcs'
-import { fmtHm } from '@/lib/dates'
+import { fmtHm, startOfDayJst } from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
 import type { EntryKind, GroupKey } from '@/types/database'
@@ -32,6 +32,7 @@ export default function BulkAddSheet({
   const [kind, setKind] = useState<EntryKind>('event')
   const [err, setErr] = useState<string | null>(null)
   const [done, setDone] = useState<number | null>(null)
+  const [skipPast, setSkipPast] = useState(true)
   const fileInput = useRef<HTMLInputElement>(null)
 
   // Googleカレンダーの書き出しは .ics(iCalendar)。BEGIN:VEVENT があれば .ics として解析。
@@ -43,6 +44,14 @@ export default function BulkAddSheet({
         : parseBulk(text, year, defaultTitle.trim() || '予定'),
     [text, year, defaultTitle, isIcs]
   )
+
+  // .ics取り込み時は「過去の予定を入れない」フィルタ（今日以降だけ）を適用できる。
+  const rows = useMemo(() => {
+    if (!isIcs || !skipPast) return parsed.rows
+    const todayStart = startOfDayJst(new Date()).getTime()
+    return parsed.rows.filter((r) => new Date(r.ends_at).getTime() >= todayStart)
+  }, [parsed, isIcs, skipPast])
+  const skippedPast = isIcs && skipPast ? parsed.rows.length - rows.length : 0
 
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -60,13 +69,13 @@ export default function BulkAddSheet({
 
   async function onRegister() {
     setErr(null)
-    if (parsed.rows.length === 0) {
+    if (rows.length === 0) {
       setErr('登録できる行がありません')
       return
     }
     try {
       await bulk.mutateAsync(
-        parsed.rows.map((r) => ({
+        rows.map((r) => ({
           title: r.title,
           category_id: categoryId,
           kind: r.all_day ? kind : 'event',
@@ -75,7 +84,7 @@ export default function BulkAddSheet({
           all_day: r.all_day,
         }))
       )
-      setDone(parsed.rows.length)
+      setDone(rows.length)
       setText('')
     } catch (e) {
       setErr('登録に失敗: ' + errMessage(e))
@@ -109,9 +118,20 @@ export default function BulkAddSheet({
           className="hidden"
         />
         {isIcs && (
-          <p className="-mt-1 text-[11px] text-group-work">
-            ✓ カレンダー形式(.ics)として読み取っています
-          </p>
+          <div className="-mt-1 flex flex-col gap-1">
+            <p className="text-[11px] text-group-work">
+              ✓ カレンダー形式(.ics)として読み取っています
+            </p>
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={skipPast}
+                onChange={(e) => setSkipPast(e.target.checked)}
+                className="h-4 w-4"
+              />
+              過去の予定は取り込まない（今日以降だけ）
+            </label>
+          </div>
         )}
 
         <textarea
@@ -196,7 +216,13 @@ export default function BulkAddSheet({
         {text.trim() && (
           <div className="rounded-lg border border-gray-100 bg-gray-50 p-2">
             <p className="mb-1 text-xs font-medium text-gray-600">
-              プレビュー: {parsed.rows.length}件
+              プレビュー: {rows.length}件
+              {skippedPast > 0 && (
+                <span className="text-gray-400">
+                  {' '}
+                  / 過去を除外 {skippedPast}
+                </span>
+              )}
               {parsed.errors.length > 0 && (
                 <span className="text-red-500">
                   {' '}
@@ -205,7 +231,7 @@ export default function BulkAddSheet({
               )}
             </p>
             <ul className="max-h-40 space-y-0.5 overflow-y-auto text-xs">
-              {parsed.rows.map((r, i) => (
+              {rows.map((r, i) => (
                 <li key={i} className="text-gray-700">
                   {r.starts_at.slice(0, 10)}{' '}
                   {r.all_day ? '終日' : `${fmtHm(r.starts_at)}–${fmtHm(r.ends_at)}`}{' '}
@@ -228,10 +254,10 @@ export default function BulkAddSheet({
 
         <button
           onClick={onRegister}
-          disabled={bulk.isPending || parsed.rows.length === 0}
+          disabled={bulk.isPending || rows.length === 0}
           className="min-h-tap rounded-lg bg-group-work font-medium text-white disabled:opacity-40"
         >
-          {bulk.isPending ? '登録中…' : `${parsed.rows.length}件をまとめて登録`}
+          {bulk.isPending ? '登録中…' : `${rows.length}件をまとめて登録`}
         </button>
       </div>
     </BottomSheet>
