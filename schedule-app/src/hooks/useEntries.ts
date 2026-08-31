@@ -56,13 +56,23 @@ export function useSaveEntry() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: EntryInput) => {
-      const payload = {
-        ...input,
-        user_id: user!.id,
-        updated_at: new Date().toISOString(),
+      const nowIso = new Date().toISOString()
+      if (input.id) {
+        // 既存の編集 → その id を更新
+        const { id, ...rest } = input
+        const { error } = await supabase
+          .from('entries')
+          .update({ ...rest, updated_at: nowIso })
+          .eq('id', id)
+        if (error) throw error
+      } else {
+        // 新規 → 必ず新しい行として追加（既存を上書きしない）
+        const { id: _omit, ...rest } = input
+        const { error } = await supabase
+          .from('entries')
+          .insert({ ...rest, user_id: user!.id, updated_at: nowIso })
+        if (error) throw error
       }
-      const { error } = await supabase.from('entries').upsert(payload)
-      if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['entries'] }),
   })
