@@ -8,6 +8,11 @@ import {
   useSaveEntry,
   type EntryInput,
 } from '@/hooks/useEntries'
+import {
+  useStartTimer,
+  useStopTimer,
+  useRunningTimer,
+} from '@/hooks/useTimeTracking'
 import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
 import {
@@ -49,6 +54,9 @@ export default function EntrySheet({
   const addCat = useAddCategoryReturning()
   const save = useSaveEntry()
   const del = useDeleteEntry()
+  const startTimer = useStartTimer()
+  const stopTimer = useStopTimer()
+  const { data: runningTimer } = useRunningTimer()
 
   const [title, setTitle] = useState('')
   const [kind, setKind] = useState<EntryKind>('event')
@@ -411,6 +419,33 @@ export default function EntrySheet({
               className={field + ' min-h-[72px] py-2'}
             />
           </label>
+        )}
+
+        {/* 予定の作業時間を計測（既存の予定のみ） */}
+        {entry && entry.kind === 'event' && (
+          runningTimer?.entry_id === entry.id ? (
+            <button
+              type="button"
+              onClick={() => stopTimer.mutate()}
+              className="min-h-tap rounded-lg border border-red-300 bg-red-50 text-sm font-medium text-red-600"
+            >
+              ■ 計測を停止
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                startTimer.mutate({
+                  label: entry.title,
+                  entry_id: entry.id,
+                  category_id: entry.category_id,
+                })
+              }
+              className="min-h-tap rounded-lg border border-group-work/40 bg-group-work/5 text-sm font-medium text-group-work"
+            >
+              ▶ この予定を計測
+            </button>
+          )
         )}
 
         {err && <p className="text-sm text-red-600">{err}</p>}

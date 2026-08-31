@@ -5,7 +5,6 @@ import {
   checklistProgress,
 } from '@/lib/checklist'
 import { useSetProgress, useUpdateChecklist } from '@/hooks/useEntries'
-import { useStartTimer, useRunningTimer } from '@/hooks/useTimeTracking'
 import { fmtHm, fmtMd } from '@/lib/dates'
 import type { Entry } from '@/types/database'
 
@@ -28,8 +27,6 @@ export default function TaskList({
   const [open, setOpen] = useState(defaultOpen)
   const setProgress = useSetProgress()
   const updateChecklist = useUpdateChecklist()
-  const startTimer = useStartTimer()
-  const { data: runningTimer } = useRunningTimer()
 
   const sorted = useMemo(() => {
     return [...tasks].sort((a, b) => {
@@ -116,26 +113,6 @@ export default function TaskList({
                       {items.filter((i) => i.done).length}/{items.length}
                     </span>
                   )}
-                  {!done &&
-                    (runningTimer?.entry_id === e.id ? (
-                      <span className="shrink-0 animate-pulse text-[11px] font-medium text-red-500">
-                        計測中
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          startTimer.mutate({
-                            label: e.title,
-                            entry_id: e.id,
-                            category_id: e.category_id,
-                          })
-                        }
-                        className="min-h-tap shrink-0 rounded-md bg-group-work/10 px-2 text-sm font-medium text-group-work"
-                        aria-label="このタスクの計測を開始"
-                      >
-                        ▶
-                      </button>
-                    ))}
                   <span className="shrink-0 text-[11px] text-gray-400">
                     {showDate ? `${fmtMd(new Date(e.starts_at))} ` : ''}
                     {e.all_day ? '終日' : fmtHm(e.starts_at)}

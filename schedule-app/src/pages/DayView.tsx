@@ -13,6 +13,7 @@ import {
 } from '@/lib/checklist'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter } from '@/hooks/useGroupFilter'
+import { useStartTimer, useRunningTimer } from '@/hooks/useTimeTracking'
 import TaskList from '@/components/TaskList'
 import {
   addDays,
@@ -64,6 +65,8 @@ export default function DayView() {
   const updateChecklist = useUpdateChecklist()
   const { data: overdue = [] } = useOverdueTasks()
   const carryOver = useCarryOverToday()
+  const startTimer = useStartTimer()
+  const { data: runningTimer } = useRunningTimer()
 
   const catMap = useMemo(() => {
     const m = new Map<string, Category>()
@@ -229,6 +232,28 @@ export default function DayView() {
           openEdit(e)
         }}
       >
+        {/* 予定の計測ボタン（十分な高さのときだけ表示） */}
+        {!isTask &&
+          height >= 34 &&
+          (runningTimer?.entry_id === e.id ? (
+            <span className="absolute right-1 top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+          ) : (
+            <button
+              onClick={(ev) => {
+                ev.stopPropagation()
+                startTimer.mutate({
+                  label: e.title,
+                  entry_id: e.id,
+                  category_id: e.category_id,
+                })
+              }}
+              className="absolute right-0.5 top-0.5 rounded bg-black/15 px-1 text-[11px] leading-none"
+              style={{ color: ink }}
+              aria-label="この予定を計測"
+            >
+              ▶
+            </button>
+          ))}
         {(showTitle || !isTask) && (
           <button
             onClick={(ev) => {
