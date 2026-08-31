@@ -9,13 +9,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'スケジュール管理',
         short_name: 'スケジュール',
         description: '仕事・家族・個人の予定を1つで横断管理する個人用スケジュールアプリ',
-        theme_color: '#4F86F7',
-        background_color: '#ffffff',
+        theme_color: '#CF8DA7',
+        background_color: '#CF8DA7',
         display: 'standalone',
         orientation: 'portrait',
         lang: 'ja',
