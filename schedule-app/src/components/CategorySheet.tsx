@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import BottomSheet from './BottomSheet'
 import {
   useCategories,
@@ -21,6 +22,9 @@ export default function CategorySheet({
   const { data: categories = [] } = useCategories()
   const upsert = useUpsertCategory()
   const del = useDeleteCategory()
+  // 削除時: 対象カテゴリと、その予定の移動先（'' = 未分類）
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
+  const [reassign, setReassign] = useState<string>('')
 
   async function addTo(group: GroupKey) {
     const name = window.prompt(`「${GROUP_LABELS[group]}」に追加する名前（例: A社）`)
@@ -91,45 +95,95 @@ export default function CategorySheet({
                 </p>
               )}
               {items.map((c) => (
-                <div
-                  key={c.id}
-                  className="ml-6 flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-1.5"
-                >
-                  <button
-                    onClick={() => rename(c)}
-                    className="flex-1 text-left text-sm text-gray-800"
-                    title="タップで名前を変更"
-                  >
-                    {c.name}
-                  </button>
-                  {/* 移動先（別の大分類） */}
-                  <select
-                    value={c.group_key}
-                    onChange={(e) => move(c, e.target.value as GroupKey)}
-                    className="rounded-md border border-gray-200 bg-white px-1 py-0.5 text-xs text-gray-500"
-                    title="別の大分類へ移動"
-                  >
-                    {GROUPS.map((gg) => (
-                      <option key={gg} value={gg}>
-                        {GROUP_LABELS[gg]}へ
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={async () => {
-                      if (!confirm(`「${c.name}」を削除しますか？\n（この中分類の予定は未分類になります）`))
-                        return
-                      try {
-                        await del.mutateAsync(c.id)
-                      } catch (e) {
-                        alert('削除に失敗: ' + errMessage(e))
-                      }
-                    }}
-                    className="px-1 text-sm text-red-500"
-                    aria-label="削除"
-                  >
-                    削除
-                  </button>
+                <div key={c.id}>
+                  <div className="ml-6 flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-1.5">
+                    <button
+                      onClick={() => rename(c)}
+                      className="flex-1 text-left text-sm text-gray-800"
+                      title="タップで名前を変更"
+                    >
+                      {c.name}
+                    </button>
+                    {/* 移動先（別の大分類） */}
+                    <select
+                      value={c.group_key}
+                      onChange={(e) => move(c, e.target.value as GroupKey)}
+                      className="rounded-md border border-gray-200 bg-white px-1 py-0.5 text-xs text-gray-500"
+                      title="別の大分類へ移動"
+                    >
+                      {GROUPS.map((gg) => (
+                        <option key={gg} value={gg}>
+                          {GROUP_LABELS[gg]}へ
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => {
+                        setReassign('')
+                        setPendingDelete(c)
+                      }}
+                      className="px-1 text-sm text-red-500"
+                      aria-label="削除"
+                    >
+                      削除
+                    </button>
+                  </div>
+
+                  {/* 削除の確認: 予定の移動先を選ぶ */}
+                  {pendingDelete?.id === c.id && (
+                    <div className="ml-6 mt-1 rounded-lg border border-red-200 bg-red-50 p-2">
+                      <p className="mb-1 text-xs text-gray-700">
+                        「{c.name}」を削除します。この分類の予定の移動先：
+                      </p>
+                      <select
+                        value={reassign}
+                        onChange={(e) => setReassign(e.target.value)}
+                        className="min-h-tap w-full rounded-lg border border-gray-300 bg-white px-2 text-base"
+                      >
+                        <option value="">未分類にする</option>
+                        {GROUPS.map((gg) => {
+                          const opts = categories.filter(
+                            (x) => x.group_key === gg && x.id !== c.id
+                          )
+                          if (opts.length === 0) return null
+                          return (
+                            <optgroup key={gg} label={GROUP_LABELS[gg]}>
+                              {opts.map((o) => (
+                                <option key={o.id} value={o.id}>
+                                  {o.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          )
+                        })}
+                      </select>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={() => setPendingDelete(null)}
+                          className="min-h-tap flex-1 rounded-lg border border-gray-300 text-sm text-gray-600"
+                        >
+                          キャンセル
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await del.mutateAsync({
+                                id: c.id,
+                                reassignTo: reassign || null,
+                              })
+                              setPendingDelete(null)
+                            } catch (e) {
+                              alert('削除に失敗: ' + errMessage(e))
+                            }
+                          }}
+                          disabled={del.isPending}
+                          className="min-h-tap flex-1 rounded-lg bg-red-500 text-sm font-medium text-white disabled:opacity-50"
+                        >
+                          削除する
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 

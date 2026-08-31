@@ -90,11 +90,18 @@ export function useAddCategoryReturning() {
 export function useDeleteCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      // このカテゴリの予定を先に「未分類」にする（外部キー制約で削除できない問題を回避）
+    // reassignTo: 削除するカテゴリの予定の移動先。別カテゴリのid、または null（未分類にする）。
+    mutationFn: async ({
+      id,
+      reassignTo,
+    }: {
+      id: string
+      reassignTo: string | null
+    }) => {
+      // このカテゴリの予定を先に付け替える（外部キー制約で削除できない問題を回避）
       const { error: e1 } = await supabase
         .from('entries')
-        .update({ category_id: null })
+        .update({ category_id: reassignTo })
         .eq('category_id', id)
       if (e1) throw e1
       const { error } = await supabase.from('categories').delete().eq('id', id)
