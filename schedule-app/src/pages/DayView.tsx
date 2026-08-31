@@ -89,13 +89,19 @@ export default function DayView() {
     [entries, catMap, active]
   )
 
+  // タイムラインに載せるのは「予定（イベント）」だけ。TODOは下の専用リストで扱う。
+  const timelineVisible = useMemo(
+    () => visible.filter((e) => e.kind !== 'task'),
+    [visible]
+  )
+
   // レーン一覧: 有効なグループ + 未分類（該当があれば）
   const lanes: LaneKey[] = useMemo(() => {
     const ks: LaneKey[] = GROUP_ORDER.filter((g) => active.includes(g))
-    if (visible.some((e) => groupOf(e) === 'other')) ks.push('other')
+    if (timelineVisible.some((e) => groupOf(e) === 'other')) ks.push('other')
     return ks
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, visible])
+  }, [active, timelineVisible])
 
   // その日のTODO（タスク）一覧: 未完了→完了、時刻順。専用リストで確認しやすく。
   const dayTasks = useMemo(() => {
@@ -137,7 +143,7 @@ export default function DayView() {
   // その日の最初の予定が見える位置へスクロール（無ければ 6:00）
   useEffect(() => {
     if (!scrollRef.current) return
-    const timed = visible.filter((e) => !isBandEntry(e, day))
+    const timed = timelineVisible.filter((e) => !isBandEntry(e, day))
     let targetMin = START_HOUR * 60
     if (timed.length > 0) {
       const earliest = Math.min(
@@ -497,7 +503,7 @@ export default function DayView() {
 
           {mode === 'lanes' ? (
             lanes.map((k, li) => {
-              const laneEntries = visible.filter((e) => groupOf(e) === k)
+              const laneEntries = timelineVisible.filter((e) => groupOf(e) === k)
               const blocks = layoutDay(laneEntries, day)
               const n = lanes.length
               return (
@@ -542,7 +548,7 @@ export default function DayView() {
                   openNew((y / HOUR_H) * 60)
                 }}
               />
-              {layoutDay(visible, day).map((b) => (
+              {layoutDay(timelineVisible, day).map((b) => (
                 <Block
                   key={b.entry.id}
                   b={b}
