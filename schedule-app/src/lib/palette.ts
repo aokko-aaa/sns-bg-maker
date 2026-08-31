@@ -9,6 +9,14 @@ export const GROUP_COLORS: Record<GroupKey | 'other', string> = {
   other: '#A6AEBB', // グレー（未分類）
 }
 
+// 中分類ごとに選べる色。大分類のトーンに馴染む範囲でバリエーションを用意。
+// work=青系 / family=暖色系 / personal=緑系（彩度・明度は既存トーンに合わせる）。
+export const GROUP_SWATCHES: Record<GroupKey, string[]> = {
+  work: ['#5E97D0', '#4C7FB8', '#7FB0DD', '#6AA6C9', '#8E9FD6', '#5FB0C4'],
+  family: ['#E58C74', '#E0A16B', '#D98B9E', '#E8A87C', '#CF8DA7', '#D97D6E'],
+  personal: ['#6FBF9B', '#86C98A', '#58AE97', '#9BC97F', '#5FB6A6', '#7FC2A6'],
+}
+
 // カテゴリ追加時に選べる色（背景のトーンに寄せたパステル）
 export const CATEGORY_PALETTE = [
   '#5E97D0', // 青

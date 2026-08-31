@@ -6,7 +6,7 @@ import {
   useUpsertCategory,
 } from '@/hooks/useCategories'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
-import { GROUP_COLORS } from '@/lib/palette'
+import { GROUP_COLORS, GROUP_SWATCHES } from '@/lib/palette'
 import { errMessage } from '@/lib/errors'
 import type { Category, GroupKey } from '@/types/database'
 
@@ -25,6 +25,8 @@ export default function CategorySheet({
   // 削除時: 対象カテゴリと、その予定の移動先（'' = 未分類）
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
   const [reassign, setReassign] = useState<string>('')
+  // 色パレットを開いているカテゴリ
+  const [colorPickFor, setColorPickFor] = useState<string | null>(null)
 
   async function addTo(group: GroupKey) {
     const name = window.prompt(`「${GROUP_LABELS[group]}」に追加する名前（例: A社）`)
@@ -44,18 +46,30 @@ export default function CategorySheet({
       id: c.id,
       name: name.trim(),
       group_key: c.group_key,
-      color: GROUP_COLORS[c.group_key],
+      color: c.color, // 色は維持
       sort_order: c.sort_order,
     })
   }
 
   async function move(c: Category, group: GroupKey) {
     if (group === c.group_key) return
+    // 大分類を移すと色のトーンが合わなくなるので、移動先の基調色にリセット
     await upsert.mutateAsync({
       id: c.id,
       name: c.name,
       group_key: group,
       color: GROUP_COLORS[group],
+      sort_order: c.sort_order,
+    })
+  }
+
+  async function setColor(c: Category, color: string) {
+    setColorPickFor(null)
+    await upsert.mutateAsync({
+      id: c.id,
+      name: c.name,
+      group_key: c.group_key,
+      color,
       sort_order: c.sort_order,
     })
   }
@@ -97,6 +111,16 @@ export default function CategorySheet({
               {items.map((c) => (
                 <div key={c.id}>
                   <div className="ml-6 flex items-center gap-2 rounded-lg border border-gray-100 px-2 py-1.5">
+                    {/* 色（タップでパレット） */}
+                    <button
+                      onClick={() =>
+                        setColorPickFor((v) => (v === c.id ? null : c.id))
+                      }
+                      className="h-5 w-5 shrink-0 rounded-full border border-black/10"
+                      style={{ backgroundColor: c.color }}
+                      aria-label="色を変更"
+                      title="タップで色を変更"
+                    />
                     <button
                       onClick={() => rename(c)}
                       className="flex-1 text-left text-sm text-gray-800"
@@ -128,6 +152,26 @@ export default function CategorySheet({
                       削除
                     </button>
                   </div>
+
+                  {/* 色パレット（この大分類のトーン内で選ぶ） */}
+                  {colorPickFor === c.id && (
+                    <div className="ml-6 mt-1 flex flex-wrap gap-2 rounded-lg border border-gray-100 bg-gray-50 p-2">
+                      {GROUP_SWATCHES[c.group_key].map((sw) => (
+                        <button
+                          key={sw}
+                          onClick={() => setColor(c, sw)}
+                          className={
+                            'h-7 w-7 rounded-full border-2 ' +
+                            (c.color === sw
+                              ? 'border-gray-700'
+                              : 'border-transparent')
+                          }
+                          style={{ backgroundColor: sw }}
+                          aria-label={`色 ${sw}`}
+                        />
+                      ))}
+                    </div>
+                  )}
 
                   {/* 削除の確認: 予定の移動先を選ぶ */}
                   {pendingDelete?.id === c.id && (

@@ -74,8 +74,11 @@ export default function MonthView() {
 
   const groupOf = (e: Entry) =>
     (e.category_id ? catMap.get(e.category_id)?.group_key : null) ?? 'other'
-  // 予定の色は大分類の色に統一
-  const colorOf = (e: Entry) => GROUP_COLORS[groupOf(e)]
+  // 予定の色は中分類の色。未設定なら大分類の基調色にフォールバック。
+  const colorOf = (e: Entry) => {
+    const c = e.category_id ? catMap.get(e.category_id) : null
+    return c?.color ?? GROUP_COLORS[groupOf(e)]
+  }
 
   const visible = useMemo(
     () =>

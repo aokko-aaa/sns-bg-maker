@@ -75,7 +75,7 @@ export function useAddCategoryReturning() {
           user_id: user!.id,
           name: args.name,
           group_key: args.group_key ?? 'personal',
-          color: args.color ?? GROUP_COLORS.personal,
+          color: args.color ?? GROUP_COLORS[args.group_key ?? 'personal'],
           sort_order: 0,
         })
         .select('*')
