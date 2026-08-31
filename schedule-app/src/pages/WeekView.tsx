@@ -10,6 +10,7 @@ import {
   weekDays,
 } from '@/lib/dates'
 import EntrySheet from '@/components/EntrySheet'
+import TaskList from '@/components/TaskList'
 import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry } from '@/types/database'
 
@@ -58,10 +59,25 @@ export default function WeekView() {
     [entries, catMap, active]
   )
 
+  // ガントに載せるのは予定（イベント）だけ。TODOは上の専用リストで扱う。
+  const eventVisible = useMemo(
+    () => visible.filter((e) => e.kind !== 'task'),
+    [visible]
+  )
+  const weekTasks = useMemo(
+    () => visible.filter((e) => e.kind === 'task'),
+    [visible]
+  )
+
+  function openEdit(e: Entry) {
+    setEditing(e)
+    setSheetOpen(true)
+  }
+
   // カテゴリごとにグループ化（縦軸）。未分類は最後にまとめる
   const groups = useMemo(() => {
     const byCat = new Map<string, Entry[]>()
-    for (const e of visible) {
+    for (const e of eventVisible) {
       const key = e.category_id ?? 'other'
       if (!byCat.has(key)) byCat.set(key, [])
       byCat.get(key)!.push(e)
@@ -81,7 +97,7 @@ export default function WeekView() {
     if (byCat.has('other'))
       ordered.push({ key: 'other', name: '未分類', color: GROUP_COLORS.other, items: byCat.get('other')! })
     return ordered
-  }, [visible, categories])
+  }, [eventVisible, categories])
 
   const todayKey = dayKey(new Date())
 
@@ -206,6 +222,15 @@ export default function WeekView() {
         })}
       </div>
 
+      {/* 今週のTODO */}
+      <TaskList
+        title="今週のTODO"
+        tasks={weekTasks}
+        colorOf={colorOf}
+        onEdit={openEdit}
+        showDate
+      />
+
       {/* ガント本体 */}
       <div ref={gridRef} className="relative min-h-0 flex-1 overflow-y-auto">
         {/* 縦の日区切り線 */}
@@ -248,10 +273,7 @@ export default function WeekView() {
               return (
                 <div key={e.id} className="relative h-9 border-b border-gray-50">
                   <div
-                    onClick={() => {
-                      setEditing(e)
-                      setSheetOpen(true)
-                    }}
+                    onClick={() => openEdit(e)}
                     className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[13px] shadow-sm"
                     style={{
                       left: `${start * pct}%`,

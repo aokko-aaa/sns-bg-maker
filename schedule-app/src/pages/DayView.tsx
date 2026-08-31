@@ -13,6 +13,7 @@ import {
 } from '@/lib/checklist'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter } from '@/hooks/useGroupFilter'
+import TaskList from '@/components/TaskList'
 import {
   addDays,
   fmtDateLabel,
@@ -52,7 +53,6 @@ export default function DayView() {
   const [editing, setEditing] = useState<Entry | null>(null)
   const [defaultStart, setDefaultStart] = useState<string | undefined>()
   const [defaultCat, setDefaultCat] = useState<string | null>(null)
-  const [todoOpen, setTodoOpen] = useState(true)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchX = useRef<number | null>(null)
@@ -113,32 +113,6 @@ export default function DayView() {
       return a.starts_at.localeCompare(b.starts_at)
     })
   }, [visible])
-  const todoRemaining = dayTasks.filter((e) => (e.progress ?? 0) < 100).length
-
-  // タスク全体の完了/未完を切り替え（チェックリストがあれば全項目に反映）
-  const toggleTask = (e: Entry) => {
-    const items = parseChecklist(e.notes)
-    if (items.length > 0) {
-      const allDone = items.every((i) => i.done)
-      const next = items.map((i) => ({ ...i, done: !allDone }))
-      updateChecklist.mutate({
-        id: e.id,
-        notes: serializeChecklist(next),
-        progress: checklistProgress(next),
-      })
-    } else {
-      setProgress.mutate({ id: e.id, progress: (e.progress ?? 0) >= 100 ? 0 : 100 })
-    }
-  }
-  const toggleTaskItem = (e: Entry, idx: number) => {
-    const items = parseChecklist(e.notes)
-    const next = items.map((x, i) => (i === idx ? { ...x, done: !x.done } : x))
-    updateChecklist.mutate({
-      id: e.id,
-      notes: serializeChecklist(next),
-      progress: checklistProgress(next),
-    })
-  }
 
   // その日の最初の予定が見える位置へスクロール（無ければ 6:00）
   useEffect(() => {
@@ -398,87 +372,12 @@ export default function DayView() {
       )}
 
       {/* やること（TODO）専用リスト — その日のタスクを大きなチェックで確認 */}
-      {dayTasks.length > 0 && (
-        <div className="border-b border-gray-100 bg-white">
-          <button
-            onClick={() => setTodoOpen((v) => !v)}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left"
-          >
-            <span className="text-sm font-bold text-gray-700">やること</span>
-            <span className="rounded-full bg-group-work/10 px-2 py-0.5 text-[11px] font-medium text-group-work">
-              未完了 {todoRemaining} / {dayTasks.length}
-            </span>
-            <span className="ml-auto text-gray-400">{todoOpen ? '▾' : '▸'}</span>
-          </button>
-          {todoOpen && (
-            <ul className="max-h-56 space-y-1 overflow-y-auto px-2 pb-2">
-              {dayTasks.map((e) => {
-                const items = parseChecklist(e.notes)
-                const done = (e.progress ?? 0) >= 100
-                const dot = colorOf(e)
-                return (
-                  <li
-                    key={e.id}
-                    className="rounded-lg border border-gray-100 bg-gray-50 px-2 py-1.5"
-                  >
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleTask(e)}
-                        className="shrink-0 text-2xl leading-none"
-                        style={{ color: done ? dot : '#c4c9d2' }}
-                        aria-label={done ? '未完了に戻す' : '完了にする'}
-                      >
-                        {done ? '☑' : '☐'}
-                      </button>
-                      <span
-                        className="h-3 w-3 shrink-0 rounded-full"
-                        style={{ backgroundColor: dot }}
-                      />
-                      <button
-                        onClick={() => openEdit(e)}
-                        className="flex-1 truncate text-left text-[15px] text-gray-800"
-                      >
-                        <span className={done ? 'text-gray-400 line-through' : ''}>
-                          {e.title}
-                        </span>
-                      </button>
-                      {items.length > 0 && (
-                        <span className="shrink-0 text-[11px] text-gray-400">
-                          {items.filter((i) => i.done).length}/{items.length}
-                        </span>
-                      )}
-                      <span className="shrink-0 text-[11px] text-gray-400">
-                        {e.all_day ? '終日' : fmtHm(e.starts_at)}
-                      </span>
-                    </div>
-                    {items.length > 0 && (
-                      <ul className="mt-1 space-y-0.5 pl-8">
-                        {items.map((it, i) => (
-                          <li key={i}>
-                            <button
-                              onClick={() => toggleTaskItem(e, i)}
-                              className="flex w-full items-start gap-2 text-left text-[14px] leading-snug text-gray-700"
-                            >
-                              <span className="shrink-0 text-lg leading-none text-gray-500">
-                                {it.done ? '☑' : '☐'}
-                              </span>
-                              <span
-                                className={it.done ? 'text-gray-400 line-through' : ''}
-                              >
-                                {it.text}
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </div>
-      )}
+      <TaskList
+        title="やること"
+        tasks={dayTasks}
+        colorOf={colorOf}
+        onEdit={openEdit}
+      />
 
       {/* レーンモードのヘッダ（種類ラベル） */}
       {mode === 'lanes' && (

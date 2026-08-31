@@ -46,14 +46,31 @@ create table if not exists entries (
 
 create index if not exists entries_range_idx on entries (user_id, starts_at, ends_at);
 
+-- ── time_logs（作業時間の計測ログ）──────────────────────
+create table if not exists time_logs (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id),
+  entry_id    uuid references entries(id) on delete set null, -- タスクから開始した場合
+  category_id uuid references categories(id),                 -- 集計の分類
+  label       text not null,                                  -- 作業内容
+  started_at  timestamptz not null,
+  ended_at    timestamptz,                                    -- null = 計測中
+  created_at  timestamptz default now()
+);
+
+create index if not exists time_logs_range_idx on time_logs (user_id, started_at);
+
 -- ── RLS: 全テーブルで user_id = auth.uid() のみ許可 ──────
 alter table inbox_items enable row level security;
 alter table categories  enable row level security;
 alter table entries     enable row level security;
+alter table time_logs   enable row level security;
 
 create policy inbox_owner on inbox_items
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy categories_owner on categories
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy entries_owner on entries
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy time_logs_owner on time_logs
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());

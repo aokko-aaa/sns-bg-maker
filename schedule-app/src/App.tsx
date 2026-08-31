@@ -9,6 +9,8 @@ import DayView from '@/pages/DayView'
 import WeekView from '@/pages/WeekView'
 import MonthView from '@/pages/MonthView'
 import InboxView from '@/pages/InboxView'
+import ReportView from '@/pages/ReportView'
+import TimerBar from '@/components/TimerBar'
 import Login from '@/pages/Login'
 import { useAuth } from '@/hooks/useAuth'
 import { applyBg, loadBg } from '@/lib/background'
@@ -18,6 +20,7 @@ const TITLES: Record<string, string> = {
   '/week': 'Weekly',
   '/month': 'Monthly',
   '/inbox': 'Inbox',
+  '/report': '稼働時間',
 }
 
 export default function App() {
@@ -33,7 +36,7 @@ export default function App() {
   }, [])
 
   const title = TITLES[pathname] ?? 'スケジュール'
-  const showFilter = pathname !== '/inbox'
+  const showFilter = pathname !== '/inbox' && pathname !== '/report'
 
   if (loading) {
     return (
@@ -88,10 +91,12 @@ export default function App() {
           <Route path="/week" element={<WeekView />} />
           <Route path="/month" element={<MonthView />} />
           <Route path="/inbox" element={<InboxView />} />
+          <Route path="/report" element={<ReportView />} />
           <Route path="*" element={<Navigate to="/day" replace />} />
         </Routes>
       </main>
 
+      <TimerBar />
       <BottomTabBar />
 
       <CategorySheet open={catOpen} onClose={() => setCatOpen(false)} />

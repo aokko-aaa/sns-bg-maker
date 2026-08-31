@@ -5,6 +5,7 @@ const TABS = [
   { to: '/day', label: '日', icon: '☀' },
   { to: '/week', label: '週', icon: '▤' },
   { to: '/month', label: '月', icon: '▦' },
+  { to: '/report', label: '稼働', icon: '⏱' },
   { to: '/inbox', label: '受信箱', icon: '✉' },
 ] as const
 

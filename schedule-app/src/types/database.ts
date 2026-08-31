@@ -72,6 +72,18 @@ export type InboxItem = {
   created_at: string
 }
 
+/** 作業時間の計測ログ。ended_at が null の間は「計測中」。 */
+export type TimeLog = {
+  id: string
+  user_id: string
+  entry_id: string | null
+  category_id: string | null
+  label: string
+  started_at: string
+  ended_at: string | null
+  created_at: string
+}
+
 // createClient<Database> に渡す最小限のスキーマ型。
 // 生成型に差し替えるまでの土台。
 export interface Database {
@@ -96,6 +108,13 @@ export interface Database {
         Insert: Omit<InboxItem, 'id' | 'created_at'> &
           Partial<Pick<InboxItem, 'id' | 'created_at'>>
         Update: Partial<InboxItem>
+        Relationships: []
+      }
+      time_logs: {
+        Row: TimeLog
+        Insert: Omit<TimeLog, 'id' | 'created_at'> &
+          Partial<Pick<TimeLog, 'id' | 'created_at'>>
+        Update: Partial<TimeLog>
         Relationships: []
       }
     }

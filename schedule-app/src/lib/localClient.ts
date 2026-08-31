@@ -28,7 +28,7 @@ const now = () => new Date().toISOString()
 
 interface Filter {
   col: string
-  op: 'eq' | 'lt' | 'gt'
+  op: 'eq' | 'lt' | 'gt' | 'gte' | 'lte' | 'is'
   val: unknown
 }
 
@@ -80,6 +80,18 @@ class Builder implements PromiseLike<Result> {
     this.filters.push({ col, op: 'gt', val })
     return this
   }
+  gte(col: string, val: unknown) {
+    this.filters.push({ col, op: 'gte', val })
+    return this
+  }
+  lte(col: string, val: unknown) {
+    this.filters.push({ col, op: 'lte', val })
+    return this
+  }
+  is(col: string, val: unknown) {
+    this.filters.push({ col, op: 'is', val })
+    return this
+  }
   order(col: string, opts?: { ascending?: boolean }) {
     this.orders.push({ col, asc: opts?.ascending !== false })
     return this
@@ -98,8 +110,12 @@ class Builder implements PromiseLike<Result> {
       const v = r[f.col] as never
       const val = f.val as never
       if (f.op === 'eq') return v === val
+      if (f.op === 'is') return f.val === null ? v == null : v === val
       if (f.op === 'lt') return v < val
-      return v > val
+      if (f.op === 'gt') return v > val
+      if (f.op === 'gte') return v >= val
+      if (f.op === 'lte') return v <= val
+      return false
     })
 
   private applyOrder(rows: Row[]) {
