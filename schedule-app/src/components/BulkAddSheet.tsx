@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import BottomSheet from './BottomSheet'
 import { useCategories } from '@/hooks/useCategories'
 import { useBulkAddEntries } from '@/hooks/useEntries'
 import { parseBulk } from '@/lib/parseBulk'
+import { parseIcs } from '@/lib/parseIcs'
 import { fmtHm } from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
@@ -31,11 +32,31 @@ export default function BulkAddSheet({
   const [kind, setKind] = useState<EntryKind>('event')
   const [err, setErr] = useState<string | null>(null)
   const [done, setDone] = useState<number | null>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
 
+  // Googleカレンダーの書き出しは .ics(iCalendar)。BEGIN:VEVENT があれば .ics として解析。
+  const isIcs = /BEGIN:VEVENT/i.test(text)
   const parsed = useMemo(
-    () => parseBulk(text, year, defaultTitle.trim() || '予定'),
-    [text, year, defaultTitle]
+    () =>
+      isIcs
+        ? parseIcs(text, defaultTitle.trim() || '予定')
+        : parseBulk(text, year, defaultTitle.trim() || '予定'),
+    [text, year, defaultTitle, isIcs]
   )
+
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // 同じファイルを再選択できるようにリセット
+    if (!file) return
+    setErr(null)
+    setDone(null)
+    try {
+      const content = await file.text()
+      setText(content)
+    } catch (ex) {
+      setErr('ファイルの読み込みに失敗: ' + errMessage(ex))
+    }
+  }
 
   async function onRegister() {
     setErr(null)
@@ -69,7 +90,29 @@ export default function BulkAddSheet({
       <div className="flex flex-col gap-3">
         <p className="text-xs text-gray-500">
           日付と時刻を1行に1件ずつ貼り付けてください。時刻なしの行は終日になります。
+          <br />
+          Googleカレンダーの書き出し（.ics）ファイルもそのまま取り込めます。
         </p>
+
+        <button
+          type="button"
+          onClick={() => fileInput.current?.click()}
+          className="min-h-tap rounded-lg border border-group-work/40 bg-group-work/5 text-sm font-medium text-group-work"
+        >
+          📅 Googleカレンダー(.ics)を読み込む
+        </button>
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".ics,text/calendar"
+          onChange={onPickFile}
+          className="hidden"
+        />
+        {isIcs && (
+          <p className="-mt-1 text-[11px] text-group-work">
+            ✓ カレンダー形式(.ics)として読み取っています
+          </p>
+        )}
 
         <textarea
           value={text}
@@ -83,15 +126,17 @@ export default function BulkAddSheet({
         />
 
         <div className="flex gap-2">
-          <label className="flex-1 text-sm text-gray-600">
-            年（月日だけの行に適用）
-            <input
-              type="number"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className={field + ' mt-1'}
-            />
-          </label>
+          {!isIcs && (
+            <label className="flex-1 text-sm text-gray-600">
+              年（月日だけの行に適用）
+              <input
+                type="number"
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className={field + ' mt-1'}
+              />
+            </label>
+          )}
           <label className="flex-1 text-sm text-gray-600">
             共通タイトル
             <input
