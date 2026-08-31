@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useEntriesForRange, useSaveEntry } from '@/hooks/useEntries'
 import { useCategories } from '@/hooks/useCategories'
-import { useGroupFilter } from '@/hooks/useGroupFilter'
+import { useGroupFilter, GROUP_LABELS } from '@/hooks/useGroupFilter'
 import {
   addDays,
   entryOverlapsDay,
@@ -12,7 +12,7 @@ import {
 import EntrySheet from '@/components/EntrySheet'
 import TaskList from '@/components/TaskList'
 import { GROUP_COLORS, contrastText } from '@/lib/palette'
-import type { Category, Entry } from '@/types/database'
+import type { Category, Entry, GroupKey } from '@/types/database'
 
 const WEEK_JA = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -77,30 +77,34 @@ export default function WeekView() {
     setSheetOpen(true)
   }
 
-  // カテゴリごとにグループ化（縦軸）。未分類は最後にまとめる
+  // 大分類（Work / Family / Personal）ごとに区切る。中分類ラベルは出さず、色と内容で判別。
   const groups = useMemo(() => {
-    const byCat = new Map<string, Entry[]>()
+    const byGroup = new Map<string, Entry[]>()
     for (const e of eventVisible) {
-      const key = e.category_id ?? 'other'
-      if (!byCat.has(key)) byCat.set(key, [])
-      byCat.get(key)!.push(e)
+      const g = groupOf(e) // 'work' | 'family' | 'personal' | 'other'
+      if (!byGroup.has(g)) byGroup.set(g, [])
+      byGroup.get(g)!.push(e)
     }
-    // カテゴリ順に整える
+    const order: Array<GroupKey | 'other'> = [
+      'work',
+      'family',
+      'personal',
+      'other',
+    ]
     const ordered: Array<{ key: string; name: string; color: string; items: Entry[] }> =
       []
-    for (const c of categories) {
-      if (byCat.has(c.id))
+    for (const g of order) {
+      if (byGroup.has(g))
         ordered.push({
-          key: c.id,
-          name: c.name,
-          color: c.color,
-          items: byCat.get(c.id)!,
+          key: g,
+          name: g === 'other' ? '未分類' : GROUP_LABELS[g],
+          color: GROUP_COLORS[g],
+          items: byGroup.get(g)!,
         })
     }
-    if (byCat.has('other'))
-      ordered.push({ key: 'other', name: '未分類', color: GROUP_COLORS.other, items: byCat.get('other')! })
     return ordered
-  }, [eventVisible, categories])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventVisible, catMap])
 
   const todayKey = dayKey(new Date())
 
