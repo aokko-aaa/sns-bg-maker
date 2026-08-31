@@ -60,11 +60,25 @@ create table if not exists time_logs (
 
 create index if not exists time_logs_range_idx on time_logs (user_id, started_at);
 
+-- ── monthly_goals（月ごとの目標）──────────────────────
+create table if not exists monthly_goals (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id),
+  month       text not null,          -- 'YYYY-MM'
+  goal        text not null default '',
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+create unique index if not exists monthly_goals_user_month
+  on monthly_goals (user_id, month);
+
 -- ── RLS: 全テーブルで user_id = auth.uid() のみ許可 ──────
-alter table inbox_items enable row level security;
-alter table categories  enable row level security;
-alter table entries     enable row level security;
-alter table time_logs   enable row level security;
+alter table inbox_items   enable row level security;
+alter table categories    enable row level security;
+alter table entries       enable row level security;
+alter table time_logs     enable row level security;
+alter table monthly_goals enable row level security;
 
 create policy inbox_owner on inbox_items
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
@@ -73,4 +87,6 @@ create policy categories_owner on categories
 create policy entries_owner on entries
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy time_logs_owner on time_logs
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy monthly_goals_owner on monthly_goals
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());

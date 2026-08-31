@@ -1,5 +1,8 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { formatInTimeZone } from 'date-fns-tz'
 import { useEntriesForRange, useUpdateChecklist } from '@/hooks/useEntries'
+import { useMonthlyGoal, useSaveMonthlyGoal } from '@/hooks/useMonthlyGoal'
+import { TZ } from '@/lib/time'
 import {
   parseChecklist,
   serializeChecklist,
@@ -40,6 +43,28 @@ export default function MonthView() {
   const { data: categories = [] } = useCategories()
   const { active } = useGroupFilter()
   const updateChecklist = useUpdateChecklist()
+
+  // 今月の目標（YYYY-MM で保存・同期）
+  const monthKey = formatInTimeZone(anchor, TZ, 'yyyy-MM')
+  const { data: goalRow } = useMonthlyGoal(monthKey)
+  const saveGoal = useSaveMonthlyGoal()
+  const [goalEditing, setGoalEditing] = useState(false)
+  const [goalDraft, setGoalDraft] = useState('')
+  useEffect(() => {
+    setGoalEditing(false)
+  }, [monthKey])
+  function startEditGoal() {
+    setGoalDraft(goalRow?.goal ?? '')
+    setGoalEditing(true)
+  }
+  async function commitGoal() {
+    await saveGoal.mutateAsync({
+      id: goalRow?.id,
+      month: monthKey,
+      goal: goalDraft.trim(),
+    })
+    setGoalEditing(false)
+  }
 
   const catMap = useMemo(() => {
     const m = new Map<string, Category>()
@@ -113,6 +138,58 @@ export default function MonthView() {
         >
           ›
         </button>
+      </div>
+
+      {/* 今月の目標 */}
+      <div className="border-b border-gray-100 bg-group-work/5 px-3 py-2">
+        {goalEditing ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1 text-xs font-bold text-group-work">
+              🎯 今月の目標
+            </div>
+            <textarea
+              value={goalDraft}
+              onChange={(e) => setGoalDraft(e.target.value)}
+              placeholder="例: 早寝早起き／読書2冊／週3ジム"
+              rows={2}
+              autoFocus
+              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setGoalEditing(false)}
+                className="min-h-tap flex-1 rounded-lg border border-gray-300 text-sm text-gray-600"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={commitGoal}
+                disabled={saveGoal.isPending}
+                className="min-h-tap flex-1 rounded-lg bg-group-work text-sm font-medium text-white disabled:opacity-50"
+              >
+                {saveGoal.isPending ? '保存中…' : '保存'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={startEditGoal}
+            className="flex w-full items-start gap-2 text-left"
+          >
+            <span className="shrink-0 text-xs font-bold text-group-work">
+              🎯 今月の目標
+            </span>
+            <span
+              className={
+                'flex-1 whitespace-pre-wrap text-sm ' +
+                (goalRow?.goal ? 'text-gray-800' : 'text-gray-400')
+              }
+            >
+              {goalRow?.goal || 'タップして目標を入力'}
+            </span>
+            <span className="shrink-0 text-xs text-gray-400">✎</span>
+          </button>
+        )}
       </div>
 
       {/* 曜日 */}

@@ -72,6 +72,16 @@ export type InboxItem = {
   created_at: string
 }
 
+/** 月ごとの目標（YYYY-MM 単位）。 */
+export type MonthlyGoal = {
+  id: string
+  user_id: string
+  month: string // 'YYYY-MM'
+  goal: string
+  created_at: string
+  updated_at: string
+}
+
 /** 作業時間の計測ログ。ended_at が null の間は「計測中」。 */
 export type TimeLog = {
   id: string
@@ -115,6 +125,13 @@ export interface Database {
         Insert: Omit<TimeLog, 'id' | 'created_at'> &
           Partial<Pick<TimeLog, 'id' | 'created_at'>>
         Update: Partial<TimeLog>
+        Relationships: []
+      }
+      monthly_goals: {
+        Row: MonthlyGoal
+        Insert: Omit<MonthlyGoal, 'id' | 'created_at'> &
+          Partial<Pick<MonthlyGoal, 'id' | 'created_at'>>
+        Update: Partial<MonthlyGoal>
         Relationships: []
       }
     }
