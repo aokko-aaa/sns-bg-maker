@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { parseNatural } from '@/lib/parseNatural'
 import type { InboxItem, InboxStatus, InputType } from '@/types/database'
 
 export function useInboxItems() {
@@ -49,6 +50,23 @@ export function useParseInbox() {
       if (error) throw error
       if (data?.error) throw new Error(data.error)
       return data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['inbox'] }),
+  })
+}
+
+/** 端末内の解釈エンジンで整理し、結果を保存する（AI/課金なし・オフライン可） */
+export function useAutoParseInbox() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (args: { id: string; raw_text: string }) => {
+      const parsed = parseNatural(args.raw_text)
+      const { error } = await supabase
+        .from('inbox_items')
+        .update({ parsed, parsed_at: new Date().toISOString() })
+        .eq('id', args.id)
+      if (error) throw error
+      return parsed
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['inbox'] }),
   })

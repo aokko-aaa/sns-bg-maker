@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   useAddInbox,
   useInboxItems,
-  useParseInbox,
+  useAutoParseInbox,
   useUpdateInboxStatus,
 } from '@/hooks/useInbox'
 import { useCategories } from '@/hooks/useCategories'
@@ -130,7 +130,7 @@ export default function InboxView() {
 }
 
 function InboxCard({ item }: { item: InboxItem }) {
-  const parse = useParseInbox()
+  const parse = useAutoParseInbox()
   const setStatus = useUpdateInboxStatus()
   const save = useSaveEntry()
   const { data: categories = [] } = useCategories()
@@ -149,7 +149,7 @@ function InboxCard({ item }: { item: InboxItem }) {
   async function onParse() {
     setErr(null)
     try {
-      await parse.mutateAsync(item.id)
+      await parse.mutateAsync({ id: item.id, raw_text: item.raw_text })
     } catch (e) {
       setErr(e instanceof Error ? e.message : '解釈に失敗しました')
     }
@@ -216,9 +216,9 @@ function InboxCard({ item }: { item: InboxItem }) {
               onClick={onParse}
               disabled={parse.isPending}
               className="min-h-tap rounded-lg bg-group-work/10 font-medium text-group-work disabled:opacity-50"
-              title="AI解釈には Anthropic API の設定が必要です"
+              title="端末内で日付・時刻を自動解釈します（課金なし）"
             >
-              {parse.isPending ? 'AI整理中…' : '✨ AIで整理'}
+              {parse.isPending ? '整理中…' : '✨ 自動で整理'}
             </button>
           </div>
           <div className="flex gap-2">
