@@ -175,6 +175,16 @@ export default function WeekView() {
         touchX.current = null
       }}
     >
+      {/* 今週のTODO（一番上） */}
+      <TaskList
+        title="今週のTODO"
+        tasks={weekTasks}
+        colorOf={colorOf}
+        onEdit={openEdit}
+        showDate
+        defaultOpen={false}
+      />
+
       {/* 週ナビ */}
       <div className="flex items-center justify-between border-b border-gray-100 px-2 py-2">
         <button
@@ -224,15 +234,6 @@ export default function WeekView() {
           )
         })}
       </div>
-
-      {/* 今週のTODO */}
-      <TaskList
-        title="今週のTODO"
-        tasks={weekTasks}
-        colorOf={colorOf}
-        onEdit={openEdit}
-        showDate
-      />
 
       {/* ガント本体 */}
       <div ref={gridRef} className="relative min-h-0 flex-1 overflow-y-auto">
