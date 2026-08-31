@@ -144,8 +144,9 @@ export default function MonthView() {
       <div className="border-b border-gray-100 bg-group-work/5 px-3 py-2">
         {goalEditing ? (
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-1 text-xs font-bold text-group-work">
-              🎯 今月の目標
+            <div className="flex items-center gap-1.5 text-xs font-bold tracking-wide text-group-work">
+              <span className="h-3 w-1 rounded-full bg-group-work" />
+              今月の目標
             </div>
             <textarea
               value={goalDraft}
@@ -176,8 +177,9 @@ export default function MonthView() {
             onClick={startEditGoal}
             className="flex w-full items-start gap-2 text-left"
           >
-            <span className="shrink-0 text-xs font-bold text-group-work">
-              🎯 今月の目標
+            <span className="flex shrink-0 items-center gap-1.5 text-xs font-bold tracking-wide text-group-work">
+              <span className="h-3 w-1 rounded-full bg-group-work" />
+              今月の目標
             </span>
             <span
               className={
