@@ -78,6 +78,25 @@ export function useSaveEntry() {
   })
 }
 
+/** 複数の予定/タスクを一度に追加（複製・繰り返し登録用）。全フィールドを保持する。 */
+export function useAddEntries() {
+  const { user } = useAuth()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (rows: Omit<EntryInput, 'id'>[]) => {
+      const nowIso = new Date().toISOString()
+      const payload = rows.map((r) => ({
+        ...r,
+        user_id: user!.id,
+        updated_at: nowIso,
+      }))
+      const { error } = await supabase.from('entries').insert(payload)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['entries'] }),
+  })
+}
+
 export type BulkEntryInput = {
   title: string
   category_id: string | null

@@ -3,9 +3,11 @@ import BottomSheet from './BottomSheet'
 import { useCategories, useAddCategoryReturning } from '@/hooks/useCategories'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
 import type { GroupKey } from '@/types/database'
+import { addDays, addWeeks, addMonths } from 'date-fns'
 import {
   useDeleteEntry,
   useSaveEntry,
+  useAddEntries,
   type EntryInput,
 } from '@/hooks/useEntries'
 import {
@@ -53,6 +55,7 @@ export default function EntrySheet({
   const { data: categories = [] } = useCategories()
   const addCat = useAddCategoryReturning()
   const save = useSaveEntry()
+  const addEntries = useAddEntries()
   const del = useDeleteEntry()
   const startTimer = useStartTimer()
   const stopTimer = useStopTimer()
@@ -68,6 +71,11 @@ export default function EntrySheet({
   const [notes, setNotes] = useState('')
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [err, setErr] = useState<string | null>(null)
+  // 繰り返し（新規のみ）: なし/毎日/毎週/毎月 × 回数
+  const [repeat, setRepeat] = useState<'none' | 'daily' | 'weekly' | 'monthly'>(
+    'none'
+  )
+  const [repeatCount, setRepeatCount] = useState(4)
 
   // カテゴリ追加（選んでいる大分類の中に作る → すぐ選択）
   async function onAddCategory() {
@@ -130,6 +138,8 @@ export default function EntrySheet({
       setItems([])
     }
     setErr(null)
+    setRepeat('none')
+    setRepeatCount(4)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, entry])
 
@@ -183,11 +193,59 @@ export default function EntrySheet({
       inbox_id: entry ? entry.inbox_id : inboxId ?? null,
     }
     try {
-      await save.mutateAsync(payload)
+      // 新規＋繰り返しあり → 期間をずらして複数件をまとめて追加
+      if (!entry && repeat !== 'none' && repeatCount > 1) {
+        const n = Math.min(60, Math.max(1, repeatCount))
+        const shift = (iso: string, i: number) => {
+          const d = new Date(iso)
+          const shifted =
+            repeat === 'daily'
+              ? addDays(d, i)
+              : repeat === 'weekly'
+                ? addWeeks(d, i)
+                : addMonths(d, i)
+          return shifted.toISOString()
+        }
+        const { id: _omit, ...base } = payload
+        const rows = Array.from({ length: n }, (_, i) => ({
+          ...base,
+          starts_at: shift(startsIso, i),
+          ends_at: shift(endsIso, i),
+        }))
+        await addEntries.mutateAsync(rows)
+      } else {
+        await save.mutateAsync(payload)
+      }
       onSaved?.()
       onClose()
     } catch (e) {
       setErr('保存に失敗: ' + errMessage(e))
+    }
+  }
+
+  // 既存の予定を複製（同じ内容でもう1件追加）
+  async function onDuplicate() {
+    if (!entry) return
+    setErr(null)
+    try {
+      await addEntries.mutateAsync([
+        {
+          title: entry.title,
+          category_id: entry.category_id,
+          kind: entry.kind,
+          starts_at: entry.starts_at,
+          ends_at: entry.ends_at,
+          all_day: entry.all_day,
+          progress: entry.progress ?? 0,
+          notes: entry.notes,
+          source: 'manual',
+          inbox_id: null,
+        },
+      ])
+      onSaved?.()
+      onClose()
+    } catch (e) {
+      setErr('複製に失敗: ' + errMessage(e))
     }
   }
 
@@ -421,6 +479,49 @@ export default function EntrySheet({
           </label>
         )}
 
+        {/* 繰り返し登録（新規のみ）: 同じ予定を毎日/毎週/毎月でまとめて作成 */}
+        {!entry && (
+          <div className={label}>
+            繰り返し
+            <div className="mt-1 flex gap-2">
+              <select
+                value={repeat}
+                onChange={(e) =>
+                  setRepeat(e.target.value as typeof repeat)
+                }
+                className="min-h-tap flex-1 rounded-lg border border-gray-300 px-3 text-base"
+              >
+                <option value="none">なし（1件だけ）</option>
+                <option value="daily">毎日</option>
+                <option value="weekly">毎週</option>
+                <option value="monthly">毎月</option>
+              </select>
+              {repeat !== 'none' && (
+                <label className="flex items-center gap-1 text-sm text-gray-600">
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={repeatCount}
+                    onChange={(e) =>
+                      setRepeatCount(Number(e.target.value) || 1)
+                    }
+                    className="min-h-tap w-16 rounded-lg border border-gray-300 px-2 text-base"
+                  />
+                  回
+                </label>
+              )}
+            </div>
+            {repeat !== 'none' && (
+              <p className="mt-1 text-[11px] text-gray-400">
+                この予定を含めて{' '}
+                {repeat === 'daily' ? '毎日' : repeat === 'weekly' ? '毎週' : '毎月'}
+                、合計 {Math.min(60, Math.max(1, repeatCount))} 件つくります。
+              </p>
+            )}
+          </div>
+        )}
+
         {/* 予定の作業時間を計測（既存の予定のみ） */}
         {entry && entry.kind === 'event' && (
           runningTimer?.entry_id === entry.id ? (
@@ -450,6 +551,16 @@ export default function EntrySheet({
 
         {err && <p className="text-sm text-red-600">{err}</p>}
 
+        {entry && (
+          <button
+            onClick={onDuplicate}
+            disabled={addEntries.isPending}
+            className="min-h-tap rounded-lg border border-group-work/40 bg-group-work/5 text-sm font-medium text-group-work disabled:opacity-50"
+          >
+            ⧉ この{entry.kind === 'task' ? 'TODO' : '予定'}を複製
+          </button>
+        )}
+
         <div className="mt-1 flex gap-2">
           {entry && (
             <button
@@ -461,10 +572,14 @@ export default function EntrySheet({
           )}
           <button
             onClick={onSave}
-            disabled={save.isPending}
+            disabled={save.isPending || addEntries.isPending}
             className="min-h-tap flex-1 rounded-lg bg-group-work font-medium text-white disabled:opacity-50"
           >
-            {save.isPending ? '保存中…' : '保存'}
+            {save.isPending || addEntries.isPending
+              ? '保存中…'
+              : !entry && repeat !== 'none'
+                ? `${Math.min(60, Math.max(1, repeatCount))}件を登録`
+                : '保存'}
           </button>
         </div>
       </div>
