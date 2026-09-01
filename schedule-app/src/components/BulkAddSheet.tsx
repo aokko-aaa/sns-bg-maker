@@ -3,6 +3,7 @@ import BottomSheet from './BottomSheet'
 import { useCategories } from '@/hooks/useCategories'
 import { useBulkAddEntries } from '@/hooks/useEntries'
 import { parseBulk } from '@/lib/parseBulk'
+import { parseCsv } from '@/lib/parseCsv'
 import { parseIcs } from '@/lib/parseIcs'
 import { fmtHm, startOfDayJst } from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
@@ -37,21 +38,27 @@ export default function BulkAddSheet({
 
   // Googleカレンダーの書き出しは .ics(iCalendar)。BEGIN:VEVENT があれば .ics として解析。
   const isIcs = /BEGIN:VEVENT/i.test(text)
+  // カンマ/タブ区切りが1行でもあれば CSV/TSV として解析（.ics 以外）。
+  const isCsv =
+    !isIcs && text.split('\n').some((l) => l.includes(',') || l.includes('\t'))
   const parsed = useMemo(
     () =>
       isIcs
         ? parseIcs(text, defaultTitle.trim() || '予定')
-        : parseBulk(text, year, defaultTitle.trim() || '予定'),
-    [text, year, defaultTitle, isIcs]
+        : isCsv
+          ? parseCsv(text, year, defaultTitle.trim() || '予定')
+          : parseBulk(text, year, defaultTitle.trim() || '予定'),
+    [text, year, defaultTitle, isIcs, isCsv]
   )
 
-  // .ics取り込み時は「過去の予定を入れない」フィルタ（今日以降だけ）を適用できる。
+  // ファイル取り込み(.ics / CSV)時は「過去の予定を入れない」フィルタ（今日以降だけ）を適用できる。
+  const canSkipPast = isIcs || isCsv
   const rows = useMemo(() => {
-    if (!isIcs || !skipPast) return parsed.rows
+    if (!canSkipPast || !skipPast) return parsed.rows
     const todayStart = startOfDayJst(new Date()).getTime()
     return parsed.rows.filter((r) => new Date(r.ends_at).getTime() >= todayStart)
-  }, [parsed, isIcs, skipPast])
-  const skippedPast = isIcs && skipPast ? parsed.rows.length - rows.length : 0
+  }, [parsed, canSkipPast, skipPast])
+  const skippedPast = canSkipPast && skipPast ? parsed.rows.length - rows.length : 0
 
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -98,9 +105,12 @@ export default function BulkAddSheet({
     <BottomSheet open={open} onClose={onClose} title="表から一括追加">
       <div className="flex flex-col gap-3">
         <p className="text-xs text-gray-500">
-          日付と時刻を1行に1件ずつ貼り付けてください。時刻なしの行は終日になります。
+          日付と時刻を1行に1件ずつ。時刻なしの行は終日になります。
           <br />
-          Googleカレンダーの書き出し（.ics）ファイルもそのまま取り込めます。
+          Googleカレンダー(.ics)や、CSV / txt ファイルもそのまま取り込めます。
+          <br />
+          CSV例:{' '}
+          <code className="rounded bg-gray-100 px-1">日付,開始,終了,タイトル</code>
         </p>
 
         <button
@@ -108,19 +118,21 @@ export default function BulkAddSheet({
           onClick={() => fileInput.current?.click()}
           className="min-h-tap rounded-lg border border-group-work/40 bg-group-work/5 text-sm font-medium text-group-work"
         >
-          📅 Googleカレンダー(.ics)を読み込む
+          📄 ファイルを読み込む（.ics / .csv / .txt）
         </button>
         <input
           ref={fileInput}
           type="file"
-          accept=".ics,text/calendar"
+          accept=".ics,.csv,.txt,text/calendar,text/csv,text/plain"
           onChange={onPickFile}
           className="hidden"
         />
-        {isIcs && (
+        {(isIcs || isCsv) && (
           <div className="-mt-1 flex flex-col gap-1">
             <p className="text-[11px] text-group-work">
-              ✓ カレンダー形式(.ics)として読み取っています
+              {isIcs
+                ? '✓ カレンダー形式(.ics)として読み取っています'
+                : '✓ CSV / 表形式として読み取っています'}
             </p>
             <label className="flex items-center gap-2 text-sm text-gray-600">
               <input
