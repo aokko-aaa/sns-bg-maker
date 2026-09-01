@@ -107,6 +107,15 @@ export default function MonthView() {
     setSheetOpen(true)
   }
 
+  function openNew() {
+    const todayK = dayKey(new Date())
+    const inMonth = cells.some((c) => c.inMonth && c.key === todayK)
+    const first = cells.find((c) => c.inMonth)?.key ?? todayK
+    setDefaultStart(`${inMonth ? todayK : first}T09:00`)
+    setEditing(null)
+    setSheetOpen(true)
+  }
+
   return (
     <div
       className="flex min-h-0 flex-1 flex-col"
@@ -344,6 +353,15 @@ export default function MonthView() {
           </div>
         )}
       </BottomSheet>
+
+      {/* 予定を追加（今日/この月へ。日付は入力画面で変更可） */}
+      <button
+        onClick={openNew}
+        className="absolute bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
+        aria-label="予定を追加"
+      >
+        ＋
+      </button>
 
       <EntrySheet
         open={sheetOpen}

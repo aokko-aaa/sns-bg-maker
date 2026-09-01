@@ -495,7 +495,7 @@ export default function DayView() {
       {/* 追加ボタン */}
       <button
         onClick={() => openNew()}
-        className="absolute bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
+        className="absolute bottom-20 left-3 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
         aria-label="予定を追加"
       >
         ＋

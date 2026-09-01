@@ -20,6 +20,7 @@ export default function WeekView() {
   const [anchor, setAnchor] = useState(() => new Date())
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<Entry | null>(null)
+  const [defaultStart, setDefaultStart] = useState<string | undefined>()
   const gridRef = useRef<HTMLDivElement>(null)
   const touchX = useRef<number | null>(null)
   // ドラッグ中のプレビュー: entryId -> {startShift, endShift}(日数)
@@ -74,6 +75,16 @@ export default function WeekView() {
 
   function openEdit(e: Entry) {
     setEditing(e)
+    setDefaultStart(undefined)
+    setSheetOpen(true)
+  }
+
+  function openNew() {
+    const todayK = dayKey(new Date())
+    const inWeek = days.some((d) => dayKey(d) === todayK)
+    const base = inWeek ? todayK : dayKey(days[0])
+    setDefaultStart(`${base}T09:00`)
+    setEditing(null)
     setSheetOpen(true)
   }
 
@@ -323,10 +334,20 @@ export default function WeekView() {
         ))}
       </div>
 
+      {/* 予定を追加 */}
+      <button
+        onClick={openNew}
+        className="absolute bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
+        aria-label="予定を追加"
+      >
+        ＋
+      </button>
+
       <EntrySheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         entry={editing}
+        defaultStartLocal={defaultStart}
       />
     </div>
   )
