@@ -2,9 +2,25 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createLocalClient } from './localClient'
 import type { Database } from '@/types/database'
 
-// 配布用ローカルモード（VITE_LOCAL_MODE=true でビルド）:
+// 配布用ローカルモード:
 // ログイン不要・端末内(localStorage)だけに保存。運営側は誰の情報も預からない。
-const LOCAL_MODE = import.meta.env.VITE_LOCAL_MODE === 'true'
+// 有効化の方法は2つ:
+//   1) ビルド時に VITE_LOCAL_MODE=true（専用デプロイ用）
+//   2) URLに ?local=1 を付けて開く（その端末だけローカル版に切替・以後記憶）
+//      ?local=0 で通常(クラウド)版に戻す
+const LOCAL_FLAG_KEY = 'app-mode'
+function detectLocalMode(): boolean {
+  if (import.meta.env.VITE_LOCAL_MODE === 'true') return true
+  try {
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('local') === '1') localStorage.setItem(LOCAL_FLAG_KEY, 'local')
+    else if (p.get('local') === '0') localStorage.removeItem(LOCAL_FLAG_KEY)
+    return localStorage.getItem(LOCAL_FLAG_KEY) === 'local'
+  } catch {
+    return false
+  }
+}
+const LOCAL_MODE = detectLocalMode()
 
 // 設計原則 2-3: フロントに置いてよいのは anon(publishable) key と URL のみ。
 // これらはブラウザに公開される前提の公開用の値（RLS で守られる）。
