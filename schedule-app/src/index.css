@@ -56,8 +56,8 @@ h3,
   z-index: 0;
   background-color: #f2f6fb;
   background-image: var(--bg-img, url('/bg.png'));
-  background-size: cover;
-  background-position: center top;
+  background-size: var(--bg-size, cover);
+  background-position: center var(--bg-pos-y, top);
   background-repeat: no-repeat;
 }
 /* 読みやすさ用の白のせ（画像に応じて自動/手動で不透明度を調整） */

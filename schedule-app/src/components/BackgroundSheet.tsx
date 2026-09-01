@@ -84,10 +84,58 @@ export default function BackgroundSheet({
 
         {/* プレビュー */}
         {s.mode === 'custom' && s.img && (
-          <div
-            className="h-28 w-full rounded-lg bg-cover bg-center"
-            style={{ backgroundImage: `url("${s.img}")` }}
-          />
+          <>
+            <div
+              className="h-40 w-full rounded-lg border border-gray-100 bg-[#f2f6fb] bg-no-repeat"
+              style={{
+                backgroundImage: `url("${s.img}")`,
+                backgroundSize: s.fit ?? 'cover',
+                backgroundPosition: `center ${s.posY ?? 0}%`,
+              }}
+            />
+
+            {/* 表示方法 */}
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ['cover', '画面いっぱい'],
+                  ['contain', '全体を表示'],
+                ] as const
+              ).map(([f, label]) => (
+                <button
+                  key={f}
+                  onClick={() => update({ fit: f })}
+                  className={
+                    'min-h-tap rounded-lg border text-sm ' +
+                    ((s.fit ?? 'cover') === f
+                      ? 'border-group-work bg-group-work/10 font-medium text-group-work'
+                      : 'border-gray-300 text-gray-500')
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* 縦位置 */}
+            <label className="text-sm text-gray-600">
+              縦位置（見せたい部分に合わせる）
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={s.posY ?? 0}
+                onChange={(e) => update({ posY: Number(e.target.value) })}
+                className="mt-1 w-full"
+              />
+              <div className="flex justify-between text-[11px] text-gray-400">
+                <span>上</span>
+                <span>中央</span>
+                <span>下</span>
+              </div>
+            </label>
+          </>
         )}
 
         {/* 読みやすさ（白のせ） */}

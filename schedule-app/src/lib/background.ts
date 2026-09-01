@@ -2,21 +2,30 @@
 // 画像は縮小してから保存し、明るさ/にぎやかさから「白のせ(ヴェール)」量を自動算出。
 
 export type BgMode = 'default' | 'custom' | 'none'
+export type BgFit = 'cover' | 'contain'
 export interface BgSettings {
   mode: BgMode
   img?: string // custom時の dataURL
   veil: number // 0..0.6 白のせ不透明度
+  fit?: BgFit // 画面いっぱい(cover) / 全体を表示(contain)
+  posY?: number // 縦位置 0(上)..100(下)
 }
 
 const KEY = 'bg-settings'
-const DEFAULT: BgSettings = { mode: 'default', veil: 0.15 }
+const DEFAULT: BgSettings = { mode: 'default', veil: 0.15, fit: 'cover', posY: 0 }
 
 export function loadBg(): BgSettings {
   try {
     const raw = localStorage.getItem(KEY)
     if (!raw) return DEFAULT
     const s = JSON.parse(raw) as BgSettings
-    return { mode: s.mode ?? 'default', img: s.img, veil: s.veil ?? 0.15 }
+    return {
+      mode: s.mode ?? 'default',
+      img: s.img,
+      veil: s.veil ?? 0.15,
+      fit: s.fit ?? 'cover',
+      posY: s.posY ?? 0,
+    }
   } catch {
     return DEFAULT
   }
@@ -27,12 +36,15 @@ export function applyBg(s: BgSettings) {
   if (s.mode === 'none') {
     root.style.setProperty('--bg-img', 'none')
     root.style.setProperty('--bg-veil', '0')
-  } else if (s.mode === 'custom' && s.img) {
+    return
+  }
+  root.style.setProperty('--bg-size', s.fit ?? 'cover')
+  root.style.setProperty('--bg-pos-y', `${s.posY ?? 0}%`)
+  root.style.setProperty('--bg-veil', String(s.veil))
+  if (s.mode === 'custom' && s.img) {
     root.style.setProperty('--bg-img', `url("${s.img}")`)
-    root.style.setProperty('--bg-veil', String(s.veil))
   } else {
     root.style.setProperty('--bg-img', "url('/bg.png')")
-    root.style.setProperty('--bg-veil', String(s.veil))
   }
 }
 
@@ -61,8 +73,9 @@ export async function processImage(
   const url = URL.createObjectURL(file)
   try {
     const img = await loadImage(url)
-    const maxW = 1200
-    const scale = Math.min(1, maxW / img.width)
+    // 長辺を1600pxに収める（縦長の壁紙でもくっきり）
+    const maxSide = 1600
+    const scale = Math.min(1, maxSide / Math.max(img.width, img.height))
     const w = Math.max(1, Math.round(img.width * scale))
     const h = Math.max(1, Math.round(img.height * scale))
     const canvas = document.createElement('canvas')
