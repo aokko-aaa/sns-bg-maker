@@ -316,7 +316,7 @@ export default function DayView() {
       <div className="flex items-center justify-between px-2 pt-1">
         <button
           onClick={() => setDay((d) => addDays(d, -1))}
-          className="min-h-tap min-w-tap text-2xl text-gray-400"
+          className="h-9 min-w-tap text-2xl text-gray-400"
           aria-label="前日"
         >
           ‹
@@ -325,7 +325,7 @@ export default function DayView() {
           onClick={() => setDay(new Date())}
           className="flex flex-col items-center leading-tight"
         >
-          <span className="text-2xl font-bold text-gray-800">
+          <span className="text-xl font-bold text-gray-800">
             {fmtDateLabel(day)}
           </span>
           {isToday && (
@@ -334,7 +334,7 @@ export default function DayView() {
         </button>
         <button
           onClick={() => setDay((d) => addDays(d, 1))}
-          className="min-h-tap min-w-tap text-2xl text-gray-400"
+          className="h-9 min-w-tap text-2xl text-gray-400"
           aria-label="翌日"
         >
           ›
