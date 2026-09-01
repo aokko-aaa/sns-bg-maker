@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import BottomSheet from './BottomSheet'
+import BulkAddPanel from './BulkAddPanel'
 import { useCategories, useAddCategoryReturning } from '@/hooks/useCategories'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
 import type { GroupKey } from '@/types/database'
@@ -66,6 +67,8 @@ export default function EntrySheet({
   const stopTimer = useStopTimer()
   const { data: runningTimer } = useRunningTimer()
 
+  // 新規追加の入力方法: 1件ずつ / CSV・表で一括
+  const [addMode, setAddMode] = useState<'single' | 'bulk'>('single')
   const [title, setTitle] = useState('')
   const [kind, setKind] = useState<EntryKind>('event')
   const [group, setGroup] = useState<GroupKey>('work')
@@ -146,6 +149,7 @@ export default function EntrySheet({
       setItems([])
     }
     setErr(null)
+    setAddMode('single')
     setRepeat('none')
     setRepeatCount(4)
     setPickedDates(new Set())
@@ -311,6 +315,39 @@ export default function EntrySheet({
       title={`${kind === 'task' ? 'TODO' : '予定'}を${entry ? '編集' : '追加'}`}
     >
       <div className="flex flex-col gap-3">
+        {/* 入力方法の切り替え（新規のみ）: 1件ずつ / CSV・表で一括 */}
+        {!entry && (
+          <div className="flex overflow-hidden rounded-xl border border-group-work/30 bg-group-work/5">
+            {(
+              [
+                ['single', '📝 1件ずつ'],
+                ['bulk', '📋 CSVで一括'],
+              ] as const
+            ).map(([m, label]) => (
+              <button
+                key={m}
+                onClick={() => setAddMode(m)}
+                className={
+                  'min-h-tap flex-1 text-sm font-medium ' +
+                  (addMode === m
+                    ? 'bg-group-work text-white'
+                    : 'text-group-work')
+                }
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!entry && addMode === 'bulk' ? (
+          <BulkAddPanel
+            onDone={() => {
+              onSaved?.()
+            }}
+          />
+        ) : (
+          <>
         {/* 予定 / TODO 切り替え（一番上） */}
         <div className="flex overflow-hidden rounded-xl border border-gray-200">
           {(['event', 'task'] as EntryKind[]).map((k) => (
@@ -733,6 +770,8 @@ export default function EntrySheet({
                   : '保存'}
           </button>
         </div>
+          </>
+        )}
       </div>
     </BottomSheet>
   )
