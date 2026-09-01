@@ -145,6 +145,14 @@ export default function DayView() {
     return () => clearInterval(t)
   }, [])
 
+  // ヘッダーの「＋追加」から。表示中の日に対して新規追加。
+  useEffect(() => {
+    const h = () => openNew()
+    window.addEventListener('app:add-entry', h)
+    return () => window.removeEventListener('app:add-entry', h)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [day, categories])
+
   const isToday = fmtDateLabel(day) === fmtDateLabel(new Date())
 
   function openNew(atMin?: number, lane?: LaneKey) {
@@ -491,15 +499,6 @@ export default function DayView() {
       {isLoading && (
         <div className="p-4 text-center text-sm text-gray-400">読み込み中…</div>
       )}
-
-      {/* 追加ボタン */}
-      <button
-        onClick={() => openNew()}
-        className="absolute bottom-20 left-3 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
-        aria-label="予定を追加"
-      >
-        ＋
-      </button>
 
       <EntrySheet
         open={sheetOpen}

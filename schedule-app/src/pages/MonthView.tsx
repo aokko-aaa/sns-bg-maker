@@ -116,6 +116,14 @@ export default function MonthView() {
     setSheetOpen(true)
   }
 
+  // ヘッダーの「＋追加」から。表示中の月に対して新規追加。
+  useEffect(() => {
+    const h = () => openNew()
+    window.addEventListener('app:add-entry', h)
+    return () => window.removeEventListener('app:add-entry', h)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cells])
+
   return (
     <div
       className="flex min-h-0 flex-1 flex-col"
@@ -353,15 +361,6 @@ export default function MonthView() {
           </div>
         )}
       </BottomSheet>
-
-      {/* 予定を追加（今日/この月へ。日付は入力画面で変更可） */}
-      <button
-        onClick={openNew}
-        className="absolute bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
-        aria-label="予定を追加"
-      >
-        ＋
-      </button>
 
       <EntrySheet
         open={sheetOpen}

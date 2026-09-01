@@ -37,6 +37,9 @@ export default function App() {
 
   const title = TITLES[pathname] ?? 'スケジュール'
   const showFilter = pathname !== '/inbox' && pathname !== '/report'
+  // 予定追加はスケジュール系（Daily/Weekly/Monthly）でのみ。ヘッダーに置き、
+  // どのレーンにも重ならないようにする。各ビューが 'app:add-entry' を受け取る。
+  const showAdd = pathname === '/day' || pathname === '/week' || pathname === '/month'
 
   if (loading) {
     return (
@@ -79,6 +82,17 @@ export default function App() {
             >
               ⚙
             </button>
+            {showAdd && (
+              <button
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent('app:add-entry'))
+                }
+                className="ml-1 flex h-9 items-center gap-1 rounded-full bg-group-work px-3 text-sm font-bold text-white shadow-sm"
+                aria-label="予定を追加"
+              >
+                ＋<span className="text-xs">追加</span>
+              </button>
+            )}
           </div>
         </div>
         {showFilter && <GroupFilterBar />}

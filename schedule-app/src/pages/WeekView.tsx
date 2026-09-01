@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEntriesForRange, useSaveEntry } from '@/hooks/useEntries'
 import { useCategories } from '@/hooks/useCategories'
 import { useGroupFilter, GROUP_LABELS } from '@/hooks/useGroupFilter'
@@ -87,6 +87,14 @@ export default function WeekView() {
     setEditing(null)
     setSheetOpen(true)
   }
+
+  // ヘッダーの「＋追加」から。表示中の週に対して新規追加。
+  useEffect(() => {
+    const h = () => openNew()
+    window.addEventListener('app:add-entry', h)
+    return () => window.removeEventListener('app:add-entry', h)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days])
 
   // 大分類（Work / Family / Personal）ごとに区切る。中分類ラベルは出さず、色と内容で判別。
   const groups = useMemo(() => {
@@ -333,15 +341,6 @@ export default function WeekView() {
           </div>
         ))}
       </div>
-
-      {/* 予定を追加 */}
-      <button
-        onClick={openNew}
-        className="absolute bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-group-work text-3xl text-white shadow-lg"
-        aria-label="予定を追加"
-      >
-        ＋
-      </button>
 
       <EntrySheet
         open={sheetOpen}

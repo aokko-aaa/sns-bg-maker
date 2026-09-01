@@ -164,9 +164,11 @@ export default function EntrySheet({
       setErr('タイトルを入力してください')
       return
     }
+    // TODO は日付だけ（時刻なし）で扱う。予定は「終日」チェックで日付だけにできる。
+    const dateOnly = kind === 'task' || allDay
     let startsIso: string
     let endsIso: string
-    if (allDay) {
+    if (dateOnly) {
       // 終日・時間未定: 日付だけ。開始日0:00〜終了日の翌0:00（その日を丸ごとカバー）
       const sDay = startLocal.slice(0, 10)
       const eDay = endLocal.slice(0, 10) || sDay
@@ -193,7 +195,7 @@ export default function EntrySheet({
       kind,
       starts_at: startsIso,
       ends_at: endsIso,
-      all_day: allDay,
+      all_day: dateOnly,
       progress: kind === 'task' ? checklistProgress(items) : 0,
       notes:
         kind === 'task'
@@ -212,7 +214,7 @@ export default function EntrySheet({
         }
         const { id: _omit, ...base } = payload
         const rows = days.map((d) => {
-          if (allDay) {
+          if (dateOnly) {
             const s = jstLocalToIso(`${d}T00:00`)
             const e = new Date(new Date(s).getTime() + 86400000).toISOString()
             return { ...base, starts_at: s, ends_at: e, all_day: true }
@@ -389,61 +391,80 @@ export default function EntrySheet({
           </div>
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={allDay}
-            onChange={(e) => setAllDay(e.target.checked)}
-            className="h-5 w-5"
-          />
-          終日・時間未定（日付だけ）
-        </label>
-
-        {allDay ? (
-          <>
-            <label className={label}>
-              日付
-              <input
-                type="date"
-                value={startLocal.slice(0, 10)}
-                onChange={(e) => {
-                  const d = e.target.value
-                  setStartLocal(`${d}T00:00`)
-                  if (endLocal.slice(0, 10) < d) setEndLocal(`${d}T00:00`)
-                }}
-                className={field}
-              />
-            </label>
-            <label className={label}>
-              終了日（複数日にまたぐ場合のみ・省略可）
-              <input
-                type="date"
-                value={endLocal.slice(0, 10)}
-                onChange={(e) => setEndLocal(`${e.target.value}T00:00`)}
-                className={field}
-              />
-            </label>
-          </>
+        {kind === 'task' ? (
+          /* TODO は日付だけ（開始/終了の時刻は不要でまぎらわしいので出さない） */
+          <label className={label}>
+            日付
+            <input
+              type="date"
+              value={startLocal.slice(0, 10)}
+              onChange={(e) => {
+                const d = e.target.value
+                setStartLocal(`${d}T00:00`)
+                setEndLocal(`${d}T00:00`)
+              }}
+              className={field}
+            />
+          </label>
         ) : (
           <>
-            <label className={label}>
-              開始
+            <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
-                type="datetime-local"
-                value={startLocal}
-                onChange={(e) => setStartLocal(e.target.value)}
-                className={field}
+                type="checkbox"
+                checked={allDay}
+                onChange={(e) => setAllDay(e.target.checked)}
+                className="h-5 w-5"
               />
+              終日・時間未定（日付だけ）
             </label>
-            <label className={label}>
-              終了
-              <input
-                type="datetime-local"
-                value={endLocal}
-                onChange={(e) => setEndLocal(e.target.value)}
-                className={field}
-              />
-            </label>
+
+            {allDay ? (
+              <>
+                <label className={label}>
+                  日付
+                  <input
+                    type="date"
+                    value={startLocal.slice(0, 10)}
+                    onChange={(e) => {
+                      const d = e.target.value
+                      setStartLocal(`${d}T00:00`)
+                      if (endLocal.slice(0, 10) < d) setEndLocal(`${d}T00:00`)
+                    }}
+                    className={field}
+                  />
+                </label>
+                <label className={label}>
+                  終了日（複数日にまたぐ場合のみ・省略可）
+                  <input
+                    type="date"
+                    value={endLocal.slice(0, 10)}
+                    onChange={(e) => setEndLocal(`${e.target.value}T00:00`)}
+                    className={field}
+                  />
+                </label>
+              </>
+            ) : (
+              <>
+                <label className={label}>
+                  開始
+                  <input
+                    type="datetime-local"
+                    value={startLocal}
+                    onChange={(e) => setStartLocal(e.target.value)}
+                    className={field}
+                  />
+                </label>
+                <label className={label}>
+                  終了
+                  <input
+                    type="datetime-local"
+                    value={endLocal}
+                    onChange={(e) => setEndLocal(e.target.value)}
+                    className={field}
+                  />
+                </label>
+              </>
+            )}
           </>
         )}
 
