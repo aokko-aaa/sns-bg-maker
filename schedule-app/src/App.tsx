@@ -25,7 +25,7 @@ const TITLES: Record<string, string> = {
 
 export default function App() {
   const { session, loading } = useAuth()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const [catOpen, setCatOpen] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bgOpen, setBgOpen] = useState(false)
@@ -86,7 +86,7 @@ export default function App() {
 
       <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <Routes>
-          <Route path="/" element={<Navigate to="/day" replace />} />
+          <Route path="/" element={<Navigate to={`/day${search}`} replace />} />
           <Route path="/day" element={<DayView />} />
           <Route path="/week" element={<WeekView />} />
           <Route path="/month" element={<MonthView />} />
