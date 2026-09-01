@@ -313,7 +313,7 @@ export default function DayView() {
       }}
     >
       {/* 日付ナビ（大きく表示） */}
-      <div className="flex items-center justify-between px-2 pt-2">
+      <div className="flex items-center justify-between px-2 pt-1">
         <button
           onClick={() => setDay((d) => addDays(d, -1))}
           className="min-h-tap min-w-tap text-2xl text-gray-400"
@@ -329,7 +329,7 @@ export default function DayView() {
             {fmtDateLabel(day)}
           </span>
           {isToday && (
-            <span className="text-sm font-medium text-group-work">Today</span>
+            <span className="text-xs font-medium text-group-work">Today</span>
           )}
         </button>
         <button
@@ -341,7 +341,7 @@ export default function DayView() {
         </button>
       </div>
       {/* 表示切替 */}
-      <div className="flex justify-end border-b border-gray-100 px-2 py-1">
+      <div className="flex justify-end border-b border-gray-100 px-2 py-0.5">
         <div className="flex overflow-hidden rounded-lg border border-gray-200 text-xs">
           <button
             onClick={() => setMode('lanes')}
@@ -399,9 +399,9 @@ export default function DayView() {
         </div>
       )}
 
-      {/* やること（TODO）専用リスト — その日のタスクを大きなチェックで確認 */}
+      {/* TODO 専用リスト — その日のタスクを大きなチェックで確認 */}
       <TaskList
-        title="やること"
+        title="TODO"
         tasks={dayTasks}
         colorOf={colorOf}
         onEdit={openEdit}

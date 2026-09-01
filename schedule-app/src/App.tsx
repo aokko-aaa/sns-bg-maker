@@ -53,7 +53,7 @@ export default function App() {
       <div className="bg-layer" aria-hidden />
       <div className="relative z-10 mx-auto flex h-full max-w-md flex-col">
       <header className="pt-safe surface-translucent border-b border-white/40">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-2">
           <h1 className="text-base font-bold text-gray-800">{title}</h1>
           <div className="flex items-center gap-1">
             <button
