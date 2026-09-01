@@ -15,7 +15,12 @@ import {
   useStopTimer,
   useRunningTimer,
 } from '@/hooks/useTimeTracking'
-import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
+import {
+  isoToJstLocal,
+  jstLocalToIso,
+  monthGrid,
+  fmtMonthLabel,
+} from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
 import {
   checklistProgress,
@@ -71,11 +76,14 @@ export default function EntrySheet({
   const [notes, setNotes] = useState('')
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [err, setErr] = useState<string | null>(null)
-  // 繰り返し（新規のみ）: なし/毎日/毎週/毎月 × 回数
-  const [repeat, setRepeat] = useState<'none' | 'daily' | 'weekly' | 'monthly'>(
-    'none'
-  )
+  // 繰り返し（新規のみ）: なし/毎日/毎週/毎月 × 回数、または カレンダーで複数日選択
+  const [repeat, setRepeat] = useState<
+    'none' | 'daily' | 'weekly' | 'monthly' | 'dates'
+  >('none')
   const [repeatCount, setRepeatCount] = useState(4)
+  // repeat==='dates' 用: カレンダーで選んだ複数日
+  const [pickedDates, setPickedDates] = useState<Set<string>>(new Set())
+  const [calAnchor, setCalAnchor] = useState(() => new Date())
 
   // カテゴリ追加（選んでいる大分類の中に作る → すぐ選択）
   async function onAddCategory() {
@@ -140,6 +148,8 @@ export default function EntrySheet({
     setErr(null)
     setRepeat('none')
     setRepeatCount(4)
+    setPickedDates(new Set())
+    setCalAnchor(new Date())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, entry])
 
@@ -193,6 +203,34 @@ export default function EntrySheet({
       inbox_id: entry ? entry.inbox_id : inboxId ?? null,
     }
     try {
+      // 新規＋カレンダーで複数日選択 → 選んだ各日に同じ内容で作成（時刻は上の設定を使用）
+      if (!entry && repeat === 'dates') {
+        const days = [...pickedDates].sort()
+        if (days.length === 0) {
+          setErr('カレンダーで日付を選んでください')
+          return
+        }
+        const { id: _omit, ...base } = payload
+        const rows = days.map((d) => {
+          if (allDay) {
+            const s = jstLocalToIso(`${d}T00:00`)
+            const e = new Date(new Date(s).getTime() + 86400000).toISOString()
+            return { ...base, starts_at: s, ends_at: e, all_day: true }
+          }
+          const hhmmS = startLocal.slice(11, 16) || '09:00'
+          const hhmmE = endLocal.slice(11, 16) || '10:00'
+          const s = jstLocalToIso(`${d}T${hhmmS}`)
+          let e = jstLocalToIso(`${d}T${hhmmE}`)
+          if (new Date(e).getTime() <= new Date(s).getTime()) {
+            e = new Date(new Date(s).getTime() + 3600000).toISOString()
+          }
+          return { ...base, starts_at: s, ends_at: e, all_day: false }
+        })
+        await addEntries.mutateAsync(rows)
+        onSaved?.()
+        onClose()
+        return
+      }
       // 新規＋繰り返しあり → 期間をずらして複数件をまとめて追加
       if (!entry && repeat !== 'none' && repeatCount > 1) {
         const n = Math.min(60, Math.max(1, repeatCount))
@@ -495,8 +533,9 @@ export default function EntrySheet({
                 <option value="daily">毎日</option>
                 <option value="weekly">毎週</option>
                 <option value="monthly">毎月</option>
+                <option value="dates">🗓️ カレンダーで選ぶ</option>
               </select>
-              {repeat !== 'none' && (
+              {repeat !== 'none' && repeat !== 'dates' && (
                 <label className="flex items-center gap-1 text-sm text-gray-600">
                   <input
                     type="number"
@@ -512,12 +551,101 @@ export default function EntrySheet({
                 </label>
               )}
             </div>
-            {repeat !== 'none' && (
+            {repeat !== 'none' && repeat !== 'dates' && (
               <p className="mt-1 text-[11px] text-gray-400">
                 この予定を含めて{' '}
                 {repeat === 'daily' ? '毎日' : repeat === 'weekly' ? '毎週' : '毎月'}
                 、合計 {Math.min(60, Math.max(1, repeatCount))} 件つくります。
               </p>
+            )}
+
+            {/* カレンダーで複数日を選ぶ */}
+            {repeat === 'dates' && (
+              <div className="mt-2">
+                <p className="mb-1 text-[11px] text-gray-400">
+                  上の時刻で、選んだ各日に登録します。バラバラの日でOK。
+                </p>
+                <div className="rounded-xl border border-gray-200 p-2">
+                  <div className="mb-1 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCalAnchor((d) => addMonths(d, -1))}
+                      className="min-h-tap min-w-tap text-gray-500"
+                      aria-label="前月"
+                    >
+                      ‹
+                    </button>
+                    <span className="text-base font-bold text-gray-800">
+                      {fmtMonthLabel(calAnchor)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCalAnchor((d) => addMonths(d, 1))}
+                      className="min-h-tap min-w-tap text-gray-500"
+                      aria-label="翌月"
+                    >
+                      ›
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-7 text-center text-[11px] text-gray-400">
+                    {['日', '月', '火', '水', '木', '金', '土'].map((w, i) => (
+                      <div
+                        key={w}
+                        className={
+                          i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : ''
+                        }
+                      >
+                        {w}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7">
+                    {monthGrid(calAnchor).map(({ key, inMonth }) => {
+                      const sel = pickedDates.has(key)
+                      return (
+                        <button
+                          type="button"
+                          key={key}
+                          onClick={() =>
+                            setPickedDates((prev) => {
+                              const n = new Set(prev)
+                              if (n.has(key)) n.delete(key)
+                              else n.add(key)
+                              return n
+                            })
+                          }
+                          className="flex items-center justify-center py-1"
+                        >
+                          <span
+                            className={
+                              'flex h-8 w-8 items-center justify-center rounded-full text-sm ' +
+                              (sel
+                                ? 'bg-group-work font-bold text-white'
+                                : inMonth
+                                  ? 'text-gray-700'
+                                  : 'text-gray-300')
+                            }
+                          >
+                            {Number(key.slice(-2))}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <p className="mt-1 text-sm font-medium text-gray-600">
+                  選択中: {pickedDates.size} 日
+                  {pickedDates.size > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setPickedDates(new Set())}
+                      className="ml-2 text-xs text-gray-400 underline"
+                    >
+                      クリア
+                    </button>
+                  )}
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -577,9 +705,11 @@ export default function EntrySheet({
           >
             {save.isPending || addEntries.isPending
               ? '保存中…'
-              : !entry && repeat !== 'none'
-                ? `${Math.min(60, Math.max(1, repeatCount))}件を登録`
-                : '保存'}
+              : !entry && repeat === 'dates'
+                ? `選んだ ${pickedDates.size} 日に登録`
+                : !entry && repeat !== 'none'
+                  ? `${Math.min(60, Math.max(1, repeatCount))}件を登録`
+                  : '保存'}
           </button>
         </div>
       </div>
