@@ -28,7 +28,7 @@ import EntrySheet from '@/components/EntrySheet'
 import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry, GroupKey } from '@/types/database'
 
-const HOUR_H = 60 // 1時間の高さ(px)
+const HOUR_H = 40 // 1時間の高さ(px)。半日(約12h)が1画面に入る目安
 const START_HOUR = 6 // 初期スクロール位置
 const GUT = '2.5rem' // 左の時刻ラベル幅
 
