@@ -141,8 +141,9 @@ export default function WeekView() {
     return { start, end }
   }
 
-  // グループ内の予定を「重ならない同士は同じ行」にまとめる（レーン詰め）。
-  // 同一中分類でも日付が重ならなければ1行に並ぶので、予定の数だけ行が増えない。
+  // 予定を「重ならない同士は同じ行」にまとめる（レーン詰め）。
+  // ただし中分類（カテゴリ）が違うものは同じ行にせず、必ず行を分ける。
+  // 同一中分類の中でだけ、日付が重ならなければ1行に並ぶので行増えしない。
   function packRows(items: Entry[]): Array<Array<{ e: Entry; start: number; end: number }>> {
     const withSpan = items
       .map((e) => ({ e, sp: span(e) }))
@@ -150,23 +151,43 @@ export default function WeekView() {
         (x): x is { e: Entry; sp: { start: number; end: number } } =>
           x.sp !== null
       )
-      .sort((a, b) => a.sp.start - b.sp.start || a.sp.end - b.sp.end)
 
-    const rows: Array<{
-      lastEnd: number
-      items: Array<{ e: Entry; start: number; end: number }>
-    }> = []
-    for (const { e, sp } of withSpan) {
-      // 既存の行のうち、最後の予定がこの予定の開始より前に終わっている行へ入れる
-      const row = rows.find((r) => r.lastEnd < sp.start)
-      if (row) {
-        row.items.push({ e, start: sp.start, end: sp.end })
-        row.lastEnd = sp.end
-      } else {
-        rows.push({ lastEnd: sp.end, items: [{ e, start: sp.start, end: sp.end }] })
-      }
+    // 中分類ごとにバケツ分け（出現順を保つ）。未分類は 'none' 扱い。
+    const buckets = new Map<
+      string,
+      Array<{ e: Entry; sp: { start: number; end: number } }>
+    >()
+    for (const x of withSpan) {
+      const key = x.e.category_id ?? 'none'
+      if (!buckets.has(key)) buckets.set(key, [])
+      buckets.get(key)!.push(x)
     }
-    return rows.map((r) => r.items)
+
+    const result: Array<Array<{ e: Entry; start: number; end: number }>> = []
+    for (const bucket of buckets.values()) {
+      const sorted = [...bucket].sort(
+        (a, b) => a.sp.start - b.sp.start || a.sp.end - b.sp.end
+      )
+      const rows: Array<{
+        lastEnd: number
+        items: Array<{ e: Entry; start: number; end: number }>
+      }> = []
+      for (const { e, sp } of sorted) {
+        // 同じ中分類の行のうち、最後の予定がこの予定の開始より前に終わる行へ入れる
+        const row = rows.find((r) => r.lastEnd < sp.start)
+        if (row) {
+          row.items.push({ e, start: sp.start, end: sp.end })
+          row.lastEnd = sp.end
+        } else {
+          rows.push({
+            lastEnd: sp.end,
+            items: [{ e, start: sp.start, end: sp.end }],
+          })
+        }
+      }
+      for (const r of rows) result.push(r.items)
+    }
+    return result
   }
 
   function beginDrag(
