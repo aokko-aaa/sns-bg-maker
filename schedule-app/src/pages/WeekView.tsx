@@ -6,6 +6,7 @@ import {
   addDays,
   entryOverlapsDay,
   fmtMd,
+  fmtHm,
   dayKey,
   weekDays,
 } from '@/lib/dates'
@@ -21,6 +22,12 @@ export default function WeekView() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<Entry | null>(null)
   const [defaultStart, setDefaultStart] = useState<string | undefined>()
+  // タップで出す簡易プレビュー（内容確認用）
+  const [preview, setPreview] = useState<{
+    e: Entry
+    top: number
+    left: number
+  } | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const touchX = useRef<number | null>(null)
   // ドラッグ中のプレビュー: entryId -> {startShift, endShift}(日数)
@@ -235,6 +242,18 @@ export default function WeekView() {
     window.addEventListener('pointerup', onUp)
   }
 
+  // プレビュー用の日時ラベル（例: 8/17〜8/19・終日 / 8/20 09:00〜10:00）
+  function whenLabel(e: Entry): string {
+    const sp = span(e)
+    const dateLabel = sp
+      ? sp.start === sp.end
+        ? fmtMd(days[sp.start])
+        : `${fmtMd(days[sp.start])}〜${fmtMd(days[sp.end])}`
+      : fmtMd(new Date(e.starts_at))
+    if (e.all_day) return `${dateLabel}・終日`
+    return `${dateLabel} ${fmtHm(e.starts_at)}〜${fmtHm(e.ends_at)}`
+  }
+
   return (
     <div
       className="flex min-h-0 flex-1 flex-col"
@@ -349,7 +368,13 @@ export default function WeekView() {
                   return (
                     <div
                       key={e.id}
-                      onClick={() => openEdit(e)}
+                      onClick={(ev) => {
+                        const r = (
+                          ev.currentTarget as HTMLElement
+                        ).getBoundingClientRect()
+                        setPreview({ e, top: r.bottom + 4, left: r.left })
+                      }}
+                      title={`${e.title}\n${whenLabel(e)}`}
                       className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[13px] shadow-sm"
                       style={{
                         left: `${start * pct}%`,
@@ -391,6 +416,67 @@ export default function WeekView() {
           </div>
         ))}
       </div>
+
+      {/* 簡易プレビュー（内容確認）— タップで表示、外側タップで閉じる */}
+      {preview && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setPreview(null)}
+          />
+          <div
+            className="fixed z-50 w-60 max-w-[80vw] rounded-xl border border-gray-200 bg-white p-3 shadow-xl"
+            style={{
+              top: Math.max(8, Math.min(preview.top, window.innerHeight - 170)),
+              left: Math.max(8, Math.min(preview.left, window.innerWidth - 248)),
+            }}
+          >
+            <div className="flex items-start gap-2">
+              <span
+                className="mt-0.5 h-3 w-3 shrink-0 rounded-full"
+                style={{ backgroundColor: colorOf(preview.e) }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-bold text-gray-800">
+                  {preview.e.title}
+                </p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {whenLabel(preview.e)}
+                </p>
+                {preview.e.category_id &&
+                  catMap.get(preview.e.category_id) && (
+                    <p className="text-xs text-gray-400">
+                      {catMap.get(preview.e.category_id)!.name}
+                    </p>
+                  )}
+                {preview.e.notes && preview.e.kind !== 'task' && (
+                  <p className="mt-1 whitespace-pre-wrap break-words text-xs text-gray-600">
+                    {preview.e.notes}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => setPreview(null)}
+                className="min-h-tap flex-1 rounded-lg border border-gray-300 text-xs text-gray-600"
+              >
+                閉じる
+              </button>
+              <button
+                onClick={() => {
+                  const e = preview.e
+                  setPreview(null)
+                  openEdit(e)
+                }}
+                className="min-h-tap flex-1 rounded-lg bg-group-work text-xs font-medium text-white"
+              >
+                編集
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <EntrySheet
         open={sheetOpen}
