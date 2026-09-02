@@ -141,6 +141,34 @@ export default function WeekView() {
     return { start, end }
   }
 
+  // グループ内の予定を「重ならない同士は同じ行」にまとめる（レーン詰め）。
+  // 同一中分類でも日付が重ならなければ1行に並ぶので、予定の数だけ行が増えない。
+  function packRows(items: Entry[]): Array<Array<{ e: Entry; start: number; end: number }>> {
+    const withSpan = items
+      .map((e) => ({ e, sp: span(e) }))
+      .filter(
+        (x): x is { e: Entry; sp: { start: number; end: number } } =>
+          x.sp !== null
+      )
+      .sort((a, b) => a.sp.start - b.sp.start || a.sp.end - b.sp.end)
+
+    const rows: Array<{
+      lastEnd: number
+      items: Array<{ e: Entry; start: number; end: number }>
+    }> = []
+    for (const { e, sp } of withSpan) {
+      // 既存の行のうち、最後の予定がこの予定の開始より前に終わっている行へ入れる
+      const row = rows.find((r) => r.lastEnd < sp.start)
+      if (row) {
+        row.items.push({ e, start: sp.start, end: sp.end })
+        row.lastEnd = sp.end
+      } else {
+        rows.push({ lastEnd: sp.end, items: [{ e, start: sp.start, end: sp.end }] })
+      }
+    }
+    return rows.map((r) => r.items)
+  }
+
   function beginDrag(
     e: Entry,
     side: 'left' | 'right',
@@ -283,61 +311,62 @@ export default function WeekView() {
               />
               {g.name}
             </div>
-            {/* 各エントリ1行 */}
-            {g.items.map((e) => {
-              const sp = span(e)
-              if (!sp) return null
-              let start = sp.start
-              let end = sp.end
-              // ドラッグ中のプレビュー反映
-              if (drag && drag.id === e.id) {
-                if (drag.side === 'left')
-                  start = Math.max(0, Math.min(end, start + drag.shift))
-                else end = Math.min(6, Math.max(start, end + drag.shift))
-              }
-              const count = end - start + 1
-              const pct = 100 / 7
-              return (
-                <div key={e.id} className="relative h-9 border-b border-gray-50">
-                  <div
-                    onClick={() => openEdit(e)}
-                    className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[13px] shadow-sm"
-                    style={{
-                      left: `${start * pct}%`,
-                      width: `${count * pct}%`,
-                      backgroundColor: colorOf(e),
-                      color: contrastText(colorOf(e)),
-                    }}
-                  >
-                    {/* progress 塗り分け */}
-                    {e.kind === 'task' && (e.progress ?? 0) > 0 && (
-                      <div
-                        className="absolute inset-y-0 left-0 bg-black/20"
-                        style={{ width: `${e.progress}%` }}
+            {/* 重ならない予定は同じ行に詰める（同一中分類が予定の数だけ行増えしない） */}
+            {packRows(g.items).map((row, ri) => (
+              <div key={ri} className="relative h-9 border-b border-gray-50">
+                {row.map(({ e, start: s0, end: e0 }) => {
+                  let start = s0
+                  let end = e0
+                  // ドラッグ中のプレビュー反映
+                  if (drag && drag.id === e.id) {
+                    if (drag.side === 'left')
+                      start = Math.max(0, Math.min(end, start + drag.shift))
+                    else end = Math.min(6, Math.max(start, end + drag.shift))
+                  }
+                  const count = end - start + 1
+                  const pct = 100 / 7
+                  return (
+                    <div
+                      key={e.id}
+                      onClick={() => openEdit(e)}
+                      className="absolute top-1 flex h-7 items-center overflow-hidden rounded-md text-[13px] shadow-sm"
+                      style={{
+                        left: `${start * pct}%`,
+                        width: `${count * pct}%`,
+                        backgroundColor: colorOf(e),
+                        color: contrastText(colorOf(e)),
+                      }}
+                    >
+                      {/* progress 塗り分け */}
+                      {e.kind === 'task' && (e.progress ?? 0) > 0 && (
+                        <div
+                          className="absolute inset-y-0 left-0 bg-black/20"
+                          style={{ width: `${e.progress}%` }}
+                        />
+                      )}
+                      {/* 左ハンドル */}
+                      <span
+                        onPointerDown={(ev) => beginDrag(e, 'left', ev)}
+                        className="z-10 h-full w-3 cursor-ew-resize bg-black/10"
+                        title="開始をドラッグ"
                       />
-                    )}
-                    {/* 左ハンドル */}
-                    <span
-                      onPointerDown={(ev) => beginDrag(e, 'left', ev)}
-                      className="z-10 h-full w-3 cursor-ew-resize bg-black/10"
-                      title="開始をドラッグ"
-                    />
-                    <span className="pointer-events-none z-0 flex-1 truncate px-1">
-                      {e.title}
-                      {e.kind === 'task' && (e.progress ?? 0) > 0
-                        ? ` ${e.progress}%`
-                        : ''}
-                    </span>
-                    {/* 右ハンドル */}
-                    <span
-                      onPointerDown={(ev) => beginDrag(e, 'right', ev)}
-                      className="z-10 h-full w-3 cursor-ew-resize bg-black/10"
-                      title="終了をドラッグ"
-                    />
-                  </div>
-                </div>
-              )
-            })}
+                      <span className="pointer-events-none z-0 flex-1 truncate px-1">
+                        {e.title}
+                        {e.kind === 'task' && (e.progress ?? 0) > 0
+                          ? ` ${e.progress}%`
+                          : ''}
+                      </span>
+                      {/* 右ハンドル */}
+                      <span
+                        onPointerDown={(ev) => beginDrag(e, 'right', ev)}
+                        className="z-10 h-full w-3 cursor-ew-resize bg-black/10"
+                        title="終了をドラッグ"
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
           </div>
         ))}
       </div>
