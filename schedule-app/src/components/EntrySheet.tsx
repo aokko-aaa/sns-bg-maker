@@ -322,7 +322,7 @@ export default function EntrySheet({
             {(
               [
                 ['single', '1件ずつ'],
-                ['bulk', '📋 CSVで一括'],
+                ['bulk', 'CSVで一括'],
               ] as const
             ).map(([m, label]) => (
               <button
@@ -335,7 +335,7 @@ export default function EntrySheet({
                     : 'text-group-work')
                 }
               >
-                {m === 'single' && <Icon name="add" size={16} />}
+                <Icon name={m === 'single' ? 'add' : 'csv'} size={16} />
                 {label}
               </button>
             ))}

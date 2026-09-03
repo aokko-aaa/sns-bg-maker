@@ -8,7 +8,7 @@ export default function Icon({
   size = 20,
   className = '',
 }: {
-  name: 'bg' | 'add' | 'schedule' | 'settings' | 'mic'
+  name: 'bg' | 'add' | 'schedule' | 'settings' | 'mic' | 'csv'
   size?: number
   className?: string
 }) {
