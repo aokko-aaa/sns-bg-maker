@@ -40,9 +40,11 @@
   .badge{ display:inline-block; margin-top:12px; font-family:var(--disp); font-weight:700;
     font-size:14px; color:#fff; background:var(--pink); padding:6px 16px; border-radius:999px;
     box-shadow:0 6px 14px rgba(207,141,167,.4); }
-  h1{ font-family:var(--disp); font-weight:900; font-size:30px; line-height:1.42;
-    margin:20px 6px 0; text-wrap:balance; letter-spacing:.01em; }
+  h1{ font-family:var(--disp); font-weight:800; font-size:clamp(15px,5.4vw,30px); line-height:1.42;
+    margin:20px 6px 0; letter-spacing:.01em; }
   h1 .pink{ color:var(--pink-d); }
+  /* 見出しは各行を折り返さない単位に。文字サイズが縮んで割り位置はPCと同じ */
+  .hero h1 .ln{ display:block; white-space:nowrap; }
   .lead{ color:#6b6469; font-size:16px; margin:14px 8px 0; text-wrap:balance; }
   .cta{ position:relative; display:inline-flex; align-items:center; gap:8px; margin-top:26px; text-decoration:none;
     font-family:var(--disp); font-weight:700; font-size:19px; color:#fff; background:var(--pink);
@@ -120,7 +122,8 @@
   footer{ text-align:center; color:var(--muted); font-size:13.5px; padding:6px 10px 0; }
   footer .made{ font-family:var(--disp); font-weight:700; color:var(--pink-d); font-size:15px; }
   @media (max-width:480px){
-    h1{ font-size:26px; } .panel{ padding:28px 22px; border-radius:26px; }
+    main{ padding-left:14px; padding-right:14px; }
+    .panel{ padding:28px 18px; border-radius:26px; }
     .cta{ font-size:18px; padding:15px 34px; }
   }
 </style>
@@ -143,8 +146,8 @@
     </span>
     <div class="brand">MY SCHEDULE</div>
     <div><span class="badge">無料・ログイン不要</span></div>
-    <h1>ワンオペ・フリーランス母が、<br><span class="pink">ほしかった予定帳。</span></h1>
-    <p class="lead">予定・TODO・今月の目標・作業時間を、ぜんぶ1つに。<br>仕事・自分・家族をレーンで分けて、すっきり整頓。</p>
+    <h1><span class="ln">ワンオペ・フリーランス母が、</span><span class="ln pink">ほしかった予定帳</span></h1>
+    <p class="lead">予定・TODO・今月の目標・作業時間を、ぜんぶ1つに。仕事・自分・家族をレーンで分けて、すっきり整頓。</p>
     <a class="cta" href="https://my-schedule-local.vercel.app">アプリを開く →</a>
     <p class="hint">ホーム画面に追加すれば、アプリのように使えます</p>
     <div><span class="sticky">市場調査ゼロ。<br>完全に <em>“わたしが欲しかったもの”</em> です。</span></div>
@@ -216,7 +219,7 @@
   </section>
 
   <section class="panel hero" style="padding:34px 30px;">
-    <h1 style="font-size:26px;margin-top:0;">今日から、<span class="pink">自分だけの予定帳</span>を。</h1>
+    <h1 style="margin-top:0;">今日から、<span class="pink">自分だけの予定帳</span>を。</h1>
     <a class="cta" href="https://my-schedule-local.vercel.app">アプリを開く →</a>
     <p class="hint">無料・ログイン不要・端末の中だけで完結</p>
   </section>
