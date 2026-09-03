@@ -9,7 +9,7 @@ export type StartTimerInput = {
   category_id?: string | null
 }
 
-/** 現在計測中のログ（ended_at が null）。無ければ null。 */
+/** 現在計測中のログ（ended_at が null）。無ければ null。※後方互換の単数版。 */
 export function useRunningTimer() {
   const { user } = useAuth()
   return useQuery({
@@ -28,18 +28,31 @@ export function useRunningTimer() {
   })
 }
 
-/** 計測開始。既に計測中のものがあれば止めてから新規に開始（同時に1つだけ）。 */
+/** 現在計測中のログすべて（同時計測に対応）。新しい順。 */
+export function useRunningTimers() {
+  const { user } = useAuth()
+  return useQuery({
+    queryKey: ['time_logs', 'running-all', user?.id],
+    enabled: !!user,
+    queryFn: async (): Promise<TimeLog[]> => {
+      const { data, error } = await supabase
+        .from('time_logs')
+        .select('*')
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
+/** 計測開始。既存の計測は止めず、新しい計測を1つ追加（複数同時計測OK）。 */
 export function useStartTimer() {
   const { user } = useAuth()
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: StartTimerInput) => {
       const nowIso = new Date().toISOString()
-      // 走っている計測を止める
-      await supabase
-        .from('time_logs')
-        .update({ ended_at: nowIso })
-        .is('ended_at', null)
       const { error } = await supabase.from('time_logs').insert({
         user_id: user!.id,
         label: input.label || '作業',
@@ -54,16 +67,16 @@ export function useStartTimer() {
   })
 }
 
-/** 計測停止（走っている計測すべてに終了時刻を入れる）。 */
+/** 計測停止。id 指定でその1件だけ、未指定なら走っている計測すべてを止める。 */
 export function useStopTimer() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (id?: string) => {
       const nowIso = new Date().toISOString()
-      const { error } = await supabase
-        .from('time_logs')
-        .update({ ended_at: nowIso })
-        .is('ended_at', null)
+      const base = supabase.from('time_logs').update({ ended_at: nowIso })
+      const { error } = id
+        ? await base.eq('id', id)
+        : await base.is('ended_at', null)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['time_logs'] }),

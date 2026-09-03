@@ -15,7 +15,7 @@ import {
 import {
   useStartTimer,
   useStopTimer,
-  useRunningTimer,
+  useRunningTimers,
 } from '@/hooks/useTimeTracking'
 import {
   isoToJstLocal,
@@ -66,7 +66,11 @@ export default function EntrySheet({
   const del = useDeleteEntry()
   const startTimer = useStartTimer()
   const stopTimer = useStopTimer()
-  const { data: runningTimer } = useRunningTimer()
+  const { data: runningTimers = [] } = useRunningTimers()
+  // この予定を計測中のログ（あれば）
+  const runningForEntry = entry
+    ? runningTimers.find((t) => t.entry_id === entry.id)
+    : undefined
 
   // 新規追加の入力方法: 1件ずつ / CSV・表で一括
   const [addMode, setAddMode] = useState<'single' | 'bulk'>('single')
@@ -719,10 +723,10 @@ export default function EntrySheet({
 
         {/* 予定の作業時間を計測（既存の予定のみ） */}
         {entry && entry.kind === 'event' && (
-          runningTimer?.entry_id === entry.id ? (
+          runningForEntry ? (
             <button
               type="button"
-              onClick={() => stopTimer.mutate()}
+              onClick={() => stopTimer.mutate(runningForEntry.id)}
               className="min-h-tap rounded-lg border border-red-300 bg-red-50 text-sm font-medium text-red-600"
             >
               ■ 計測を停止
