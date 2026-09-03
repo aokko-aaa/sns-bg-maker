@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import BottomSheet from './BottomSheet'
 import BulkAddPanel from './BulkAddPanel'
+import Icon from './Icon'
 import { useCategories, useAddCategoryReturning } from '@/hooks/useCategories'
 import { GROUP_LABELS } from '@/hooks/useGroupFilter'
 import type { GroupKey } from '@/types/database'
@@ -320,7 +321,7 @@ export default function EntrySheet({
           <div className="flex overflow-hidden rounded-xl border border-group-work/30 bg-group-work/5">
             {(
               [
-                ['single', '📝 1件ずつ'],
+                ['single', '1件ずつ'],
                 ['bulk', '📋 CSVで一括'],
               ] as const
             ).map(([m, label]) => (
@@ -328,12 +329,13 @@ export default function EntrySheet({
                 key={m}
                 onClick={() => setAddMode(m)}
                 className={
-                  'min-h-tap flex-1 text-sm font-medium ' +
+                  'flex min-h-tap flex-1 items-center justify-center gap-1 text-sm font-medium ' +
                   (addMode === m
                     ? 'bg-group-work text-white'
                     : 'text-group-work')
                 }
               >
+                {m === 'single' && <Icon name="add" size={16} />}
                 {label}
               </button>
             ))}
@@ -355,13 +357,20 @@ export default function EntrySheet({
               key={k}
               onClick={() => setKind(k)}
               className={
-                'min-h-tap flex-1 text-sm font-medium ' +
+                'flex min-h-tap flex-1 items-center justify-center gap-1 text-sm font-medium ' +
                 (kind === k
                   ? 'bg-group-work text-white'
                   : 'bg-white text-gray-500')
               }
             >
-              {k === 'event' ? '📅 予定' : '✓ TODO'}
+              {k === 'event' ? (
+                <>
+                  <Icon name="schedule" size={16} />
+                  予定
+                </>
+              ) : (
+                '✓ TODO'
+              )}
             </button>
           ))}
         </div>

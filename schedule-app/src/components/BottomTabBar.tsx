@@ -1,12 +1,14 @@
 import { NavLink } from 'react-router-dom'
+import Icon from './Icon'
 
 // 設計原則 2-4: 片手操作前提。主要操作（画面切替）は画面下部に配置。
+// icon が 'mic' などのときはオリジナルSVGアイコン、文字列は絵文字表示。
 const TABS = [
   { to: '/day', label: '日', icon: '☀' },
   { to: '/week', label: '週', icon: '▤' },
   { to: '/month', label: '月', icon: '▦' },
   { to: '/report', label: '稼働', icon: '⏱' },
-  { to: '/inbox', label: '音声入力', icon: '🎙️' },
+  { to: '/inbox', label: '音声入力', icon: 'mic' as const },
 ] as const
 
 export default function BottomTabBar() {
@@ -27,11 +29,15 @@ export default function BottomTabBar() {
               {({ isActive }) => (
                 <>
                   <span
-                    className="text-lg leading-none"
+                    className="flex h-[22px] items-center text-lg leading-none"
                     aria-hidden
                     style={{ opacity: isActive ? 1 : 0.6 }}
                   >
-                    {t.icon}
+                    {t.icon === 'mic' ? (
+                      <Icon name="mic" size={20} />
+                    ) : (
+                      t.icon
+                    )}
                   </span>
                   <span>{t.label}</span>
                 </>

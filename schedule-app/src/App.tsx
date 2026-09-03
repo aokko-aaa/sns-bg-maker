@@ -4,6 +4,7 @@ import BottomTabBar from '@/components/BottomTabBar'
 import GroupFilterBar from '@/components/GroupFilterBar'
 import CategorySheet from '@/components/CategorySheet'
 import BackgroundSheet from '@/components/BackgroundSheet'
+import Icon from '@/components/Icon'
 import DayView from '@/pages/DayView'
 import WeekView from '@/pages/WeekView'
 import MonthView from '@/pages/MonthView'
@@ -59,28 +60,29 @@ export default function App() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setBgOpen(true)}
-              className="min-h-tap min-w-tap text-lg text-gray-500"
+              className="flex min-h-tap min-w-tap items-center justify-center text-gray-500"
               aria-label="背景の設定"
               title="背景の設定"
             >
-              🎨
+              <Icon name="bg" size={22} />
             </button>
             <button
               onClick={() => setCatOpen(true)}
-              className="min-h-tap min-w-tap text-lg text-gray-500"
+              className="flex min-h-tap min-w-tap items-center justify-center text-gray-500"
               aria-label="カテゴリ管理"
             >
-              ⚙
+              <Icon name="settings" size={22} />
             </button>
             {showAdd && (
               <button
                 onClick={() =>
                   window.dispatchEvent(new CustomEvent('app:add-entry'))
                 }
-                className="ml-1 flex h-9 items-center gap-1 rounded-full bg-group-work px-3 text-sm font-bold text-white shadow-sm"
+                className="ml-1 flex h-9 items-center gap-1 rounded-full bg-group-work pl-2.5 pr-3 text-sm font-bold text-white shadow-sm"
                 aria-label="予定を追加"
               >
-                ＋<span className="text-xs">追加</span>
+                <Icon name="add" size={18} />
+                <span className="text-xs">追加</span>
               </button>
             )}
           </div>

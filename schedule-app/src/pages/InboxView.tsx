@@ -8,6 +8,7 @@ import {
 } from '@/hooks/useInbox'
 import { useCategories } from '@/hooks/useCategories'
 import { useDictation } from '@/hooks/useDictation'
+import Icon from '@/components/Icon'
 import { useSaveEntry, type EntryInput } from '@/hooks/useEntries'
 import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
 import EntrySheet from '@/components/EntrySheet'
@@ -73,7 +74,7 @@ export default function InboxView() {
             onClick={toggleMic}
             disabled={!dictation.supported}
             className={
-              'min-h-tap min-w-tap rounded-lg border text-lg ' +
+              'flex min-h-tap min-w-tap items-center justify-center rounded-lg border text-lg ' +
               (dictation.listening
                 ? 'animate-pulse border-red-300 bg-red-50'
                 : dictation.supported
@@ -89,7 +90,11 @@ export default function InboxView() {
             }
             aria-label="音声入力"
           >
-            {dictation.listening ? '⏹' : '🎙️'}
+            {dictation.listening ? (
+              '⏹'
+            ) : (
+              <Icon name="mic" size={22} className={dictation.supported ? 'text-gray-700' : 'text-gray-300'} />
+            )}
           </button>
         </div>
         {dictation.partial && (
