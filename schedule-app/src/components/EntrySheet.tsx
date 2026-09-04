@@ -169,8 +169,9 @@ export default function EntrySheet({
     // TODO はタイトル任意（空なら先頭項目 or 'TODO'）。予定は必須
     let finalTitle = title.trim()
     if (kind === 'task') {
+      // タイトル空欄でも先頭のチェック項目を昇格させない（中立の「TODO」にする）
       if (!finalTitle) {
-        finalTitle = items.find((i) => i.text.trim())?.text.trim() || 'TODO'
+        finalTitle = 'TODO'
       }
     } else if (!finalTitle) {
       setErr('タイトルを入力してください')
