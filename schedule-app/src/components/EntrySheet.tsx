@@ -74,6 +74,8 @@ export default function EntrySheet({
 
   // 新規追加の入力方法: 1件ずつ / CSV・表で一括
   const [addMode, setAddMode] = useState<'single' | 'bulk'>('single')
+  // TODO の分類ピッカーを開いているか（ふだんは隠してシンプルに）
+  const [showCat, setShowCat] = useState(false)
   const [title, setTitle] = useState('')
   const [kind, setKind] = useState<EntryKind>('event')
   const [group, setGroup] = useState<GroupKey>('work')
@@ -155,6 +157,7 @@ export default function EntrySheet({
     }
     setErr(null)
     setAddMode('single')
+    setShowCat(!!(entry && entry.kind === 'task' && entry.category_id))
     setRepeat('none')
     setRepeatCount(4)
     setPickedDates(new Set())
@@ -580,6 +583,62 @@ export default function EntrySheet({
             )}
           </>
         )}
+
+        {/* TODO の分類（任意）。小さめボタンで折りたたみ、押すと大分類/中分類 */}
+        {kind === 'task' &&
+          (showCat ? (
+            <div className={label}>
+              分類（任意）
+              <div className="mt-1 flex gap-1.5">
+                {(['work', 'family', 'personal'] as GroupKey[]).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => selectGroup(g)}
+                    className={
+                      'min-h-tap flex-1 rounded-lg border py-1 text-xs ' +
+                      (group === g
+                        ? 'border-group-work bg-group-work/10 font-medium text-group-work'
+                        : 'border-gray-300 text-gray-500')
+                    }
+                  >
+                    {GROUP_LABELS[g]}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-1.5 flex gap-2">
+                <select
+                  value={categoryId ?? ''}
+                  onChange={(e) => setCategoryId(e.target.value || null)}
+                  className="min-h-tap flex-1 rounded-lg border border-gray-300 px-3 text-sm"
+                >
+                  <option value="">（分類なし）</option>
+                  {categories
+                    .filter((c) => c.group_key === group)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={onAddCategory}
+                  className="min-h-tap shrink-0 rounded-lg border border-group-work px-3 text-xs font-medium text-group-work"
+                >
+                  ＋
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowCat(true)}
+              className="self-start rounded-full border border-gray-300 px-3 py-1 text-xs text-gray-500"
+            >
+              🏷 分類をつける（任意）
+            </button>
+          ))}
 
         {/* メモは予定のときだけ（TODOは上のチェックリストで入力） */}
         {kind !== 'task' && (
