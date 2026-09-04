@@ -380,37 +380,21 @@ export default function EntrySheet({
     >
       <div className="flex flex-col gap-3">
         {/* 入力方法の切り替え（新規のみ）: 1件ずつ / CSV・表で一括 */}
-        {!entry && (
-          <div className="flex overflow-hidden rounded-xl border border-group-work/30 bg-group-work/5">
-            {(
-              [
-                ['single', '1件ずつ'],
-                ['bulk', 'CSVで一括'],
-              ] as const
-            ).map(([m, label]) => (
-              <button
-                key={m}
-                onClick={() => setAddMode(m)}
-                className={
-                  'flex min-h-tap flex-1 items-center justify-center gap-1 text-sm font-medium ' +
-                  (addMode === m
-                    ? 'bg-group-work text-white'
-                    : 'text-group-work')
-                }
-              >
-                <Icon name={m === 'single' ? 'add' : 'csv'} size={16} />
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-
         {!entry && addMode === 'bulk' ? (
-          <BulkAddPanel
-            onDone={() => {
-              onSaved?.()
-            }}
-          />
+          <>
+            <button
+              type="button"
+              onClick={() => setAddMode('single')}
+              className="self-start text-sm font-medium text-group-work"
+            >
+              ← 1件ずつの入力に戻る
+            </button>
+            <BulkAddPanel
+              onDone={() => {
+                onSaved?.()
+              }}
+            />
+          </>
         ) : (
           <>
         {/* 予定 / TODO 切り替え（一番上） */}
@@ -848,6 +832,17 @@ export default function EntrySheet({
                   : '保存'}
           </button>
         </div>
+
+        {/* CSV/表での一括取り込みは控えめに、下の方へ */}
+        {!entry && (
+          <button
+            type="button"
+            onClick={() => setAddMode('bulk')}
+            className="mt-1 self-center text-xs text-gray-400 underline underline-offset-2"
+          >
+            📋 CSV・表でまとめて取り込む
+          </button>
+        )}
           </>
         )}
       </div>
