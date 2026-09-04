@@ -313,6 +313,61 @@ export default function EntrySheet({
   const field =
     'mt-1 min-h-tap w-full rounded-lg border border-gray-300 px-3 text-base'
 
+  // TODO の「やること（チェックリスト）」。TODOでは入力を上に置くため関数化。
+  const checklistNode = (
+    <div className={label}>
+      やること（チェックリスト）
+      <div className="mt-1 flex flex-col gap-1.5">
+        {items.map((it, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setItems((prev) =>
+                  prev.map((x, j) => (j === i ? { ...x, done: !x.done } : x))
+                )
+              }
+              className="shrink-0 text-lg leading-none text-group-work"
+              aria-label={it.done ? '未完了に戻す' : '完了にする'}
+            >
+              {it.done ? '☑' : '☐'}
+            </button>
+            <input
+              value={it.text}
+              onChange={(e) =>
+                setItems((prev) =>
+                  prev.map((x, j) =>
+                    j === i ? { ...x, text: e.target.value } : x
+                  )
+                )
+              }
+              placeholder="項目を入力"
+              className={
+                'min-h-tap flex-1 rounded-lg border border-gray-300 px-2 text-base ' +
+                (it.done ? 'text-gray-400 line-through' : '')
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setItems((prev) => prev.filter((_, j) => j !== i))}
+              className="shrink-0 px-1 text-gray-400"
+              aria-label="削除"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => setItems((prev) => [...prev, { text: '', done: false }])}
+          className="min-h-tap self-start rounded-lg border border-dashed border-gray-300 px-3 text-sm text-gray-500"
+        >
+          ＋ 項目を追加
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <BottomSheet
       open={open}
@@ -389,57 +444,65 @@ export default function EntrySheet({
           />
         </label>
 
-        {/* 大分類 */}
-        <div className={label}>
-          大分類
-          <div className="mt-1 flex gap-2">
-            {(['work', 'family', 'personal'] as GroupKey[]).map((g) => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => selectGroup(g)}
-                className={
-                  'min-h-tap flex-1 rounded-lg border text-sm ' +
-                  (group === g
-                    ? 'border-group-work bg-group-work/10 font-medium text-group-work'
-                    : 'border-gray-300 text-gray-500')
-                }
-              >
-                {GROUP_LABELS[g]}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* TODO は「やること」を最優先で上に。ノイズになる大分類/中分類は出さない */}
+        {kind === 'task' && checklistNode}
 
-        {/* 中分類（選んだ大分類の中のカテゴリ） */}
-        <label className={label}>
-          中分類（カテゴリ）
-          <div className="mt-1 flex gap-2">
-            <select
-              value={categoryId ?? ''}
-              onChange={(e) => setCategoryId(e.target.value || null)}
-              className="min-h-tap flex-1 rounded-lg border border-gray-300 px-3 text-base"
-            >
-              {categories.filter((c) => c.group_key === group).length === 0 && (
-                <option value="">（まだありません）</option>
-              )}
-              {categories
-                .filter((c) => c.group_key === group)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
+        {/* 大分類・中分類は予定のときだけ（TODOはシンプルに） */}
+        {kind !== 'task' && (
+          <>
+            {/* 大分類 */}
+            <div className={label}>
+              大分類
+              <div className="mt-1 flex gap-2">
+                {(['work', 'family', 'personal'] as GroupKey[]).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => selectGroup(g)}
+                    className={
+                      'min-h-tap flex-1 rounded-lg border text-sm ' +
+                      (group === g
+                        ? 'border-group-work bg-group-work/10 font-medium text-group-work'
+                        : 'border-gray-300 text-gray-500')
+                    }
+                  >
+                    {GROUP_LABELS[g]}
+                  </button>
                 ))}
-            </select>
-            <button
-              type="button"
-              onClick={onAddCategory}
-              className="min-h-tap shrink-0 rounded-lg border border-group-work px-3 text-sm font-medium text-group-work"
-            >
-              ＋追加
-            </button>
-          </div>
-        </label>
+              </div>
+            </div>
+
+            {/* 中分類（選んだ大分類の中のカテゴリ） */}
+            <label className={label}>
+              中分類（カテゴリ）
+              <div className="mt-1 flex gap-2">
+                <select
+                  value={categoryId ?? ''}
+                  onChange={(e) => setCategoryId(e.target.value || null)}
+                  className="min-h-tap flex-1 rounded-lg border border-gray-300 px-3 text-base"
+                >
+                  {categories.filter((c) => c.group_key === group).length === 0 && (
+                    <option value="">（まだありません）</option>
+                  )}
+                  {categories
+                    .filter((c) => c.group_key === group)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={onAddCategory}
+                  className="min-h-tap shrink-0 rounded-lg border border-group-work px-3 text-sm font-medium text-group-work"
+                >
+                  ＋追加
+                </button>
+              </div>
+            </label>
+          </>
+        )}
 
         {kind === 'task' ? (
           /* TODO は日付だけ（開始/終了の時刻は不要でまぎらわしいので出さない） */
@@ -518,66 +581,8 @@ export default function EntrySheet({
           </>
         )}
 
-        {kind === 'task' ? (
-          /* TODO: チェックリスト（1枠に複数項目） */
-          <div className={label}>
-            やること（チェックリスト）
-            <div className="mt-1 flex flex-col gap-1.5">
-              {items.map((it, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setItems((prev) =>
-                        prev.map((x, j) =>
-                          j === i ? { ...x, done: !x.done } : x
-                        )
-                      )
-                    }
-                    className="shrink-0 text-lg leading-none text-group-work"
-                    aria-label={it.done ? '未完了に戻す' : '完了にする'}
-                  >
-                    {it.done ? '☑' : '☐'}
-                  </button>
-                  <input
-                    value={it.text}
-                    onChange={(e) =>
-                      setItems((prev) =>
-                        prev.map((x, j) =>
-                          j === i ? { ...x, text: e.target.value } : x
-                        )
-                      )
-                    }
-                    placeholder="項目を入力"
-                    className={
-                      'min-h-tap flex-1 rounded-lg border border-gray-300 px-2 text-base ' +
-                      (it.done ? 'text-gray-400 line-through' : '')
-                    }
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setItems((prev) => prev.filter((_, j) => j !== i))
-                    }
-                    className="shrink-0 px-1 text-gray-400"
-                    aria-label="削除"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() =>
-                  setItems((prev) => [...prev, { text: '', done: false }])
-                }
-                className="min-h-tap self-start rounded-lg border border-dashed border-gray-300 px-3 text-sm text-gray-500"
-              >
-                ＋ 項目を追加
-              </button>
-            </div>
-          </div>
-        ) : (
+        {/* メモは予定のときだけ（TODOは上のチェックリストで入力） */}
+        {kind !== 'task' && (
           <label className={label}>
             メモ
             <textarea
@@ -588,8 +593,8 @@ export default function EntrySheet({
           </label>
         )}
 
-        {/* 繰り返し登録（新規のみ）: 同じ予定を毎日/毎週/毎月でまとめて作成 */}
-        {!entry && (
+        {/* 繰り返し登録（新規の予定のみ。TODOはシンプルにするため非表示） */}
+        {!entry && kind !== 'task' && (
           <div className={label}>
             繰り返し
             <div className="mt-1 flex gap-2">
