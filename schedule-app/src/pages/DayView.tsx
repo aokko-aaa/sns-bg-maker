@@ -164,7 +164,8 @@ export default function DayView() {
         `${dayPart}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
       )
     } else {
-      setDefaultStart(isoToJstLocal(day.toISOString()))
+      // 日付だけ渡す（時刻は入力画面で空・現在時刻を引っ張らない）
+      setDefaultStart(isoToJstLocal(day.toISOString()).slice(0, 10))
     }
     // レーンから追加された場合はそのグループの先頭カテゴリを初期選択
     const cat =

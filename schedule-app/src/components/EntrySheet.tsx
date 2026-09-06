@@ -138,10 +138,12 @@ export default function EntrySheet({
         setNotes(entry.notes ?? '')
       }
     } else {
-      const base = defaultStartLocal ?? isoToJstLocal(new Date().toISOString())
-      // 開始の1時間後をデフォルト終了に（要件 6-4: event は60分）
-      const endDate = new Date(jstLocalToIso(base))
-      endDate.setHours(endDate.getHours() + 1)
+      const todayDate = isoToJstLocal(new Date().toISOString()).slice(0, 10)
+      const dsl = defaultStartLocal
+      // タイムライン等から具体的な時刻が渡されたときだけ時刻を入れる。
+      // それ以外（＋追加など）は現在時刻を引っ張らず、時刻は空にする。
+      const hasTime = !!dsl && dsl.length >= 16 && dsl.slice(11, 16).length === 5
+      const baseDate = (dsl && dsl.slice(0, 10)) || todayDate
       const dc = defaultCategoryId
         ? categories.find((c) => c.id === defaultCategoryId)
         : categories[0]
@@ -150,8 +152,16 @@ export default function EntrySheet({
       setGroup(dc?.group_key ?? 'work')
       setCategoryId(dc?.id ?? null)
       setAllDay(false)
-      setStartLocal(base)
-      setEndLocal(isoToJstLocal(endDate.toISOString()))
+      if (hasTime) {
+        const endDate = new Date(jstLocalToIso(dsl!))
+        endDate.setHours(endDate.getHours() + 1)
+        setStartLocal(dsl!)
+        setEndLocal(isoToJstLocal(endDate.toISOString()))
+      } else {
+        // 日付だけセット・時刻は空
+        setStartLocal(`${baseDate}T`)
+        setEndLocal(`${baseDate}T`)
+      }
       setNotes('')
       setItems([])
     }
@@ -194,6 +204,10 @@ export default function EntrySheet({
         new Date(jstLocalToIso(`${eDay}T00:00`)).getTime() + 86400000
       ).toISOString()
     } else {
+      if (!startLocal.slice(11, 16) || !endLocal.slice(11, 16)) {
+        setErr('開始・終了の時刻を入力してください')
+        return
+      }
       startsIso = jstLocalToIso(startLocal)
       endsIso = jstLocalToIso(endLocal)
       if (new Date(endsIso) <= new Date(startsIso)) {
@@ -546,24 +560,44 @@ export default function EntrySheet({
               </>
             ) : (
               <>
+                {/* 日付と時刻を分離。時刻は初期値を入れない（現在時刻を引っ張らない） */}
                 <label className={label}>
-                  開始
+                  日付
                   <input
-                    type="datetime-local"
-                    value={startLocal}
-                    onChange={(e) => setStartLocal(e.target.value)}
+                    type="date"
+                    value={startLocal.slice(0, 10)}
+                    onChange={(e) => {
+                      const d = e.target.value
+                      setStartLocal(`${d}T${startLocal.slice(11)}`)
+                      setEndLocal(`${d}T${endLocal.slice(11)}`)
+                    }}
                     className={field}
                   />
                 </label>
-                <label className={label}>
-                  終了
-                  <input
-                    type="datetime-local"
-                    value={endLocal}
-                    onChange={(e) => setEndLocal(e.target.value)}
-                    className={field}
-                  />
-                </label>
+                <div className="flex gap-2">
+                  <label className={label + ' flex-1'}>
+                    開始
+                    <input
+                      type="time"
+                      value={startLocal.slice(11, 16)}
+                      onChange={(e) =>
+                        setStartLocal(`${startLocal.slice(0, 10)}T${e.target.value}`)
+                      }
+                      className={field}
+                    />
+                  </label>
+                  <label className={label + ' flex-1'}>
+                    終了
+                    <input
+                      type="time"
+                      value={endLocal.slice(11, 16)}
+                      onChange={(e) =>
+                        setEndLocal(`${startLocal.slice(0, 10)}T${e.target.value}`)
+                      }
+                      className={field}
+                    />
+                  </label>
+                </div>
               </>
             )}
           </>

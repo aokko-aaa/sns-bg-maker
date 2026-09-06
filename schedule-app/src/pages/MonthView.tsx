@@ -102,7 +102,7 @@ export default function MonthView() {
   }
   function addOnSelected() {
     if (!selected) return
-    setDefaultStart(`${dayKey(selected)}T09:00`)
+    setDefaultStart(dayKey(selected))
     setEditing(null)
     setSheetOpen(true)
   }
@@ -111,7 +111,7 @@ export default function MonthView() {
     const todayK = dayKey(new Date())
     const inMonth = cells.some((c) => c.inMonth && c.key === todayK)
     const first = cells.find((c) => c.inMonth)?.key ?? todayK
-    setDefaultStart(`${inMonth ? todayK : first}T09:00`)
+    setDefaultStart(inMonth ? todayK : first)
     setEditing(null)
     setSheetOpen(true)
   }

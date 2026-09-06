@@ -90,7 +90,7 @@ export default function WeekView() {
     const todayK = dayKey(new Date())
     const inWeek = days.some((d) => dayKey(d) === todayK)
     const base = inWeek ? todayK : dayKey(days[0])
-    setDefaultStart(`${base}T09:00`)
+    setDefaultStart(base)
     setEditing(null)
     setSheetOpen(true)
   }
