@@ -77,6 +77,8 @@ export default function EntrySheet({
   const [addMode, setAddMode] = useState<'single' | 'bulk'>('single')
   // TODO の分類ピッカーを開いているか（ふだんは隠してシンプルに）
   const [showCat, setShowCat] = useState(false)
+  // 「別の日にコピー」のカレンダーを開いているか（既存の予定の複製用）
+  const [dupOpen, setDupOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [kind, setKind] = useState<EntryKind>('event')
   const [group, setGroup] = useState<GroupKey>('work')
@@ -172,6 +174,7 @@ export default function EntrySheet({
     setErr(null)
     setAddMode('single')
     setShowCat(!!(entry && entry.kind === 'task' && entry.category_id))
+    setDupOpen(false)
     setRepeat('none')
     setRepeatCount(4)
     setPickedDates(new Set())
@@ -296,29 +299,47 @@ export default function EntrySheet({
     }
   }
 
-  // 既存の予定を複製（同じ内容でもう1件追加）
-  async function onDuplicate() {
+  // 既存の予定を、カレンダーで選んだ別の日にコピー（時刻・長さは元のまま）
+  async function onDuplicateToDates() {
     if (!entry) return
     setErr(null)
+    const days = [...pickedDates].sort()
+    if (days.length === 0) {
+      setErr('コピー先の日付を選んでください')
+      return
+    }
+    const durationMs =
+      new Date(entry.ends_at).getTime() - new Date(entry.starts_at).getTime()
+    const startTime = isoToJstLocal(entry.starts_at).slice(11, 16) // HH:mm
     try {
-      await addEntries.mutateAsync([
-        {
+      const rows = days.map((d) => {
+        let s: string
+        let e: string
+        if (entry.all_day) {
+          s = jstLocalToIso(`${d}T00:00`)
+          e = new Date(new Date(s).getTime() + (durationMs || 86400000)).toISOString()
+        } else {
+          s = jstLocalToIso(`${d}T${startTime}`)
+          e = new Date(new Date(s).getTime() + durationMs).toISOString()
+        }
+        return {
           title: entry.title,
           category_id: entry.category_id,
           kind: entry.kind,
-          starts_at: entry.starts_at,
-          ends_at: entry.ends_at,
+          starts_at: s,
+          ends_at: e,
           all_day: entry.all_day,
           progress: entry.progress ?? 0,
           notes: entry.notes,
-          source: 'manual',
+          source: 'manual' as const,
           inbox_id: null,
-        },
-      ])
+        }
+      })
+      await addEntries.mutateAsync(rows)
       onSaved?.()
       onClose()
-    } catch (e) {
-      setErr('複製に失敗: ' + errMessage(e))
+    } catch (err) {
+      setErr('コピーに失敗: ' + errMessage(err))
     }
   }
 
@@ -389,6 +410,76 @@ export default function EntrySheet({
         >
           ＋ 項目を追加
         </button>
+      </div>
+    </div>
+  )
+
+  // 複数日を選ぶカレンダー（繰り返し「カレンダーで選ぶ」と複製で共用）
+  const calendarNode = (
+    <div className="rounded-xl border border-gray-200 p-2">
+      <div className="mb-1 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setCalAnchor((d) => addMonths(d, -1))}
+          className="min-h-tap min-w-tap text-gray-500"
+          aria-label="前月"
+        >
+          ‹
+        </button>
+        <span className="text-base font-bold text-gray-800">
+          {fmtMonthLabel(calAnchor)}
+        </span>
+        <button
+          type="button"
+          onClick={() => setCalAnchor((d) => addMonths(d, 1))}
+          className="min-h-tap min-w-tap text-gray-500"
+          aria-label="翌月"
+        >
+          ›
+        </button>
+      </div>
+      <div className="grid grid-cols-7 text-center text-[11px] text-gray-400">
+        {['日', '月', '火', '水', '木', '金', '土'].map((w, i) => (
+          <div
+            key={w}
+            className={i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : ''}
+          >
+            {w}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7">
+        {monthGrid(calAnchor).map(({ key, inMonth }) => {
+          const sel = pickedDates.has(key)
+          return (
+            <button
+              type="button"
+              key={key}
+              onClick={() =>
+                setPickedDates((prev) => {
+                  const n = new Set(prev)
+                  if (n.has(key)) n.delete(key)
+                  else n.add(key)
+                  return n
+                })
+              }
+              className="flex items-center justify-center py-1"
+            >
+              <span
+                className={
+                  'flex h-8 w-8 items-center justify-center rounded-full text-sm ' +
+                  (sel
+                    ? 'bg-group-work font-bold text-white'
+                    : inMonth
+                      ? 'text-gray-700'
+                      : 'text-gray-300')
+                }
+              >
+                {Number(key.slice(-2))}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -741,74 +832,7 @@ export default function EntrySheet({
                 <p className="mb-1 text-[11px] text-gray-400">
                   上の時刻で、選んだ各日に登録します。バラバラの日でOK。
                 </p>
-                <div className="rounded-xl border border-gray-200 p-2">
-                  <div className="mb-1 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setCalAnchor((d) => addMonths(d, -1))}
-                      className="min-h-tap min-w-tap text-gray-500"
-                      aria-label="前月"
-                    >
-                      ‹
-                    </button>
-                    <span className="text-base font-bold text-gray-800">
-                      {fmtMonthLabel(calAnchor)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setCalAnchor((d) => addMonths(d, 1))}
-                      className="min-h-tap min-w-tap text-gray-500"
-                      aria-label="翌月"
-                    >
-                      ›
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-7 text-center text-[11px] text-gray-400">
-                    {['日', '月', '火', '水', '木', '金', '土'].map((w, i) => (
-                      <div
-                        key={w}
-                        className={
-                          i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : ''
-                        }
-                      >
-                        {w}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7">
-                    {monthGrid(calAnchor).map(({ key, inMonth }) => {
-                      const sel = pickedDates.has(key)
-                      return (
-                        <button
-                          type="button"
-                          key={key}
-                          onClick={() =>
-                            setPickedDates((prev) => {
-                              const n = new Set(prev)
-                              if (n.has(key)) n.delete(key)
-                              else n.add(key)
-                              return n
-                            })
-                          }
-                          className="flex items-center justify-center py-1"
-                        >
-                          <span
-                            className={
-                              'flex h-8 w-8 items-center justify-center rounded-full text-sm ' +
-                              (sel
-                                ? 'bg-group-work font-bold text-white'
-                                : inMonth
-                                  ? 'text-gray-700'
-                                  : 'text-gray-300')
-                            }
-                          >
-                            {Number(key.slice(-2))}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
+                {calendarNode}
                 <p className="mt-1 text-sm font-medium text-gray-600">
                   選択中: {pickedDates.size} 日
                   {pickedDates.size > 0 && (
@@ -855,15 +879,55 @@ export default function EntrySheet({
 
         {err && <p className="text-sm text-red-600">{err}</p>}
 
-        {entry && (
-          <button
-            onClick={onDuplicate}
-            disabled={addEntries.isPending}
-            className="min-h-tap rounded-lg border border-group-work/40 bg-group-work/5 text-sm font-medium text-group-work disabled:opacity-50"
-          >
-            ⧉ この{entry.kind === 'task' ? 'TODO' : '予定'}を複製
-          </button>
-        )}
+        {entry &&
+          (!dupOpen ? (
+            <button
+              type="button"
+              onClick={() => setDupOpen(true)}
+              className="min-h-tap rounded-lg border border-group-work/40 bg-group-work/5 text-sm font-medium text-group-work"
+            >
+              ⧉ この{entry.kind === 'task' ? 'TODO' : '予定'}を別の日にコピー
+            </button>
+          ) : (
+            <div className={label}>
+              コピー先の日付を選ぶ（時刻・内容はそのまま）
+              <div className="mt-1">{calendarNode}</div>
+              <p className="mt-1 text-sm font-medium text-gray-600">
+                選択中: {pickedDates.size} 日
+                {pickedDates.size > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setPickedDates(new Set())}
+                    className="ml-2 text-xs text-gray-400 underline"
+                  >
+                    クリア
+                  </button>
+                )}
+              </p>
+              <div className="mt-1 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDupOpen(false)
+                    setPickedDates(new Set())
+                  }}
+                  className="min-h-tap rounded-lg border border-gray-300 px-4 text-sm text-gray-600"
+                >
+                  やめる
+                </button>
+                <button
+                  type="button"
+                  onClick={onDuplicateToDates}
+                  disabled={addEntries.isPending || pickedDates.size === 0}
+                  className="min-h-tap flex-1 rounded-lg bg-group-work text-sm font-medium text-white disabled:opacity-40"
+                >
+                  {addEntries.isPending
+                    ? 'コピー中…'
+                    : `選んだ ${pickedDates.size} 日にコピー`}
+                </button>
+              </div>
+            </div>
+          ))}
 
         <div className="mt-1 flex gap-2">
           {entry && (
