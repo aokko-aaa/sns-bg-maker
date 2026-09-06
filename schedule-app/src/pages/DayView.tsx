@@ -24,7 +24,7 @@ import {
   minutesFromDayStart,
 } from '@/lib/dates'
 import { isBandEntry, layoutDay, type TimedBlock } from '@/lib/dayLayout'
-import { useStickerMap } from '@/lib/stickers'
+import { useStickerMap, setSticker } from '@/lib/stickers'
 import EntrySheet from '@/components/EntrySheet'
 import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry, GroupKey } from '@/types/database'
@@ -55,6 +55,13 @@ export default function DayView() {
   const [editing, setEditing] = useState<Entry | null>(null)
   const [defaultStart, setDefaultStart] = useState<string | undefined>()
   const [defaultCat, setDefaultCat] = useState<string | null>(null)
+  // 予定ブロックから直接つける付箋エディタ
+  const [stickerEdit, setStickerEdit] = useState<{
+    id: string
+    value: string
+    top: number
+    left: number
+  } | null>(null)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const touchX = useRef<number | null>(null)
@@ -247,11 +254,33 @@ export default function DayView() {
           openEdit(e)
         }}
       >
-        {/* 付箋（ひとことメモ）: 予定の上にペタッと */}
+        {/* 付箋（ひとことメモ）: 予定の上にペタッと。タップで編集 */}
         {sticker && (
-          <div className="mb-0.5 shrink-0 truncate rounded bg-amber-200 px-1 text-[10px] font-bold leading-tight text-amber-900">
+          <button
+            onClick={(ev) => {
+              ev.stopPropagation()
+              const r = (ev.currentTarget as HTMLElement).getBoundingClientRect()
+              setStickerEdit({ id: e.id, value: sticker, top: r.bottom + 4, left: r.left })
+            }}
+            className="mb-0.5 shrink-0 truncate rounded bg-amber-200 px-1 text-left text-[10px] font-bold leading-tight text-amber-900"
+          >
             📌 {sticker}
-          </div>
+          </button>
+        )}
+        {/* 付箋がまだ無い予定に、直接貼れる📌ボタン */}
+        {!sticker && !isTask && height >= 28 && (
+          <button
+            onClick={(ev) => {
+              ev.stopPropagation()
+              const r = (ev.currentTarget as HTMLElement).getBoundingClientRect()
+              setStickerEdit({ id: e.id, value: '', top: r.bottom + 4, left: r.left })
+            }}
+            className="absolute bottom-0.5 right-0.5 z-10 rounded bg-black/15 px-1 text-[10px] leading-none"
+            style={{ color: ink }}
+            aria-label="付箋を貼る"
+          >
+            📌
+          </button>
         )}
 
         {/* 予定の計測ボタン（十分な高さのときだけ表示） */}
@@ -509,6 +538,63 @@ export default function DayView() {
 
       {isLoading && (
         <div className="p-4 text-center text-sm text-gray-400">読み込み中…</div>
+      )}
+
+      {/* 付箋クイック編集ポップアップ（予定ブロックから直接） */}
+      {stickerEdit && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setStickerEdit(null)}
+          />
+          <div
+            className="fixed z-50 w-64 max-w-[85vw] rounded-xl border border-gray-200 bg-white p-3 shadow-xl"
+            style={{
+              top: Math.max(8, Math.min(stickerEdit.top, window.innerHeight - 170)),
+              left: Math.max(8, Math.min(stickerEdit.left, window.innerWidth - 268)),
+            }}
+          >
+            <div className="mb-1.5 text-xs font-bold text-amber-700">
+              📌 付箋（ひとこと）
+            </div>
+            <input
+              autoFocus
+              value={stickerEdit.value}
+              maxLength={30}
+              onChange={(e) =>
+                setStickerEdit({ ...stickerEdit, value: e.target.value })
+              }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setSticker(stickerEdit.id, stickerEdit.value)
+                  setStickerEdit(null)
+                }
+              }}
+              placeholder="例: 体操服を持たせる"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={() => {
+                  setSticker(stickerEdit.id, '')
+                  setStickerEdit(null)
+                }}
+                className="min-h-tap rounded-lg border border-gray-300 px-3 text-xs text-gray-500"
+              >
+                消す
+              </button>
+              <button
+                onClick={() => {
+                  setSticker(stickerEdit.id, stickerEdit.value)
+                  setStickerEdit(null)
+                }}
+                className="min-h-tap flex-1 rounded-lg bg-amber-400 text-sm font-bold text-white"
+              >
+                貼る
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       <EntrySheet
