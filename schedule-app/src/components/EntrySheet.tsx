@@ -24,6 +24,7 @@ import {
   fmtMonthLabel,
 } from '@/lib/dates'
 import { errMessage } from '@/lib/errors'
+import { getSticker, setSticker as persistSticker } from '@/lib/stickers'
 import {
   checklistProgress,
   parseChecklist,
@@ -84,6 +85,7 @@ export default function EntrySheet({
   const [startLocal, setStartLocal] = useState('')
   const [endLocal, setEndLocal] = useState('')
   const [notes, setNotes] = useState('')
+  const [stickerText, setStickerText] = useState('')
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [err, setErr] = useState<string | null>(null)
   // 繰り返し（新規のみ）: なし/毎日/毎週/毎月 × 回数、または カレンダーで複数日選択
@@ -130,6 +132,7 @@ export default function EntrySheet({
       setAllDay(entry.all_day)
       setStartLocal(isoToJstLocal(entry.starts_at))
       setEndLocal(isoToJstLocal(entry.ends_at))
+      setStickerText(getSticker(entry.id))
       if (entry.kind === 'task') {
         setItems(parseChecklist(entry.notes))
         setNotes('')
@@ -164,6 +167,7 @@ export default function EntrySheet({
       }
       setNotes('')
       setItems([])
+      setStickerText('')
     }
     setErr(null)
     setAddMode('single')
@@ -283,6 +287,8 @@ export default function EntrySheet({
       } else {
         await save.mutateAsync(payload)
       }
+      // 付箋（端末内メモ）は既存エントリにのみ保存
+      if (entry) persistSticker(entry.id, stickerText)
       onSaved?.()
       onClose()
     } catch (e) {
@@ -321,6 +327,7 @@ export default function EntrySheet({
     if (!confirm('この予定を削除しますか？')) return
     try {
       await del.mutateAsync(entry.id)
+      persistSticker(entry.id, '')
       onClose()
     } catch (e) {
       setErr('削除に失敗: ' + errMessage(e))
@@ -445,6 +452,20 @@ export default function EntrySheet({
             placeholder={kind === 'task' ? '例: 買い物リスト（空でもOK）' : '例: 歯医者'}
           />
         </label>
+
+        {/* 付箋（ひとことメモ）: 決まった予定にペタッと。既存の予定・TODOのみ */}
+        {entry && (
+          <label className={label}>
+            📌 付箋（ひとこと）
+            <input
+              value={stickerText}
+              onChange={(e) => setStickerText(e.target.value)}
+              maxLength={30}
+              placeholder="例: 体操服を持たせる／15分早め"
+              className={field}
+            />
+          </label>
+        )}
 
         {/* TODO は「やること」を最優先で上に。ノイズになる大分類/中分類は出さない */}
         {kind === 'task' && checklistNode}

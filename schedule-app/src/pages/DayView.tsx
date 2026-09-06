@@ -24,6 +24,7 @@ import {
   minutesFromDayStart,
 } from '@/lib/dates'
 import { isBandEntry, layoutDay, type TimedBlock } from '@/lib/dayLayout'
+import { useStickerMap } from '@/lib/stickers'
 import EntrySheet from '@/components/EntrySheet'
 import { GROUP_COLORS, contrastText } from '@/lib/palette'
 import type { Category, Entry, GroupKey } from '@/types/database'
@@ -67,6 +68,7 @@ export default function DayView() {
   const carryOver = useCarryOverToday()
   const startTimer = useStartTimer()
   const { data: runningTimers = [] } = useRunningTimers()
+  const stickerMap = useStickerMap()
 
   const catMap = useMemo(() => {
     const m = new Map<string, Category>()
@@ -219,6 +221,7 @@ export default function DayView() {
     const height = (b.heightMin / 60) * HOUR_H - 2
     const bg = colorOf(e)
     const ink = contrastText(bg)
+    const sticker = stickerMap[e.id]
     const isTask = e.kind === 'task'
     const items = isTask ? parseChecklist(e.notes) : []
     // TODOでタイトルが先頭項目と同じ（自動流用）なら見出しは省く
@@ -244,6 +247,13 @@ export default function DayView() {
           openEdit(e)
         }}
       >
+        {/* 付箋（ひとことメモ）: 予定の上にペタッと */}
+        {sticker && (
+          <div className="mb-0.5 shrink-0 truncate rounded bg-amber-200 px-1 text-[10px] font-bold leading-tight text-amber-900">
+            📌 {sticker}
+          </div>
+        )}
+
         {/* 予定の計測ボタン（十分な高さのときだけ表示） */}
         {!isTask &&
           height >= 34 &&
