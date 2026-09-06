@@ -722,15 +722,16 @@ export default function EntrySheet({
                     }
                     className="min-h-tap w-16 rounded-lg border border-gray-300 px-2 text-base"
                   />
-                  回
+                  {repeat === 'daily' ? '日分' : repeat === 'weekly' ? '週分' : 'ヶ月分'}
                 </label>
               )}
             </div>
             {repeat !== 'none' && repeat !== 'dates' && (
               <p className="mt-1 text-[11px] text-gray-400">
-                この予定を含めて{' '}
-                {repeat === 'daily' ? '毎日' : repeat === 'weekly' ? '毎週' : '毎月'}
-                、合計 {Math.min(60, Math.max(1, repeatCount))} 件つくります。
+                {repeat === 'daily' ? '毎日' : repeat === 'weekly' ? '毎週' : '毎月'}、
+                {Math.min(60, Math.max(1, repeatCount))}
+                {repeat === 'daily' ? '日分' : repeat === 'weekly' ? '週分' : 'ヶ月分'}
+                （合計 {Math.min(60, Math.max(1, repeatCount))} 件）をまとめて登録します。
               </p>
             )}
 

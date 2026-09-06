@@ -17,7 +17,6 @@ import {
   entryOverlapsDay,
   fmtDateLabel,
   fmtHm,
-  fmtMonthLabel,
   monthGrid,
 } from '@/lib/dates'
 import BottomSheet from '@/components/BottomSheet'
@@ -147,9 +146,15 @@ export default function MonthView() {
         </button>
         <button
           onClick={() => setAnchor(new Date())}
-          className="text-2xl font-bold text-gray-800"
+          className="flex items-baseline gap-2"
         >
-          {fmtMonthLabel(anchor)}
+          <span className="text-2xl font-bold text-gray-800">
+            {formatInTimeZone(anchor, TZ, 'yyyy')}年{' '}
+            {formatInTimeZone(anchor, TZ, 'M')}月
+          </span>
+          <span className="text-sm font-medium text-gray-400">
+            {formatInTimeZone(anchor, TZ, 'MMMM')}
+          </span>
         </button>
         <button
           onClick={() => setAnchor((d) => addMonths(d, 1))}
