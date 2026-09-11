@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useAddInbox,
   useInboxItems,
@@ -11,6 +11,7 @@ import { useDictation } from '@/hooks/useDictation'
 import Icon from '@/components/Icon'
 import { useSaveEntry, type EntryInput } from '@/hooks/useEntries'
 import { isoToJstLocal, jstLocalToIso } from '@/lib/dates'
+import { parseNatural } from '@/lib/parseNatural'
 import EntrySheet from '@/components/EntrySheet'
 import type { InboxItem, ParsedInboxItem } from '@/types/database'
 
@@ -154,6 +155,17 @@ function InboxCard({ item }: { item: InboxItem }) {
   const [err, setErr] = useState<string | null>(null)
   const [manualOpen, setManualOpen] = useState(false)
 
+  // 「予定にする」(手動) を押したときも、音声/文章から拾った日付・時刻を初期値に反映する。
+  // 端末内パーサで下読みし、EntrySheet の初期日時・タイトルに渡す。
+  const guess = useMemo(() => parseNatural(item.raw_text), [item.raw_text])
+  const guessItem =
+    guess.classification === 'schedule' ? guess.items[0] : undefined
+  const guessStartLocal = guessItem
+    ? guessItem.all_day
+      ? isoToJstLocal(guessItem.starts_at).slice(0, 10) // 日付だけ（時刻は空で開く）
+      : isoToJstLocal(guessItem.starts_at) // 日付＋時刻
+    : undefined
+
   useEffect(() => {
     setProposals(item.parsed?.items ?? [])
   }, [item.parsed])
@@ -259,7 +271,8 @@ function InboxCard({ item }: { item: InboxItem }) {
         open={manualOpen}
         onClose={() => setManualOpen(false)}
         entry={null}
-        defaultTitle={item.raw_text}
+        defaultTitle={guessItem?.title || item.raw_text}
+        defaultStartLocal={guessStartLocal}
         inboxId={item.id}
         onSaved={() =>
           setStatus.mutate({ id: item.id, status: 'converted' })

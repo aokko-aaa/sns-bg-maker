@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
+import { formatInTimeZone } from 'date-fns-tz'
 import {
   parseChecklist,
   serializeChecklist,
   checklistProgress,
 } from '@/lib/checklist'
 import { useSetProgress, useUpdateChecklist } from '@/hooks/useEntries'
-import { fmtHm, fmtMd } from '@/lib/dates'
+import { fmtMd } from '@/lib/dates'
+import { TZ } from '@/lib/time'
 import type { Entry } from '@/types/database'
 
 /** TODO（タスク）を大きなチェックで確認・完了できる共通リスト。 */
@@ -16,6 +18,7 @@ export default function TaskList({
   onEdit,
   showDate = false,
   defaultOpen = true,
+  nowKey,
 }: {
   title: string
   tasks: Entry[]
@@ -23,6 +26,8 @@ export default function TaskList({
   onEdit: (e: Entry) => void
   showDate?: boolean
   defaultOpen?: boolean
+  /** 表示中の日付(yyyy-MM-dd)。渡すと、それより前のTODOに「持ち越し」を表示する */
+  nowKey?: string
 }) {
   const [open, setOpen] = useState(defaultOpen)
   const setProgress = useSetProgress()
@@ -113,10 +118,24 @@ export default function TaskList({
                       {items.filter((i) => i.done).length}/{items.length}
                     </span>
                   )}
-                  <span className="shrink-0 text-[11px] text-gray-400">
-                    {showDate ? `${fmtMd(new Date(e.starts_at))} ` : ''}
-                    {e.all_day ? '終日' : fmtHm(e.starts_at)}
-                  </span>
+                  {(() => {
+                    const key = formatInTimeZone(e.starts_at, TZ, 'yyyy-MM-dd')
+                    // 週表示など: 日付を出す
+                    if (showDate)
+                      return (
+                        <span className="shrink-0 text-[11px] text-gray-400">
+                          {fmtMd(new Date(e.starts_at))}
+                        </span>
+                      )
+                    // 日表示: 表示日より前のTODOは「持ち越し」バッジ
+                    if (nowKey && key < nowKey)
+                      return (
+                        <span className="shrink-0 rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700">
+                          持ち越し
+                        </span>
+                      )
+                    return null
+                  })()}
                 </div>
                 {items.length > 0 && (
                   <ul className="mt-1 space-y-0.5 pl-8">

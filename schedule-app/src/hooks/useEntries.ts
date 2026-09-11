@@ -135,12 +135,14 @@ export function useOverdueTasks() {
     enabled: !!user,
     queryFn: async (): Promise<Entry[]> => {
       const todayStart = startOfDayJst(new Date()).toISOString()
+      // 終日/日付だけのTODOは ends_at が翌日0:00 になるため、境界を含める(lte)。
+      // これで「昨日までの未完了TODO」が今日ぶんとして途切れず持ち越される。
       const { data, error } = await supabase
         .from('entries')
         .select('*')
         .eq('kind', 'task')
         .lt('progress', 100)
-        .lt('ends_at', todayStart)
+        .lte('ends_at', todayStart)
         .order('ends_at', { ascending: false })
         .limit(50)
       if (error) throw error

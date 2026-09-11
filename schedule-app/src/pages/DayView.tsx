@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useEntriesForDay,
-  useSetProgress,
   useOverdueTasks,
-  useCarryOverToday,
   useUpdateChecklist,
 } from '@/hooks/useEntries'
 import {
@@ -19,7 +17,6 @@ import {
   addDays,
   fmtDateLabel,
   fmtHm,
-  fmtMd,
   isoToJstLocal,
   minutesFromDayStart,
 } from '@/lib/dates'
@@ -69,10 +66,8 @@ export default function DayView() {
   const { data: entries = [], isLoading } = useEntriesForDay(day)
   const { data: categories = [] } = useCategories()
   const { active } = useGroupFilter()
-  const setProgress = useSetProgress()
   const updateChecklist = useUpdateChecklist()
   const { data: overdue = [] } = useOverdueTasks()
-  const carryOver = useCarryOverToday()
   const startTimer = useStartTimer()
   const { data: runningTimers = [] } = useRunningTimers()
   const stickerMap = useStickerMap()
@@ -118,16 +113,32 @@ export default function DayView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, timelineVisible])
 
+  const isToday = fmtDateLabel(day) === fmtDateLabel(new Date())
+  const dayKey = isoToJstLocal(day.toISOString()).slice(0, 10)
+
   // その日のTODO（タスク）一覧: 未完了→完了、時刻順。専用リストで確認しやすく。
+  // 今日を見ているときは、期限切れ・未完了のTODOも自動で持ち越して表示する
+  //（＝チェックを入れるまで毎日ここに出続ける。日付なしTODOも今日付で出続ける）
   const dayTasks = useMemo(() => {
     const tasks = visible.filter((e) => e.kind === 'task')
-    return [...tasks].sort((a, b) => {
+    let all = tasks
+    if (isToday && overdue.length > 0) {
+      const seen = new Set(tasks.map((t) => t.id))
+      const carried = overdue.filter((e) => {
+        if (seen.has(e.id) || (e.progress ?? 0) >= 100) return false
+        const g = groupOf(e)
+        return g === 'other' || active.includes(g)
+      })
+      all = [...tasks, ...carried]
+    }
+    return [...all].sort((a, b) => {
       const da = (a.progress ?? 0) >= 100 ? 1 : 0
       const db = (b.progress ?? 0) >= 100 ? 1 : 0
       if (da !== db) return da - db
       return a.starts_at.localeCompare(b.starts_at)
     })
-  }, [visible])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, isToday, overdue, active, catMap])
 
   // その日の最初の予定が見える位置へスクロール（無ければ 6:00）
   useEffect(() => {
@@ -161,8 +172,6 @@ export default function DayView() {
     return () => window.removeEventListener('app:add-entry', h)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [day, categories])
-
-  const isToday = fmtDateLabel(day) === fmtDateLabel(new Date())
 
   function openNew(atMin?: number, lane?: LaneKey) {
     if (atMin != null) {
@@ -412,47 +421,14 @@ export default function DayView() {
         </div>
       </div>
 
-      {/* 持ち越し（期限切れ未完了タスク） — 今日のみ */}
-      {isToday && overdue.length > 0 && (
-        <div className="border-b border-amber-100 bg-amber-50 px-2 py-1.5">
-          <p className="mb-1 text-[11px] font-medium text-amber-700">
-            持ち越し（未完了 {overdue.length}）
-          </p>
-          <div className="flex max-h-28 flex-col gap-1 overflow-y-auto">
-            {overdue.map((e) => (
-              <div
-                key={e.id}
-                className="flex items-center gap-2 rounded bg-white px-2 py-1 text-xs"
-              >
-                <button
-                  onClick={() => setProgress.mutate({ id: e.id, progress: 100 })}
-                  className="shrink-0 text-base leading-none text-gray-500"
-                  aria-label="完了にする"
-                >
-                  ☐
-                </button>
-                <span className="flex-1 truncate text-gray-800">{e.title}</span>
-                <span className="shrink-0 text-gray-400">
-                  {fmtMd(new Date(e.starts_at))}
-                </span>
-                <button
-                  onClick={() => carryOver.mutate(e)}
-                  className="shrink-0 rounded bg-group-work px-2 py-0.5 font-medium text-white"
-                >
-                  →今日
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* TODO 専用リスト — その日のタスクを大きなチェックで確認 */}
+      {/* TODO 専用リスト — その日のタスクを大きなチェックで確認。
+          今日は期限切れの未完了TODOも自動で持ち越して表示する。 */}
       <TaskList
         title="TODO"
         tasks={dayTasks}
         colorOf={colorOf}
         onEdit={openEdit}
+        nowKey={dayKey}
       />
 
       {/* レーンモードのヘッダ（種類ラベル） */}

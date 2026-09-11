@@ -77,6 +77,8 @@ export default function EntrySheet({
   const [addMode, setAddMode] = useState<'single' | 'bulk'>('single')
   // TODO の分類ピッカーを開いているか（ふだんは隠してシンプルに）
   const [showCat, setShowCat] = useState(false)
+  // TODO に日付を指定するか（既定はオフ＝日付なし。今日のリストに出続ける）
+  const [taskHasDate, setTaskHasDate] = useState(false)
   // 「別の日にコピー」のカレンダーを開いているか（既存の予定の複製用）
   const [dupOpen, setDupOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -174,6 +176,15 @@ export default function EntrySheet({
     setErr(null)
     setAddMode('single')
     setShowCat(!!(entry && entry.kind === 'task' && entry.category_id))
+    // TODOの「日付を指定」: 新規は既定オフ。既存は今日以外の日付が入っていればオン
+    {
+      const todayKey = isoToJstLocal(new Date().toISOString()).slice(0, 10)
+      const hasDate =
+        !!entry &&
+        entry.kind === 'task' &&
+        isoToJstLocal(entry.starts_at).slice(0, 10) !== todayKey
+      setTaskHasDate(hasDate)
+    }
     setDupOpen(false)
     setRepeat('none')
     setRepeatCount(4)
@@ -200,8 +211,11 @@ export default function EntrySheet({
     let endsIso: string
     if (dateOnly) {
       // 終日・時間未定: 日付だけ。開始日0:00〜終了日の翌0:00（その日を丸ごとカバー）
-      const sDay = startLocal.slice(0, 10)
-      const eDay = endLocal.slice(0, 10) || sDay
+      // TODOで日付未指定なら「今日」で登録（チェックするまで今日のリストに出続ける）
+      const todayKey = isoToJstLocal(new Date().toISOString()).slice(0, 10)
+      const sDay =
+        kind === 'task' && !taskHasDate ? todayKey : startLocal.slice(0, 10)
+      const eDay = kind === 'task' ? sDay : endLocal.slice(0, 10) || sDay
       if (eDay < sDay) {
         setErr('終了日は開始日以降にしてください')
         return
@@ -619,20 +633,42 @@ export default function EntrySheet({
         )}
 
         {kind === 'task' ? (
-          /* TODO は日付だけ（開始/終了の時刻は不要でまぎらわしいので出さない） */
-          <label className={label}>
-            日付
-            <input
-              type="date"
-              value={startLocal.slice(0, 10)}
-              onChange={(e) => {
-                const d = e.target.value
-                setStartLocal(`${d}T00:00`)
-                setEndLocal(`${d}T00:00`)
-              }}
-              className={field}
-            />
-          </label>
+          /* TODO は日付なしが既定。指定したいときだけ日付ピッカーを出す */
+          <div className={label}>
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={taskHasDate}
+                onChange={(e) => {
+                  const on = e.target.checked
+                  setTaskHasDate(on)
+                  if (on && !startLocal.slice(0, 10)) {
+                    const d = isoToJstLocal(new Date().toISOString()).slice(0, 10)
+                    setStartLocal(`${d}T00:00`)
+                    setEndLocal(`${d}T00:00`)
+                  }
+                }}
+                className="h-5 w-5"
+              />
+              📅 日付を指定する
+            </label>
+            {taskHasDate ? (
+              <input
+                type="date"
+                value={startLocal.slice(0, 10)}
+                onChange={(e) => {
+                  const d = e.target.value
+                  setStartLocal(`${d}T00:00`)
+                  setEndLocal(`${d}T00:00`)
+                }}
+                className={field}
+              />
+            ) : (
+              <p className="mt-1 text-[11px] text-gray-400">
+                日付なし。今日のTODOに表示され、チェックを入れるまで毎日持ち越します。
+              </p>
+            )}
+          </div>
         ) : (
           <>
             <label className="flex items-center gap-2 text-sm text-gray-700">
