@@ -86,6 +86,8 @@ export default function EntrySheet({
   const [group, setGroup] = useState<GroupKey>('work')
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [allDay, setAllDay] = useState(false)
+  // 終わりの時刻が未定の予定（開始だけ登録）。保存時は ends_at = starts_at にする
+  const [endUnknown, setEndUnknown] = useState(false)
   const [startLocal, setStartLocal] = useState('')
   const [endLocal, setEndLocal] = useState('')
   const [notes, setNotes] = useState('')
@@ -134,6 +136,7 @@ export default function EntrySheet({
       setGroup(cat?.group_key ?? 'work')
       setCategoryId(entry.category_id)
       setAllDay(entry.all_day)
+      setEndUnknown(!entry.all_day && entry.starts_at === entry.ends_at)
       setStartLocal(isoToJstLocal(entry.starts_at))
       setEndLocal(isoToJstLocal(entry.ends_at))
       setStickerText(getSticker(entry.id))
@@ -159,6 +162,7 @@ export default function EntrySheet({
       setGroup(dc?.group_key ?? 'work')
       setCategoryId(dc?.id ?? null)
       setAllDay(false)
+      setEndUnknown(false)
       if (hasTime) {
         const endDate = new Date(jstLocalToIso(dsl!))
         endDate.setHours(endDate.getHours() + 1)
@@ -225,15 +229,24 @@ export default function EntrySheet({
         new Date(jstLocalToIso(`${eDay}T00:00`)).getTime() + 86400000
       ).toISOString()
     } else {
-      if (!startLocal.slice(11, 16) || !endLocal.slice(11, 16)) {
-        setErr('開始・終了の時刻を入力してください')
+      if (!startLocal.slice(11, 16)) {
+        setErr('開始時刻を入力してください')
         return
       }
       startsIso = jstLocalToIso(startLocal)
-      endsIso = jstLocalToIso(endLocal)
-      if (new Date(endsIso) <= new Date(startsIso)) {
-        setErr('終了は開始より後にしてください')
-        return
+      if (endUnknown) {
+        // 終わり未定: ends_at = starts_at（0分）。表示側は「開始〜」と扱う
+        endsIso = startsIso
+      } else {
+        if (!endLocal.slice(11, 16)) {
+          setErr('終了時刻を入力してください（未定なら「終わりの時刻は未定」にチェック）')
+          return
+        }
+        endsIso = jstLocalToIso(endLocal)
+        if (new Date(endsIso) <= new Date(startsIso)) {
+          setErr('終了は開始より後にしてください')
+          return
+        }
       }
     }
     const payload: EntryInput = {
@@ -268,11 +281,16 @@ export default function EntrySheet({
             return { ...base, starts_at: s, ends_at: e, all_day: true }
           }
           const hhmmS = startLocal.slice(11, 16) || '09:00'
-          const hhmmE = endLocal.slice(11, 16) || '10:00'
           const s = jstLocalToIso(`${d}T${hhmmS}`)
-          let e = jstLocalToIso(`${d}T${hhmmE}`)
-          if (new Date(e).getTime() <= new Date(s).getTime()) {
-            e = new Date(new Date(s).getTime() + 3600000).toISOString()
+          let e: string
+          if (endUnknown) {
+            e = s // 終わり未定
+          } else {
+            const hhmmE = endLocal.slice(11, 16) || '10:00'
+            e = jstLocalToIso(`${d}T${hhmmE}`)
+            if (new Date(e).getTime() <= new Date(s).getTime()) {
+              e = new Date(new Date(s).getTime() + 3600000).toISOString()
+            }
           }
           return { ...base, starts_at: s, ends_at: e, all_day: false }
         })
@@ -722,20 +740,37 @@ export default function EntrySheet({
                     className={field}
                   />
                 </label>
-                <div className="flex gap-2">
-                  <label className={label + ' flex-1'}>
-                    開始
-                    <input
-                      type="time"
-                      value={startLocal.slice(11, 16)}
-                      onChange={(e) =>
-                        setStartLocal(`${startLocal.slice(0, 10)}T${e.target.value}`)
-                      }
-                      className={field}
-                    />
-                  </label>
-                  <label className={label + ' flex-1'}>
-                    終了
+                {/* 開始時刻（1つずつ縦に並べてわかりやすく） */}
+                <label className={label}>
+                  開始時刻
+                  <input
+                    type="time"
+                    value={startLocal.slice(11, 16)}
+                    onChange={(e) =>
+                      setStartLocal(`${startLocal.slice(0, 10)}T${e.target.value}`)
+                    }
+                    className={field}
+                  />
+                </label>
+                {/* 終了時刻 — 未定にもできる */}
+                <div className={label}>
+                  <div className="flex items-center justify-between">
+                    <span>終了時刻</span>
+                    <label className="flex items-center gap-1.5 text-xs font-normal text-gray-500">
+                      <input
+                        type="checkbox"
+                        checked={endUnknown}
+                        onChange={(e) => setEndUnknown(e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      未定（開始だけ登録）
+                    </label>
+                  </div>
+                  {endUnknown ? (
+                    <p className="mt-1 rounded-lg bg-gray-50 px-3 py-2 text-[12px] text-gray-500">
+                      終わりの時刻は未定のまま登録します。あとから設定できます。
+                    </p>
+                  ) : (
                     <input
                       type="time"
                       value={endLocal.slice(11, 16)}
@@ -744,7 +779,7 @@ export default function EntrySheet({
                       }
                       className={field}
                     />
-                  </label>
+                  )}
                 </div>
               </>
             )}

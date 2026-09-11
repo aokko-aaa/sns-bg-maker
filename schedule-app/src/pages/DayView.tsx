@@ -328,7 +328,11 @@ export default function DayView() {
             )}
             {!isTask && (
               <div className="truncate text-[11px] opacity-90">
-                {b.band ? '終日' : fmtHm(e.starts_at)}
+                {b.band
+                  ? '終日'
+                  : e.ends_at === e.starts_at
+                    ? `${fmtHm(e.starts_at)}〜`
+                    : fmtHm(e.starts_at)}
               </div>
             )}
           </button>

@@ -251,6 +251,8 @@ export default function WeekView() {
         : `${fmtMd(days[sp.start])}〜${fmtMd(days[sp.end])}`
       : fmtMd(new Date(e.starts_at))
     if (e.all_day) return `${dateLabel}・終日`
+    // 終わり未定（ends_at===starts_at）は「開始〜」で表示
+    if (e.ends_at === e.starts_at) return `${dateLabel} ${fmtHm(e.starts_at)}〜`
     return `${dateLabel} ${fmtHm(e.starts_at)}〜${fmtHm(e.ends_at)}`
   }
 
