@@ -4,6 +4,8 @@ import { CONCEPTS } from './concepts'
 import { EMOTIONS } from './emotions'
 import { MODERNS } from './modern'
 import { OCCASIONS } from './occasions'
+import { MANNERS } from './shinshu/manners'
+import { PHRASES } from './shinshu/phrases'
 import { STORIES } from './stories'
 import { WORDS } from './words'
 
@@ -16,6 +18,8 @@ const datasets = [
   { name: 'words', items: WORDS as { id: string }[] },
   { name: 'moderns', items: MODERNS as { id: string }[] },
   { name: 'occasions', items: OCCASIONS as { id: string }[] },
+  { name: 'phrases', items: PHRASES as { id: string }[] },
+  { name: 'manners', items: MANNERS as { id: string }[] },
   { name: 'angles', items: ANGLES as { id: string }[] },
   { name: 'scenes', items: SCENES as { id: string }[] },
 ]
@@ -51,6 +55,42 @@ describe('データの整合', () => {
       expect(STORIES.some((s) => s.emotions.includes(e.id)), `story: ${e.id}`).toBe(true)
       expect(WORDS.some((w) => w.emotions.includes(e.id)), `word: ${e.id}`).toBe(true)
       expect(MODERNS.some((m) => m.emotions.includes(e.id)), `modern: ${e.id}`).toBe(true)
+    }
+  })
+
+  it('お聖教の一句に、出典と意味と使いどころが揃っている', () => {
+    for (const p of PHRASES) {
+      expect(p.source.length, p.text).toBeGreaterThan(0)
+      expect(p.gloss.length, p.text).toBeGreaterThan(0)
+      expect(p.use.length, p.text).toBeGreaterThan(0)
+      expect(p.emotions.every((e) => emotionIds.has(e)), p.text).toBe(true)
+    }
+  })
+
+  it('御文と歎異抄の一句が、それぞれ複数ある', () => {
+    expect(PHRASES.filter((p) => p.source.includes('御文')).length).toBeGreaterThanOrEqual(2)
+    expect(PHRASES.filter((p) => p.source.includes('歎異抄')).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('言い回しの注意に、代わりの言い方と理由がある', () => {
+    for (const m of MANNERS) {
+      expect(m.use.length, m.avoid).toBeGreaterThan(0)
+      expect(m.why.length, m.avoid).toBeGreaterThan(0)
+    }
+  })
+
+  it('真宗の素材が、どの切り口にも回せるだけある', () => {
+    expect(CONCEPTS.filter((c) => c.tradition === 'shinshu').length).toBeGreaterThanOrEqual(20)
+    expect(STORIES.filter((x) => x.tradition === 'shinshu').length).toBeGreaterThanOrEqual(10)
+    expect(WORDS.filter((x) => x.tradition === 'shinshu').length).toBeGreaterThanOrEqual(4)
+  })
+
+  it('どの月にも真宗の行事がある', () => {
+    for (let m = 1; m <= 12; m++) {
+      expect(
+        OCCASIONS.some((o) => o.tradition === 'shinshu' && o.months.includes(m)),
+        `month: ${m}`,
+      ).toBe(true)
     }
   })
 

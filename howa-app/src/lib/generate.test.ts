@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ANGLES } from '../data/angles'
 import { CONCEPTS } from '../data/concepts'
+import { PHRASES } from '../data/shinshu/phrases'
 import { MODERNS } from '../data/modern'
 import type { EmotionId } from '../data/types'
 import { toProse, toScript } from './format'
@@ -13,6 +14,7 @@ const base: GenerateInput = {
   sceneId: 'howakai',
   month: 5,
   kojitsukeMax: 3,
+  tradition: 'any',
   seed: 12345,
   count: 6,
 }
@@ -59,8 +61,9 @@ describe('generateNeta', () => {
   })
 
   it('使える切り口をすべて回せる', () => {
-    const kinds = new Set(generateNeta({ ...base, count: ANGLES.length }).map((n) => n.angleId))
-    expect(kinds.size).toBe(ANGLES.length)
+    const general = ANGLES.filter((a) => a.tradition !== 'shinshu')
+    const kinds = new Set(generateNeta({ ...base, count: general.length }).map((n) => n.angleId))
+    expect(kinds.size).toBe(general.length)
   })
 
   it('掲示板を選ぶと、一行と短文の形になる', () => {
@@ -132,6 +135,87 @@ describe('generateNeta', () => {
         ),
       ),
     ).toBe(true)
+  })
+})
+
+describe('真宗大谷派モード', () => {
+  const otani: GenerateInput = { ...base, tradition: 'otani', emotions: ['wakare', 'shi'] }
+
+  it('最初の一巡が真宗の切り口で埋まる', () => {
+    const out = generateNeta(otani)
+    const shinshuAngles = new Set(
+      ANGLES.filter((a) => a.tradition === 'shinshu').map((a) => a.id),
+    )
+    expect(out.every((n) => shinshuAngles.has(n.angleId))).toBe(true)
+  })
+
+  it('真宗の切り口には真宗の素材が当たる', () => {
+    const out = generateNeta({ ...otani, count: 6 })
+    for (const n of out) {
+      const c = CONCEPTS.find((x) => x.id === n.materials.conceptId)
+      expect(c?.tradition, n.title).toBe('shinshu')
+      expect(n.tradition).toBe('shinshu')
+    }
+  })
+
+  it('宗派を問わないモードでは真宗固有の切り口を出さない', () => {
+    const out = generateNeta({ ...base, tradition: 'any', count: 18 })
+    const shinshuAngles = new Set(
+      ANGLES.filter((a) => a.tradition === 'shinshu').map((a) => a.id),
+    )
+    expect(out.some((n) => shinshuAngles.has(n.angleId))).toBe(false)
+  })
+
+  it('一巡したあとも、真宗の素材が多数を占める', () => {
+    const out = generateNeta({ ...otani, count: 18 })
+    const shinshu = out.filter((n) => {
+      const c = CONCEPTS.find((x) => x.id === n.materials.conceptId)
+      return c?.tradition === 'shinshu'
+    })
+    expect(shinshu.length / out.length).toBeGreaterThan(0.6)
+  })
+
+  it('御文・歎異抄の切り口は、その出典の一句を引く', () => {
+    const out = generateNeta({ ...otani, count: 12 })
+    for (const n of out) {
+      const phrase = PHRASES.find((p) => p.id === n.materials.phraseId)
+      if (n.angleId === 'ofumi') expect(phrase?.source).toContain('御文')
+      if (n.angleId === 'tannisho') expect(phrase?.source).toContain('歎異抄')
+    }
+  })
+
+  it('声に出す本文に、大谷派で避ける言い方が混ざらない', () => {
+    // 「戒名」「天国」は、法名・お浄土の説明として言い直すために本文へ出る（引用は可）。
+    // ここで見るのは、そのまま使うと筋が変わってしまう言い方だけ。
+    const avoid = ['ご冥福', '追善供養', '草葉の陰', '浮かばれ', '御霊前', 'ご利益があり']
+    for (const sceneId of ['houji', 'sougo', 'howakai', 'tsukimairi'] as const) {
+      for (const n of generateNeta({ ...otani, sceneId, count: 18 })) {
+        const spoken = n.sections
+          .filter((x) => x.label !== SECTION.memo)
+          .map((x) => x.body)
+          .join('\n')
+        for (const word of avoid) {
+          expect(spoken.includes(word), `${n.title} / ${word}`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('結びにお念仏の一句が添えられる（掲示板をのぞく）', () => {
+    for (const n of generateNeta({ ...otani, count: 12 })) {
+      const musubi = n.sections.find((x) => x.label === SECTION.musubi)!
+      expect(
+        /南無阿弥陀仏|なんまんだぶ|お聴聞|あなかしこ/.test(musubi.body),
+        n.title,
+      ).toBe(true)
+    }
+  })
+
+  it('大谷派の言い回しの注意が、語り手向けメモに入る', () => {
+    for (const n of generateNeta({ ...otani, count: 6 })) {
+      const memo = n.sections.find((x) => x.label === SECTION.memo)!
+      expect(memo.body).toContain('大谷派の言い回し')
+    }
   })
 })
 

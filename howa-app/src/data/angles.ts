@@ -15,6 +15,13 @@ export const ANGLES: Angle[] = [
   { id: 'gyoji', name: '行事に寄せる', aim: '季節や法要の由来から入り、今の気持ちにつなげる', needs: ['concept'], kojitsuke: 2 },
   { id: 'itsuwa', name: '逸話まるごと', aim: '説話を最後まで語り、解説は最小限にする', needs: ['story'], kojitsuke: 1 },
   { id: 'kojitsuke', name: 'こじつけ全開', aim: '語呂や見立てで強引につなぎ、笑ってもらってから本題に入る', needs: ['word', 'concept'], kojitsuke: 3 },
+  // ここから下は真宗大谷派モードのときだけ出す切り口
+  { id: 'shogyo', name: 'お聖教の一句から', aim: '正信偈・和讃・歎異抄の一句を先に置き、日常へ降ろす', needs: ['concept'], kojitsuke: 1, tradition: 'shinshu' },
+  { id: 'ofumi', name: '御文をひらく', aim: '蓮如上人の御文を読み、今の暮らしの言葉に置き換える', needs: ['concept'], kojitsuke: 1, tradition: 'shinshu' },
+  { id: 'tannisho', name: '歎異抄に聞く', aim: '唯円の問いを借りて、聴き手の本音を先に言ってしまう', needs: ['concept'], kojitsuke: 1, tradition: 'shinshu' },
+  { id: 'jitoku', name: '私の上に聞く', aim: '説く側ではなく聞く側に立ち、自分の問題として話す', needs: ['concept'], kojitsuke: 1, tradition: 'shinshu' },
+  { id: 'gobyakudo', name: '誤用から入る', aim: '「他力本願」「往生した」など、世間の誤用を入口にする', needs: ['word'], kojitsuke: 2, tradition: 'shinshu' },
+  { id: 'houonko', name: '報恩講・ご縁の日に', aim: '法要の由来から入り、供養ではなく報恩だという一点に置く', needs: ['concept'], kojitsuke: 1, tradition: 'shinshu' },
 ]
 
 export const ANGLE_BY_ID: Record<string, Angle> = Object.fromEntries(
@@ -22,7 +29,7 @@ export const ANGLE_BY_ID: Record<string, Angle> = Object.fromEntries(
 )
 
 export const SCENES: Scene[] = [
-  { id: 'houji', label: '法事・年回法要', note: '故人を軸に、遺族へ向けて', minutes: 5 },
+  { id: 'houji', label: '法事・年回法要', note: '故人のご縁のお勤め。遺族へ向けて', minutes: 5 },
   { id: 'tsukimairi', label: '月参り・お内仏の前', note: '一対一、立ち話に近い距離で', minutes: 3 },
   { id: 'sougo', label: '通夜・葬儀のあと', note: '悲しみの最中。教えを急がない', minutes: 5 },
   { id: 'howakai', label: '法話会・寺の集まり', note: 'ある程度の尺で構成して語る', minutes: 10 },

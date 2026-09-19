@@ -3,12 +3,18 @@ import { CONCEPTS } from '../data/concepts'
 import { EMOTION_BY_ID } from '../data/emotions'
 import { MODERNS } from '../data/modern'
 import { OCCASIONS } from '../data/occasions'
+import { MANNERS } from '../data/shinshu/manners'
+import { PHRASES } from '../data/shinshu/phrases'
 import { STORIES } from '../data/stories'
 import { WORDS } from '../data/words'
 import type {
   Angle,
   Concept,
   EmotionId,
+  Manner,
+  Phrase,
+  Tradition,
+  TraditionMode,
   Modern,
   Neta,
   NetaSection,
@@ -33,6 +39,10 @@ export const SECTION = {
   otoshi: '落とし込み',
   musubi: '結び',
   watashi: 'ここで仏教へ渡す',
+  shogyo: 'お聖教の一句',
+  honne: '聴き手の本音（先に言ってしまう）',
+  seken_tsukaikata: '世間での使い方',
+  moto: 'もとの意味',
   memo: '演出メモ（語り手向け・声に出さない）',
   hitokoto: '掲示の一行（案）',
   tanbun: '短文（寺報・SNS）',
@@ -46,6 +56,8 @@ export type GenerateInput = {
   month: number
   /** こじつけ度の上限（1=素直のみ 3=全部） */
   kojitsukeMax: 1 | 2 | 3
+  /** 'otani' で真宗大谷派の素材と切り口を優先する */
+  tradition: TraditionMode
   seed: number
   count: number
 }
@@ -59,7 +71,9 @@ type Ctx = {
   story: Story
   word: Word
   occasion: Occasion
+  phrase: Phrase
   scene: Scene
+  mode: TraditionMode
 }
 
 type Built = {
@@ -68,10 +82,19 @@ type Built = {
   /** 語り手にだけ見せる注意・ねらい（本文には混ぜない） */
   meta: string[]
   /** 実際に使った素材（出典と注意書きの収集に使う） */
-  uses: { concept?: boolean; story?: boolean; word?: boolean; occasion?: boolean }
+  uses: {
+    concept?: boolean
+    story?: boolean
+    word?: boolean
+    occasion?: boolean
+    phrase?: boolean
+  }
 }
 
 const s = (label: string, body: string): NetaSection => ({ label, body })
+
+/** タイトルに入れるために一句を詰める */
+const short = (t: string, n = 16) => (t.length > n ? `${t.slice(0, n)}…` : t)
 
 /** 文の途中に埋めるとき、末尾の句点を外す */
 const nq = (t: string) => t.replace(/。$/, '')
@@ -279,6 +302,100 @@ const BUILDERS: Record<string, (c: Ctx) => Built> = {
     ],
   }),
 
+  shogyo: (c) => ({
+    title: `「${short(c.phrase.text)}」に聞く`,
+    uses: { concept: true, phrase: true },
+    meta: [c.phrase.use],
+    sections: [
+      s(SECTION.shogyo, `${c.phrase.text}　【${c.phrase.source}】`),
+      s(SECTION.iriguchi, `${c.modern.line}　この一句を、そこへ置いてみます。`),
+      s(SECTION.hikkakari, c.phrase.gloss),
+      s(SECTION.kotoba, conceptLine(c.concept)),
+      s(SECTION.zure, `${nq(c.concept.misread)}。けれども、${c.concept.pivot}`),
+      s(SECTION.otoshi, c.concept.step),
+      s(SECTION.musubi, `もう一度、あの一句を。${c.phrase.text}`),
+    ],
+  }),
+
+  ofumi: (c) => ({
+    title: `御文をひらく — ${c.modern.scene}`,
+    uses: { concept: true, phrase: true },
+    meta: [c.phrase.use, '御文の本文は自坊の勤行本で確かめる。大谷派では「御文」、本願寺派では「御文章」。'],
+    sections: [
+      s(SECTION.iriguchi, `御文を一通、読ませていただきます。${c.phrase.text}　【${c.phrase.source}】`),
+      s(SECTION.hikkakari, `今の言葉に直すと、${nq(c.phrase.gloss)}ということになりましょうか。`),
+      s(SECTION.zure, `${c.modern.line}　五百年前の手紙が、その場面をまっすぐに指しています。`),
+      s(SECTION.kotoba, conceptLine(c.concept)),
+      s(SECTION.otoshi, c.concept.step),
+      s(SECTION.musubi, `あなかしこ、あなかしこ。`),
+    ],
+  }),
+
+  tannisho: (c) => ({
+    title: `歎異抄に聞く — ${c.primaryLabel}`,
+    uses: { concept: true, phrase: true },
+    meta: [c.phrase.use, '唯円の問いを借りて、聴き手が言えずにいることを先に口にする。'],
+    sections: [
+      s(SECTION.iriguchi, c.modern.line),
+      s(SECTION.honne, `言いにくいことを、先に申します。${c.concept.everyday}`),
+      s(SECTION.shogyo, `${c.phrase.text}　【${c.phrase.source}】`),
+      s(SECTION.hikkakari, c.phrase.gloss),
+      s(SECTION.kotoba, conceptLine(c.concept)),
+      s(SECTION.zure, `${nq(c.concept.misread)}。ところが、${c.concept.pivot}`),
+      s(SECTION.otoshi, c.concept.step),
+      s(SECTION.musubi, `同じ問いを持った人が、八百年前にもおりました。問いのほうは、まだ私に残っています。`),
+    ],
+  }),
+
+  jitoku: (c) => ({
+    title: `私の上に聞く — ${c.concept.term}`,
+    uses: { concept: true },
+    meta: ['真宗の法話は、説く形にすると途端に遠くなる。聞いている側の一人として話す。', '［　］に自分のこととして一つ入れる。'],
+    sections: [
+      s(SECTION.iriguchi, `${c.modern.line}　これは、よその話ではありません。`),
+      s(SECTION.honne, `［ここに、ご自身が「${c.modern.scene}」で引っかかった場面を一つ］`),
+      s(SECTION.kotoba, conceptLine(c.concept)),
+      s(SECTION.zure, `私はずっと、${nq(c.concept.misread)}と思っておりました。けれども、${c.concept.pivot}`),
+      s(SECTION.otoshi, c.concept.step),
+      s(
+        SECTION.musubi,
+        `説く側に立ってしまうと、この一句は聞こえません。私も、聞かせていただく側の一人としてここにおります。`,
+      ),
+    ],
+  }),
+
+  gobyakudo: (c) => ({
+    title: `「${c.word.word}」は、そういう意味ではありません`,
+    uses: { word: true, concept: true },
+    meta: [c.word.gap],
+    sections: [
+      s(SECTION.iriguchi, c.modern.line),
+      s(SECTION.seken_tsukaikata, `「${c.word.word}」という言葉があります。世間では、${nq(c.word.now)}——そういう意味で使われています。`),
+      s(SECTION.moto, `もとの意味は、${c.word.origin}`),
+      s(SECTION.kotoba, conceptLine(c.concept)),
+      s(SECTION.zure, `言葉だけが残って、中身が入れ替わりました。${c.concept.pivot}`),
+      s(SECTION.otoshi, c.concept.step),
+      s(SECTION.musubi, `言葉を直すだけの話ではありません。使い方が変わったところに、私たちの受け取り方が出ています。`),
+    ],
+  }),
+
+  houonko: (c) => ({
+    title: `${c.occasion.name}に — ${c.concept.term}`,
+    uses: { concept: true, occasion: true },
+    meta: ['供養ではなく報恩、という一点を外さない。由来の説明は短く。'],
+    sections: [
+      s(SECTION.iriguchi, `${c.occasion.name}のお勤めです。${c.occasion.hook}、というところから申します。`),
+      s(SECTION.hikkakari, c.modern.line),
+      s(SECTION.kotoba, conceptLine(c.concept)),
+      s(SECTION.zure, `${nq(c.concept.misread)}。けれども、${c.concept.pivot}`),
+      s(SECTION.otoshi, c.concept.step),
+      s(
+        SECTION.musubi,
+        `${c.occasion.name}は、こちらが何かをして差し上げる日ではありません。受けていたことに気づかせていただく日です。`,
+      ),
+    ],
+  }),
+
   kojitsuke: (c) => ({
     title: `こじつけですが — 「${c.word.word}」と${c.concept.term}`,
     uses: { word: true, concept: true },
@@ -318,6 +435,9 @@ function condense(built: Built, c: Ctx): NetaSection[] {
   ]
 }
 
+/** 絞り込んだ候補が空なら、全体に戻す */
+const orAll = <T,>(narrowed: Ranked<T>[], all: Ranked<T>[]) => (narrowed.length > 0 ? narrowed : all)
+
 function takeUnused<T extends { id: string }>(
   ranked: Ranked<T>[],
   used: Set<string>,
@@ -336,80 +456,191 @@ function takeUnused<T extends { id: string }>(
   return chosen
 }
 
+/** 真宗大谷派モードでの素材の重みづけ（0で中立、負で後ろへ回す） */
+const TRADITION_BONUS: Record<TraditionMode, Record<Tradition, number>> = {
+  otani: { shinshu: 8, common: 1, zen: -2 },
+  any: { shinshu: 0, common: 0, zen: 0 },
+}
+
+function weighTradition<T extends { tradition?: Tradition }>(
+  ranked: Ranked<T>[],
+  mode: TraditionMode,
+): Ranked<T>[] {
+  const bonus = TRADITION_BONUS[mode]
+  return ranked
+    .map((r) => ({ item: r.item, score: r.score + bonus[r.item.tradition ?? 'common'] }))
+    .sort((a, b) => b.score - a.score)
+}
+
+const onlyShinshu = <T extends { tradition?: Tradition }>(ranked: Ranked<T>[]) =>
+  ranked.filter((r) => r.item.tradition === 'shinshu')
+
+/** 真宗モードの結びに添える一句 */
+const OTANI_CLOSINGS = [
+  '南無阿弥陀仏。',
+  'なんまんだぶ、なんまんだぶ。',
+  'ようこそのお聴聞でございました。',
+]
+
+function mannerFor(scene: Scene, rand: Rand): Manner {
+  const fit = MANNERS.filter((m) => !m.scenes || m.scenes.includes(scene.id))
+  const pool = fit.length > 0 ? fit : MANNERS
+  return pool[Math.floor(rand() * pool.length) % pool.length]
+}
+
 export function generateNeta(input: GenerateInput): Neta[] {
   const rand = mulberry32(input.seed ^ hashString(input.text + input.emotions.join(',')))
   const scene = SCENE_BY_ID[input.sceneId] ?? SCENE_BY_ID.howakai
+  const mode = input.tradition
   const emotionLabels = input.emotions.map((id) => EMOTION_BY_ID[id]?.label).filter(Boolean)
   const primaryLabel = emotionLabels[0] ?? 'そのざわつき'
 
-  const rankedConcepts = rankItems(
-    CONCEPTS,
-    input.emotions,
-    input.text,
-    (x) => x.emotions,
-    (x) => [x.term, ...(x.keywords ?? [])],
+  const rankedConcepts = weighTradition(
+    rankItems(
+      CONCEPTS,
+      input.emotions,
+      input.text,
+      (x) => x.emotions,
+      (x) => [x.term, ...(x.keywords ?? [])],
+    ),
+    mode,
   )
-  const rankedStories = rankItems(
-    STORIES,
-    input.emotions,
-    input.text,
-    (x) => x.emotions,
-    (x) => [x.title],
+  const rankedStories = weighTradition(
+    rankItems(
+      STORIES,
+      input.emotions,
+      input.text,
+      (x) => x.emotions,
+      (x) => [x.title],
+    ),
+    mode,
   )
-  const rankedWords = rankItems(
-    WORDS,
-    input.emotions,
-    input.text,
-    (x) => x.emotions,
-    (x) => [x.word],
+  const rankedWords = weighTradition(
+    rankItems(
+      WORDS,
+      input.emotions,
+      input.text,
+      (x) => x.emotions,
+      (x) => [x.word],
+    ),
+    mode,
   )
   const rankedModerns = rankItems(
-    MODERNS,
+    MODERNS.filter((m) => !(m.avoidScenes ?? []).includes(scene.id)),
     input.emotions,
     input.text,
     (x) => x.emotions,
     (x) => [x.scene, ...(x.keywords ?? [])],
   )
-
-  const occasionPool = OCCASIONS.filter((o) => o.months.includes(input.month))
-  const occasions: Occasion[] = occasionPool.length > 0 ? occasionPool : OCCASIONS
-
-  const angles = shuffle(
-    ANGLES.filter((a) => a.kojitsuke <= input.kojitsukeMax),
-    rand,
+  const rankedPhrases = rankItems(
+    PHRASES,
+    input.emotions,
+    input.text,
+    (x) => x.emotions,
+    (x) => [x.text, x.source],
   )
+
+  const monthly = OCCASIONS.filter((o) => o.months.includes(input.month))
+  const occasionPool = monthly.length > 0 ? monthly : OCCASIONS
+  const occasions = weighTradition(
+    occasionPool.map((item) => ({ item, score: 0 })),
+    mode,
+  )
+
+  // 真宗の切り口は真宗モードのときだけ。しかも先に回して、最初の一巡に必ず入るようにする。
+  const usable = ANGLES.filter(
+    (a) => a.kojitsuke <= input.kojitsukeMax && (mode === 'otani' || a.tradition !== 'shinshu'),
+  )
+  const angles =
+    mode === 'otani'
+      ? [
+          ...shuffle(
+            usable.filter((a) => a.tradition === 'shinshu'),
+            rand,
+          ),
+          ...shuffle(
+            usable.filter((a) => a.tradition !== 'shinshu'),
+            rand,
+          ),
+        ]
+      : shuffle(usable, rand)
 
   const usedConcept = new Set<string>()
   const usedStory = new Set<string>()
   const usedWord = new Set<string>()
   const usedModern = new Set<string>()
+  const usedOccasion = new Set<string>()
+  const usedPhrase = new Set<string>()
 
   const out: Neta[] = []
   for (let i = 0; i < input.count; i++) {
     const angle: Angle = angles[i % angles.length]
+    const shinshuAngle = angle.tradition === 'shinshu'
+
+    // 真宗の切り口には真宗の素材を当てる（足りなければ全体から）
+    const conceptPool = shinshuAngle ? orAll(onlyShinshu(rankedConcepts), rankedConcepts) : rankedConcepts
+    const wordPool = shinshuAngle ? orAll(onlyShinshu(rankedWords), rankedWords) : rankedWords
+    const storyPool = shinshuAngle ? orAll(onlyShinshu(rankedStories), rankedStories) : rankedStories
+    const occasionPoolForAngle = shinshuAngle ? orAll(onlyShinshu(occasions), occasions) : occasions
+
+    // 御文・歎異抄の切り口は、その出典の一句だけを引く
+    const phrasePool =
+      angle.id === 'ofumi'
+        ? rankedPhrases.filter((r) => r.item.source.includes('御文'))
+        : angle.id === 'tannisho'
+          ? rankedPhrases.filter((r) => r.item.source.includes('歎異抄'))
+          : rankedPhrases
+
+    const concept = takeUnused(conceptPool, usedConcept, rand, 8)
+    // 一句・喩え・日常語は、選んだ教義と同じ気持ちを向いているものから引く（話の筋がずれないように）
+    const conceptTags = new Set(concept.emotions)
+    const alignTo = <T extends { emotions: readonly EmotionId[] }>(pool: Ranked<T>[]) =>
+      pool
+        .map((r) => ({
+          item: r.item,
+          score: r.score + r.item.emotions.filter((e) => conceptTags.has(e)).length * 4,
+        }))
+        .sort((a, b) => b.score - a.score)
+
     const ctx: Ctx = {
       emotionLabels,
       primaryLabel,
       userText: input.text,
       modern: takeUnused(rankedModerns, usedModern, rand, 8),
-      concept: takeUnused(rankedConcepts, usedConcept, rand, 8),
-      story: takeUnused(rankedStories, usedStory, rand, 8),
-      word: takeUnused(rankedWords, usedWord, rand, 8),
-      occasion: occasions[Math.floor(rand() * occasions.length) % occasions.length],
+      concept,
+      story: takeUnused(alignTo(storyPool), usedStory, rand, 6),
+      word: takeUnused(alignTo(wordPool), usedWord, rand, 6),
+      occasion: takeUnused(occasionPoolForAngle, usedOccasion, rand, 6),
+      phrase: takeUnused(alignTo(orAll(phrasePool, rankedPhrases)), usedPhrase, rand, 4),
       scene,
+      mode,
     }
+
     const built = BUILDERS[angle.id](ctx)
+    const manner = mannerFor(scene, rand)
     const meta = [
       ...built.meta,
       `避けたい入り方：「${ctx.concept.term}とは——という意味であります」と解説から始めると、そこで顔が下がります。今日の入口は「${ctx.modern.scene}」です。`,
+      ...(mode === 'otani'
+        ? [`大谷派の言い回し：「${manner.avoid}」ではなく「${manner.use}」。${manner.why}`]
+        : []),
       scene.minutes === 0
         ? `${scene.label}：一行で立ち止まらせる。説明はしない。`
         : `${scene.label}：目安${scene.minutes}分。${scene.note}。`,
     ]
+
+    // 真宗モードでは、結びにお念仏の一句を添える
+    const spoken =
+      mode === 'otani' && scene.minutes > 0
+        ? built.sections.map((sec) =>
+            sec.label === SECTION.musubi && !sec.body.includes('あなかしこ')
+              ? s(sec.label, `${sec.body}\n\n${OTANI_CLOSINGS[Math.floor(rand() * OTANI_CLOSINGS.length) % OTANI_CLOSINGS.length]}`)
+              : sec,
+          )
+        : built.sections
+
     const sections =
-      scene.minutes === 0
-        ? condense(built, ctx)
-        : [...built.sections, s(SECTION.memo, meta.join('\n'))]
+      scene.minutes === 0 ? condense(built, ctx) : [...spoken, s(SECTION.memo, meta.join('\n'))]
 
     const sources: string[] = []
     const cautions: string[] = []
@@ -425,6 +656,17 @@ export function generateNeta(input: GenerateInput): Neta[] {
       sources.push(`${ctx.word.word}：仏教語（${ctx.word.origin}）`)
       if (ctx.word.caution) cautions.push(`${ctx.word.word}：${ctx.word.caution}`)
     }
+    if (built.uses.phrase) {
+      sources.push(`一句：${ctx.phrase.source}`)
+      if (ctx.phrase.caution) cautions.push(`一句：${ctx.phrase.caution}`)
+    }
+    if (built.uses.occasion && ctx.occasion.caution) {
+      cautions.push(`${ctx.occasion.name}：${ctx.occasion.caution}`)
+    }
+
+    const tradition: Tradition = shinshuAngle
+      ? 'shinshu'
+      : (built.uses.concept ? ctx.concept.tradition : undefined) ?? 'common'
 
     out.push({
       id: `${input.seed}-${i}-${angle.id}`,
@@ -442,11 +684,13 @@ export function generateNeta(input: GenerateInput): Neta[] {
         wordId: built.uses.word ? ctx.word.id : undefined,
         modernId: ctx.modern.id,
         occasionId: built.uses.occasion ? ctx.occasion.id : undefined,
+        phraseId: built.uses.phrase ? ctx.phrase.id : undefined,
       },
       minutes: scene.minutes,
+      tradition,
     })
   }
   return out
 }
 
-export type { Concept, Story, Word, Modern, Scene }
+export type { Concept, Story, Word, Modern, Phrase, Manner, Scene }

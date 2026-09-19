@@ -1,7 +1,8 @@
+import { SHINSHU_OCCASIONS } from './shinshu/occasions'
 import type { Occasion } from './types'
 
 // 季節・行事に寄せる切り口のための素材。
-export const OCCASIONS: Occasion[] = [
+const GENERAL_OCCASIONS: Occasion[] = [
   { id: 'shogatsu', name: '正月・修正会', months: [1], hook: '一年の初めに、めでたさの中身を一枚めくる' },
   { id: 'nehan-e', name: '涅槃会（2月15日）', months: [2], hook: '釈尊が亡くなった日から、別れの受け取り方を考える' },
   { id: 'haru-higan', name: '春彼岸', months: [3], hook: '昼と夜が同じ長さになる日に、かたよりを見直す' },
@@ -17,6 +18,9 @@ export const OCCASIONS: Occasion[] = [
   { id: 'joya', name: '除夜の鐘', months: [12], hook: '百八の煩悩を、減点ではなく持ち物として語る' },
   { id: 'sotsugyou', name: '卒業・送別', months: [2, 3], hook: '別れの季節に、一期一会を実務の言葉として語る' },
 ]
+
+// 真宗大谷派の素材を先に置く（真宗モードで優先的に当たるようにするため）
+export const OCCASIONS: Occasion[] = [...SHINSHU_OCCASIONS, ...GENERAL_OCCASIONS]
 
 export const OCCASION_BY_ID: Record<string, Occasion> = Object.fromEntries(
   OCCASIONS.map((o) => [o.id, o]),

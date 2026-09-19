@@ -1,8 +1,9 @@
+import { SHINSHU_WORDS } from './shinshu/words'
 import type { Word } from './types'
 
 // 「入口を広く」するための主力素材。
 // 一般の人が毎日使っている言葉が、もともと仏教語だったという落差から入る。
-export const WORDS: Word[] = [
+const GENERAL_WORDS: Word[] = [
   {
     id: 'gaman',
     word: '我慢',
@@ -250,6 +251,9 @@ export const WORDS: Word[] = [
     caution: '語源は諸説あり定説ではない。「こういう説があります」と前置きして語る。',
   },
 ]
+
+// 真宗大谷派の素材を先に置く（真宗モードで優先的に当たるようにするため）
+export const WORDS: Word[] = [...SHINSHU_WORDS, ...GENERAL_WORDS]
 
 export const WORD_BY_ID: Record<string, Word> = Object.fromEntries(
   WORDS.map((w) => [w.id, w]),

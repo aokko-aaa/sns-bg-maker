@@ -1,8 +1,9 @@
+import { SHINSHU_CONCEPTS } from './shinshu/concepts'
 import type { Concept } from './types'
 
 // 各項目は「misread（世間での受け取り）→ pivot（仏教から見たズレ）」の落差を必ず持たせる。
 // 出典は通称で記す。実際に引用するときは原典の確認を前提にしている（アプリ上でも注意を出す）。
-export const CONCEPTS: Concept[] = [
+const GENERAL_CONCEPTS: Concept[] = [
   {
     id: 'shogyo-mujo',
     term: '諸行無常',
@@ -207,6 +208,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '雨を晴れに変える話ではなく、雨を雨のまま受け取れるかという話。好日は気分ではなく姿勢。',
     step: '今日を「よい・悪い」で採点するのを一日だけやめてみる。',
     emotions: ['yasuragi', 'tsukare', 'ochikomi', 'henka'],
+    tradition: 'zen',
   },
   {
     id: 'kissako',
@@ -219,6 +221,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '趙州は相手が誰であっても同じ一言を返した。相手によって出すものを変えない、という態度がそのまま教え。',
     step: '今日会う人に、相手を選ばず同じ態度で挨拶する。',
     emotions: ['ningenkankei', 'isogashii', 'kodoku'],
+    tradition: 'zen',
   },
   {
     id: 'zengo-saidan',
@@ -231,6 +234,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '過去とのつながりを切るのではなく、今を過去の続きとして値踏みするのをやめる、ということ。',
     step: '「昔は〜だったのに」と言いかけたら、そこで一度止めてみる。',
     emotions: ['koukai', 'henka', 'jikokeno', 'shi'],
+    tradition: 'zen',
   },
   {
     id: 'shujinko',
@@ -243,6 +247,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '瑞巌は毎日自分に「主人公」と呼びかけ、自分で「はい」と答えた。目立つことではなく、留守にしないこと。',
     step: '一日に一度、「今ここにいるか」と自分に声をかける。',
     emotions: ['mayoi', 'shounin', 'jikokeno', 'munashisa'],
+    tradition: 'zen',
   },
   {
     id: 'hougejaku',
@@ -255,6 +260,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '捨てたという手柄まで捨てよ、という念押し。手放し方にこだわること自体が荷物になる。',
     step: '「もう気にしていない」と言いたくなったら、言わずにおく。',
     emotions: ['koukai', 'urami', 'tsukare', 'shounin'],
+    tradition: 'zen',
   },
   {
     id: 'mukudoku',
@@ -267,6 +273,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '達磨が否定したのは善行ではなく、功徳を勘定に入れる心のほう。見返りを外すと、行いはむしろ軽くなる。',
     step: '今日した親切をひとつ、誰にも言わないでおく。',
     emotions: ['mukuwarenai', 'shounin', 'munashisa', 'kazoku'],
+    tradition: 'zen',
   },
   {
     id: 'zuisho-ni-shu',
@@ -279,6 +286,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '置かれた場所を肯定する話ではなく、どこにいても客のままでいるな、という促し。主になるかどうかは自分が決める。',
     step: '今の持ち場で、自分の判断で決めていいことを一つ見つける。',
     emotions: ['mukuwarenai', 'isogashii', 'henka', 'munashisa'],
+    tradition: 'zen',
   },
   {
     id: 'shokorikkyaka',
@@ -291,6 +299,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '未来を見るなという話ではなく、今立っているところが唯一の出発点だという確認。',
     step: '家を出る前に、履物の向きをそろえる。',
     emotions: ['aseri', 'mayoi', 'isogashii', 'fuan'],
+    tradition: 'zen',
   },
   {
     id: 'makumouzou',
@@ -303,6 +312,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '止めるのは思考ではなく、事実と空想の混同。「これは起きたことか、考えただけか」と仕分ける作業になる。',
     step: '不安を書き出し、「事実」と「予想」に印をつける。',
     emotions: ['fuan', 'koukai', 'aseri', 'ochikomi'],
+    tradition: 'zen',
   },
   {
     id: 'yanagi-midori',
@@ -315,6 +325,7 @@ export const CONCEPTS: Concept[] = [
     pivot: 'ありのままを許す話ではなく、もともと別物を同じ物差しで測っていたという指摘。',
     step: '自分と誰かを比べている物差しの名前を、口に出してみる。',
     emotions: ['hikaku', 'jikokeno', 'shitto', 'shounin'],
+    tradition: 'zen',
   },
   {
     id: 'issui-shiken',
@@ -351,6 +362,7 @@ export const CONCEPTS: Concept[] = [
     pivot: 'ここでの悪人は犯罪者ではなく、自力で立てない自覚を持った人。自覚があることが、すでに受け取る側に回っている。',
     step: '誰かに「助けてほしい」と、具体的に一つだけ頼む。',
     emotions: ['zaiakukan', 'jikokeno', 'tsukare', 'koukai'],
+    tradition: 'shinshu',
   },
   {
     id: 'tariki',
@@ -363,6 +375,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '他力は他人任せではなく、自力の限界を本当に知ったところでようやく働きはじめる力のこと。',
     step: '今日、人に任せていい仕事を一つだけ手放す。',
     emotions: ['tsukare', 'fuan', 'mukuwarenai', 'jikokeno'],
+    tradition: 'shinshu',
   },
   {
     id: 'ichigo-ichie',
@@ -521,6 +534,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '怖がらせる言葉ではなく、優先順位の確認。何が一大事かを決めてある人は、急いでいても慌てない。',
     step: '今日やらなくてよいことを一つ決めて、外す。',
     emotions: ['shi', 'isogashii', 'aseri', 'wakare'],
+    tradition: 'zen',
   },
   {
     id: 'deichu-no-hasu',
@@ -545,6 +559,7 @@ export const CONCEPTS: Concept[] = [
     pivot: '道元は目的を外した。得るために坐るのではなく、坐ることがそのまま仏の姿だとした。',
     step: '見返りを求めない時間を、一日三分だけ確保する。',
     emotions: ['isogashii', 'tsukare', 'munashisa', 'yasuragi'],
+    tradition: 'zen',
   },
   {
     id: 'ichinen-hokki',
@@ -559,6 +574,9 @@ export const CONCEPTS: Concept[] = [
     emotions: ['hajimari', 'mayoi', 'tassei', 'aseri'],
   },
 ]
+
+// 真宗大谷派の素材を先に置く（真宗モードで優先的に当たるようにするため）
+export const CONCEPTS: Concept[] = [...SHINSHU_CONCEPTS, ...GENERAL_CONCEPTS]
 
 export const CONCEPT_BY_ID: Record<string, Concept> = Object.fromEntries(
   CONCEPTS.map((c) => [c.id, c]),

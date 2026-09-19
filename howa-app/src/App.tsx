@@ -4,7 +4,7 @@ import EmotionPicker from './components/EmotionPicker'
 import NetaCard from './components/NetaCard'
 import SavedView from './components/SavedView'
 import { SCENES } from './data/angles'
-import type { EmotionId, Neta, SceneId } from './data/types'
+import type { EmotionId, Neta, SceneId, TraditionMode } from './data/types'
 import { generateNeta } from './lib/generate'
 import { detectEmotions } from './lib/match'
 import { savedStore } from './lib/storage'
@@ -25,6 +25,7 @@ export default function App() {
   const [emotions, setEmotions] = useState<EmotionId[]>([])
   const [sceneId, setSceneId] = useState<SceneId>('howakai')
   const [kojitsukeMax, setKojitsukeMax] = useState<1 | 2 | 3>(2)
+  const [tradition, setTradition] = useState<TraditionMode>('otani')
   const [month, setMonth] = useState(new Date().getMonth() + 1)
   const [results, setResults] = useState<Neta[]>([])
   const [savedIds, setSavedIds] = useState<string[]>([])
@@ -48,6 +49,7 @@ export default function App() {
       sceneId,
       month,
       kojitsukeMax,
+      tradition,
       seed,
       count: BATCH,
     })
@@ -76,6 +78,9 @@ export default function App() {
           教義から降りていくのではなく、
           <span className="font-bold">一般の人が実際に立ち止まる場面</span>
           から始めて、そこから仏教へ渡します。
+          <br className="hidden sm:block" />
+          既定は<span className="font-bold">真宗大谷派</span>
+          の教え（お聖教・御文・歎異抄・報恩）を優先して出します。
         </p>
       </header>
 
@@ -120,6 +125,31 @@ export default function App() {
           </section>
 
           <section className="card flex flex-col gap-4 px-4 py-4">
+            <div>
+              <div className="label mb-2">どの教えで出す</div>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  className={`chip ${tradition === 'otani' ? 'chip-on' : ''}`}
+                  onClick={() => setTradition('otani')}
+                >
+                  真宗大谷派を優先
+                </button>
+                <button
+                  type="button"
+                  className={`chip ${tradition === 'any' ? 'chip-on' : ''}`}
+                  onClick={() => setTradition('any')}
+                >
+                  宗派を問わない
+                </button>
+              </div>
+              <p className="mt-1.5 text-xs text-stone-500">
+                {tradition === 'otani'
+                  ? '本願・他力・聞法・報恩を軸に、お聖教の一句／御文／歎異抄／私の上に聞く、の切り口を先に回します。禅語は後ろに下げ、大谷派で避ける言い回しをカードに添えます。'
+                  : '宗派を問わない素材だけで組みます（真宗固有の切り口は出しません）。'}
+              </p>
+            </div>
+
             <div>
               <div className="label mb-2">どこで話す</div>
               <div className="flex flex-wrap gap-1.5">

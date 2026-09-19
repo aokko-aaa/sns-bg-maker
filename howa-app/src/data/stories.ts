@@ -1,7 +1,8 @@
+import { SHINSHU_STORIES } from './shinshu/stories'
 import type { Story } from './types'
 
 // 語りの「山」に使う喩え話・逸話。summary はそのまま声に出せる長さにしている。
-export const STORIES: Story[] = [
+const GENERAL_STORIES: Story[] = [
   {
     id: 'devadatta',
     title: '提婆達多の嫉妬',
@@ -141,6 +142,7 @@ export const STORIES: Story[] = [
       '寺を建て僧を養った梁の武帝が、達磨に問う。「どれほどの功徳があるか」。達磨は「無功徳」。「では、目の前にいるあなたは誰か」と問えば「不識（知らぬ）」。話はそこで終わり、達磨は国を去った。',
     point: '数えた善は取引になる。承認や見返りの話に。',
     emotions: ['mukuwarenai', 'shounin', 'munashisa'],
+    tradition: 'zen',
   },
   {
     id: 'eka-anjin',
@@ -151,6 +153,7 @@ export const STORIES: Story[] = [
       '慧可が達磨に願った。「私の心は不安です。どうか安らかにしてください」。達磨は「その心を、ここへ出してみよ」。慧可は「探しましたが、見つかりません」。達磨は「もう安らかにしておいた」と答えた。',
     point: '不安を実体として扱っているうちは終わらない、という転換に。',
     emotions: ['fuan', 'ochikomi', 'mayoi', 'kodoku'],
+    tradition: 'zen',
   },
   {
     id: 'joshu-kissako',
@@ -161,6 +164,7 @@ export const STORIES: Story[] = [
       '趙州は、初めて来た僧にも「お茶でも飲んでいきなさい」、前にも来たことのある僧にも「お茶でも飲んでいきなさい」と言った。院主が「なぜどちらにも同じことを」と尋ねると、趙州は院主にも「お茶でも飲んでいきなさい」と言った。',
     point: '相手によって態度を変えない、という一点で笑いも取れる。',
     emotions: ['ningenkankei', 'isogashii', 'kodoku'],
+    tradition: 'zen',
   },
   {
     id: 'hyakujo-ichijitsu',
@@ -171,6 +175,7 @@ export const STORIES: Story[] = [
       '高齢の百丈が畑仕事をやめないので、弟子たちが農具を隠した。百丈はその日、食事をとらなかった。「一日作さざれば一日食らわず」。',
     point: '働くことと食べることのつながり。定年・介護・役割喪失の話にも。',
     emotions: ['henka', 'munashisa', 'mukuwarenai', 'tsukare'],
+    tradition: 'zen',
   },
   {
     id: 'kyogen-gekichiku',
@@ -181,6 +186,7 @@ export const STORIES: Story[] = [
       '学問では誰にも負けなかった香厳が、師の一問に答えられず、書物をすべて焼いて山に入った。ある日、掃除をしていて飛んだ小石が竹に当たった。その音で、すべてが落ちた。',
     point: '答えは机の上ではなく、日常の作業の途中で来る。',
     emotions: ['mayoi', 'ochikomi', 'tassei', 'isogashii'],
+    tradition: 'zen',
   },
   {
     id: 'jugyuzu',
@@ -191,6 +197,7 @@ export const STORIES: Story[] = [
       '牛を探し、見つけ、連れ帰り、やがて牛も自分も消える。ところが図はそこで終わらない。最後の一枚で、その人は袋をさげて町へ出て、誰かと笑っている。',
     point: '悟りのゴールが山ではなく町だという意外性。日常回帰の締めに。',
     emotions: ['munashisa', 'yasuragi', 'henka', 'tassei'],
+    tradition: 'zen',
   },
   {
     id: 'seigen-sanzan',
@@ -201,6 +208,7 @@ export const STORIES: Story[] = [
       '修行の前は、山は山、水は水に見えた。修行に入ると、山は山ではなく、水は水ではなくなった。そして今、やはり山は山、水は水である。同じ言葉が、三度とも違う意味を持つ。',
     point: '同じ日常が違って見える、という構造を短く示せる。',
     emotions: ['henka', 'yasuragi', 'mayoi', 'jikokeno'],
+    tradition: 'zen',
   },
   {
     id: 'ryokan-sainan',
@@ -211,6 +219,7 @@ export const STORIES: Story[] = [
       '大地震のあと、見舞いの手紙に良寛はこう書いた。「災難に逢う時節には災難に逢うがよく候、死ぬ時節には死ぬがよく候。これはこれ災難をのがるる妙法にて候」。',
     point: '慰めの言葉が尽きた場面で。逃げ道を示さないことが、かえって支えになる。',
     emotions: ['wakare', 'shi', 'fuan', 'ochikomi'],
+    tradition: 'zen',
   },
   {
     id: 'ryokan-tsuki',
@@ -221,6 +230,7 @@ export const STORIES: Story[] = [
       '庵に入った盗人が、持ち去るものを何も見つけられず出ていった。良寛の句に「盗人に取り残されし窓の月」とある。',
     point: '失った話のあとに、残っているものへ視線を動かす一句として。',
     emotions: ['okane', 'munashisa', 'yasuragi', 'wakare'],
+    tradition: 'zen',
     caution: '逸話としての伝承が強い。句の位置づけは断定を避けて語る。',
   },
   {
@@ -232,6 +242,7 @@ export const STORIES: Story[] = [
       '「門松は冥土の旅の一里塚 めでたくもあり めでたくもなし」。正月に浮かれる町で、一休は杖の先に髑髏をつけて歩いたとも伝えられる。',
     point: '正月・節目の法話で、めでたさを否定せずに一枚めくる。',
     emotions: ['hajimari', 'shi', 'henka', 'yorokobi'],
+    tradition: 'zen',
     caution: '伝承の要素が大きい。「と伝えられる」と添えて語る。',
   },
   {
@@ -264,6 +275,7 @@ export const STORIES: Story[] = [
       '近所の娘が身ごもり、父親は白隠だと言われた。白隠は「そうか」と言って赤子を引き取り、育てた。のちに真実が明らかになり、娘の家が詫びに来た。白隠はまた「そうか」と言って、赤子を返した。',
     point: '弁明しない強さ。誤解や悪評に苦しむ人への話に。',
     emotions: ['urami', 'zaiakukan', 'shounin', 'ningenkankei'],
+    tradition: 'zen',
     caution: '出典のはっきりしない逸話として広まっている。伝承と断って語る。',
   },
   {
@@ -277,6 +289,9 @@ export const STORIES: Story[] = [
     emotions: ['kazoku', 'okane', 'kansha', 'hajimari'],
   },
 ]
+
+// 真宗大谷派の素材を先に置く（真宗モードで優先的に当たるようにするため）
+export const STORIES: Story[] = [...SHINSHU_STORIES, ...GENERAL_STORIES]
 
 export const STORY_BY_ID: Record<string, Story> = Object.fromEntries(
   STORIES.map((s) => [s.id, s]),
