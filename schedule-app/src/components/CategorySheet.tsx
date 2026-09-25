@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import BottomSheet from './BottomSheet'
+import LineNotifySection from './LineNotifySection'
 import {
   useCategories,
   useDeleteCategory,
@@ -75,11 +76,17 @@ export default function CategorySheet({
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="カテゴリ管理">
+    <BottomSheet open={open} onClose={onClose} title="設定">
       <div className="flex flex-col gap-5">
-        <p className="text-xs text-gray-500">
-          大分類（Work / Family / Personal）ごとに中分類を整理できます。色は大分類で自動。
-        </p>
+        {/* LINEで翌日のお知らせ（クラウド版のみ） */}
+        <LineNotifySection />
+
+        <div className="border-t border-gray-100 pt-1">
+          <p className="text-xs font-bold text-gray-600">カテゴリ管理</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            大分類（Work / Family / Personal）ごとに中分類を整理できます。色は大分類で自動。
+          </p>
+        </div>
 
         {GROUPS.map((g) => {
           const items = categories.filter((c) => c.group_key === g)

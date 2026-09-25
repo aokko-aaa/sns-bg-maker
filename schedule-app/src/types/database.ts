@@ -94,6 +94,18 @@ export type TimeLog = {
   created_at: string
 }
 
+/** LINE通知の連携設定（クラウド版のみ）。1ユーザー1行。 */
+export type LineLink = {
+  user_id: string
+  line_user_id: string | null // 連携済みならLINEのuserId。未連携はnull
+  link_code: string | null // 連携用の合言葉（LINEに送ってもらう）。連携後はnull
+  enabled: boolean // 通知ON/OFF
+  notify_hour: number // 毎日この時刻(JST 0-23)に翌日ぶんを送る
+  linked_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 // createClient<Database> に渡す最小限のスキーマ型。
 // 生成型に差し替えるまでの土台。
 export interface Database {
@@ -132,6 +144,13 @@ export interface Database {
         Insert: Omit<MonthlyGoal, 'id' | 'created_at'> &
           Partial<Pick<MonthlyGoal, 'id' | 'created_at'>>
         Update: Partial<MonthlyGoal>
+        Relationships: []
+      }
+      line_links: {
+        Row: LineLink
+        // user_id 以外はDB既定値/nullでよいので任意
+        Insert: Pick<LineLink, 'user_id'> & Partial<Omit<LineLink, 'user_id'>>
+        Update: Partial<LineLink>
         Relationships: []
       }
     }

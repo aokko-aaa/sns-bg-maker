@@ -20,7 +20,7 @@ function detectLocalMode(): boolean {
     return false
   }
 }
-const LOCAL_MODE = detectLocalMode()
+export const LOCAL_MODE = detectLocalMode()
 
 // 設計原則 2-3: フロントに置いてよいのは anon(publishable) key と URL のみ。
 // これらはブラウザに公開される前提の公開用の値（RLS で守られる）。
