@@ -106,6 +106,15 @@ export type LineLink = {
   updated_at: string
 }
 
+/** チャット(Claude)からの予定登録用トークン（クラウド版のみ）。1ユーザー1行。 */
+export type ChatImportToken = {
+  user_id: string
+  token: string
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
 // createClient<Database> に渡す最小限のスキーマ型。
 // 生成型に差し替えるまでの土台。
 export interface Database {
@@ -151,6 +160,13 @@ export interface Database {
         // user_id 以外はDB既定値/nullでよいので任意
         Insert: Pick<LineLink, 'user_id'> & Partial<Omit<LineLink, 'user_id'>>
         Update: Partial<LineLink>
+        Relationships: []
+      }
+      chat_import_tokens: {
+        Row: ChatImportToken
+        Insert: Pick<ChatImportToken, 'user_id' | 'token'> &
+          Partial<Omit<ChatImportToken, 'user_id' | 'token'>>
+        Update: Partial<ChatImportToken>
         Relationships: []
       }
     }

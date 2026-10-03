@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import BottomSheet from './BottomSheet'
 import LineNotifySection from './LineNotifySection'
+import ChatImportSection from './ChatImportSection'
 import {
   useCategories,
   useDeleteCategory,
@@ -78,6 +79,9 @@ export default function CategorySheet({
   return (
     <BottomSheet open={open} onClose={onClose} title="設定">
       <div className="flex flex-col gap-5">
+        {/* チャット(Claude)から予定を登録（クラウド版のみ） */}
+        <ChatImportSection />
+
         {/* LINEで翌日のお知らせ（クラウド版のみ） */}
         <LineNotifySection />
 
