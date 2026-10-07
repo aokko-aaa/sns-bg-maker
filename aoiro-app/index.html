@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d4b98"></head><body>
+<title>青色帳簿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 帳簿の一枚紙。上部に科目タブ、本文は最大幅1080pxの一段組、スマホは下部タブ */
+:root{
+  --bg:#f2f4f7; --surface:#ffffff; --sunk:#e9edf3; --ink:#18202e; --muted:#5b677b; --line:#d7dee8;
+  --accent:#1d4b98; --accent-ink:#ffffff; --accent-soft:#e3eaf6;
+  --pos:#1b7550; --neg:#b0373a; --warn:#9a6a00; --warn-soft:#fbf1d6;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e131b; --surface:#161d28; --sunk:#1c2532; --ink:#e4e9f1; --muted:#97a3b7; --line:#2a3445;
+  --accent:#86aaf0; --accent-ink:#0e131b; --accent-soft:#1c2a43;
+  --pos:#5cc493; --neg:#ec8486; --warn:#e3b54a; --warn-soft:#2c2614; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e131b; --surface:#161d28; --sunk:#1c2532; --ink:#e4e9f1; --muted:#97a3b7; --line:#2a3445;
+  --accent:#86aaf0; --accent-ink:#0e131b; --accent-soft:#1c2a43;
+  --pos:#5cc493; --neg:#ec8486; --warn:#e3b54a; --warn-soft:#2c2614; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:0 96px}
+button,input,select,textarea{font:inherit;color:inherit}
+.num,td.n,th.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font-family:var(--f-display);font-size:1.3rem;font-weight:700}
+h3{font-size:.95rem;font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:1080px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-size:1.25rem;font-weight:700;display:flex;align-items:baseline;gap:8px}
+.brand .stamp{display:inline-grid;place-items:center;width:28px;height:28px;border:2px solid var(--accent);color:var(--accent);border-radius:6px;font-size:.95rem;transform:translateY(4px)}
+.brand small{font-family:var(--f-body);font-size:.8rem;color:var(--muted);font-weight:500}
+.yearsel{margin-left:auto;display:flex;align-items:center;gap:6px}
+.nav{display:flex;gap:2px;max-width:1080px;margin:0 auto;padding:0 16px;overflow-x:auto}
+.nav button{border:0;background:none;padding:8px 12px;border-bottom:2px solid transparent;color:var(--muted);font-weight:700;cursor:pointer;white-space:nowrap}
+.nav button[aria-current="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+@media (max-width:640px){
+  .nav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:0 0 env(safe-area-inset-bottom,0px);justify-content:space-around}
+  .nav button{flex:1;padding:10px 2px 12px;border-bottom:0;border-top:2px solid transparent;font-size:.78rem}
+  .nav button[aria-current="true"]{border-top-color:var(--accent)}
+}
+
+/* blocks */
+.stack{display:flex;flex-direction:column;gap:20px;padding-top:20px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.banner{border-radius:var(--r);padding:12px 16px;background:var(--warn-soft);color:var(--ink);border:1px solid var(--warn);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner b{color:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.kpi .l{font-size:.8rem;color:var(--muted);letter-spacing:.04em}
+.kpi .v{font-size:1.45rem;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:.8rem;color:var(--muted)}
+.kpi.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.kpi.main .l,.kpi.main .s{color:var(--accent-ink);opacity:.85}
+
+/* buttons/forms */
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;min-height:40px}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn.danger{color:var(--neg);border-color:var(--neg)}
+.btn.sm{padding:4px 10px;min-height:32px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted);font-weight:500;min-width:0}
+label.f > input,label.f > select,label.f > textarea,.inp{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;min-height:42px;color:var(--ink);font-size:1rem;width:100%}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--sunk)}
+.seg button{border:0;background:none;padding:9px 18px;cursor:pointer;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.check{display:flex;gap:8px;align-items:center;font-size:.9rem;cursor:pointer}
+.preview{background:var(--sunk);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.preview table{width:100%;border-collapse:collapse}
+.preview td{padding:2px 4px}
+
+/* tables */
+.tw{overflow-x:auto;min-width:0}
+table.t{width:100%;border-collapse:collapse;font-size:.92rem}
+table.t th{font-size:.78rem;color:var(--muted);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:.03em}
+table.t td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t tr.sum td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
+table.t tr.sub td{font-weight:700;background:var(--sunk)}
+table.t td.no{color:var(--muted);width:2.2em;font-size:.85rem}
+.pill{display:inline-block;font-size:.72rem;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:700;white-space:nowrap}
+.pill.sample{background:var(--warn-soft);color:var(--warn)}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+/* chart */
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:16px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+
+/* sheet */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:grid;place-items:center;padding:16px}
+.sheet{background:var(--surface);border-radius:14px;padding:20px;width:min(560px,100%);max-height:90vh;overflow:auto;border:1px solid var(--line)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;z-index:50;font-weight:500;max-width:calc(100% - 32px)}
+.deadline{display:flex;align-items:baseline;gap:6px}
+.deadline .big{font-size:2rem;font-weight:700;font-family:var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+ul.chk{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+ul.chk li{display:flex;gap:8px}
+ul.chk li::before{content:"□";color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.btn{transition:border-color .15s}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="stamp">青</span>青色帳簿 <small id="bizname"></small></div>
+    <div class="yearsel"><label for="year-select" class="small muted">年度</label><select id="year-select" class="inp" style="width:auto;min-height:36px;padding:4px 8px"></select></div>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-tab="home">ホーム</button>
+    <button data-tab="input">入力</button>
+    <button data-tab="journal">仕訳帳</button>
+    <button data-tab="ledger">元帳</button>
+    <button data-tab="report">決算書</button>
+    <button data-tab="settings">設定</button>
+  </nav>
+</header>
+<main class="wrap" id="main"><div class="stack"><div class="panel empty">帳簿を読み込んでいます…</div></div></main>
+<div id="overlay"></div>
+
+<script>
+"use strict";
+/* ===== 勘定科目（青色申告決算書・一般用の並び） ===== */
+// type: A資産 L負債 E元入金 R収益 C売上原価 X経費 / no: 決算書の欄番号
+const ACCTS = [
+  ['cash','現金','A'],['bank','普通預金','A'],['tdep','定期預金','A'],['ar','売掛金','A'],['inv','棚卸資産','A'],
+  ['prepaid','前払金','A'],['loanr','貸付金','A'],['bldg','建物','A'],['equip','工具器具備品','A'],['vehicle','車両運搬具','A'],
+  ['soft','ソフトウェア','A'],['deposit','敷金・保証金','A'],['owner_dr','事業主貸','A'],
+  ['ap','買掛金','L'],['unpaid','未払金','L'],['advrec','前受金','L'],['withheld','預り金','L'],['loan','借入金','L'],
+  ['owner_cr','事業主借','L'],['capital','元入金','E'],
+  ['sales','売上(収入)金額','R'],['misc_inc','雑収入','R'],
+  ['purchase','仕入金額','C'],
+  ['tax','租税公課','X','⑧'],['ship','荷造運賃','X','⑨'],['util','水道光熱費','X','⑩'],['travel','旅費交通費','X','⑪'],
+  ['comm','通信費','X','⑫'],['ad','広告宣伝費','X','⑬'],['ent','接待交際費','X','⑭'],['ins','損害保険料','X','⑮'],
+  ['repair','修繕費','X','⑯'],['supplies','消耗品費','X','⑰'],['dep','減価償却費','X','⑱'],['welfare','福利厚生費','X','⑲'],
+  ['wage','給料賃金','X','⑳'],['outsrc','外注工賃','X','㉑'],['interest','利子割引料','X','㉒'],['rent','地代家賃','X','㉓'],
+  ['baddebt','貸倒金','X','㉔'],['fee','支払手数料','X','㉕'],['books','新聞図書費','X','㉖'],['meeting','会議費','X','㉗'],
+  ['train','研修費','X','㉘'],['misc','雑費','X','㉛'],
+].map(([code,name,type,no])=>({code,name,type,no}));
+const A = Object.fromEntries(ACCTS.map(a=>[a.code,a]));
+const DEBIT_SIDE = t => t==='A'||t==='C'||t==='X';
+const BS_ACCTS = ACCTS.filter(a=>a.type==='A'||a.type==='L'||a.type==='E');
+const PAY_OUT = ['cash','bank','unpaid','owner_cr','ap'];
+const PAY_IN = ['bank','cash','ar','owner_cr'];
+const PAY_LABEL = {cash:'現金',bank:'普通預金',unpaid:'クレジットカード（未払金）',owner_cr:'個人のお金で払った（事業主借）',ap:'掛け（買掛金）',ar:'あとで入金（売掛金）'};
+const PAY_IN_LABEL = {bank:'普通預金に入金',cash:'現金で受取',ar:'あとで入金（売掛金）',owner_cr:'個人口座に入金（事業主借）'};
+// 定額法の償却率（平成19年4月以降取得）
+const SL_RATE = {2:.5,3:.334,4:.25,5:.2,6:.167,7:.143,8:.125,9:.112,10:.1,11:.091,12:.084,13:.077,14:.072,15:.067,16:.063,17:.059,18:.056,19:.053,20:.05,22:.046,24:.042,30:.034,34:.03,38:.027,47:.022};
+
+/* ===== 状態 ===== */
+const S = { mode:'local', db:null, uid:null, meta:null, year:new Date().getFullYear(), conf:null, months:{}, sample:false,
+  tab:'home', jMonth:'all', jQuery:'', ledger:'bank', kind:'expense', confirmDel:null };
+const yen = n => (n<0?'-':'')+'¥'+Math.abs(Math.round(n)).toLocaleString('ja-JP');
+const num = n => Math.round(n).toLocaleString('ja-JP');
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const lsGet = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+const lsSet = (k,v) => { try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } };
+
+/* ===== 保存（claude.ai では本人専用のクラウド保存、それ以外はこの端末） ===== */
+async function storeInit(){
+  if(!window.claude || typeof window.claude.use!=='function') return;
+  try{
+    const [db,user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if(db && user){ const id = await user.id(); if(id){ S.db=db; S.uid=id; S.mode='cloud'; } }
+  }catch(e){ /* この端末に保存 */ }
+}
+const docRef = id => S.db.collection('data/users/'+S.uid).doc(id);
+async function getDoc(id){
+  if(S.mode==='cloud'){ const s = await docRef(id).get(); return s.exists ? JSON.parse(JSON.stringify(s.data())) : null; }
+  const v = lsGet('aoiro:'+id); try{ return v ? JSON.parse(v) : null; }catch(e){ return null; }
+}
+const queues = {};
+function putDoc(id,data){
+  const body = JSON.parse(JSON.stringify(data));
+  const run = async()=>{
+    if(S.mode==='cloud') await docRef(id).set(body);
+    else if(!lsSet('aoiro:'+id, JSON.stringify(body))) throw new Error('local');
+  };
+  queues[id] = (queues[id]||Promise.resolve()).then(run).catch(e=>{
+    toast(e && e.code==='quota_exceeded' ? '保存容量の上限です。古い年度のバックアップを取って整理してください' : '保存できませんでした。通信を確認してもう一度操作してください');
+  });
+  return queues[id];
+}
+
+/* ===== 年度データ ===== */
+const defaultConf = y => ({ year:y, bizName:S.meta?.bizName||'', ded:650000, opening:{}, endInv:0, assets:[] });
+const mKey = (y,m) => 'j'+y+pad(m);
+async function loadYear(y){
+  S.year = y;
+  const [conf,...ms] = await Promise.all([getDoc('c'+y), ...Array.from({length:12},(_,i)=>getDoc(mKey(y,i+1)))]);
+  S.conf = conf || defaultConf(y);
+  S.months = {}; ms.forEach((d,i)=>{ S.months[i+1] = d?.entries || []; });
+}
+const allEntries = () => Object.values(S.months).flat().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.t||0)-(b.t||0));
+async function ensureYear(){ if(S.meta && !(S.meta.years||[]).includes(S.year)){ S.meta.years=[...(S.meta.years||[]),S.year]; await saveMeta(); } }
+async function saveMonth(m){ if(S.sample) return; await ensureYear(); await putDoc(mKey(S.year,m), {entries:S.months[m]}); }
+async function saveConf(){ if(S.sample) return; await ensureYear(); await putDoc('c'+S.year, S.conf); }
+async function saveMeta(){ await putDoc('meta', S.meta); }
+
+/* ===== サンプル（保存されない） ===== */
+function loadSample(){
+  const y = S.year; S.sample = true;
+  S.conf = { year:y, bizName:'サンプル屋（例）', ded:650000, endInv:0,
+    opening:{cash:30000, bank:820000, equip:180000, capital:1030000},
+    assets:[{id:'s1',name:'ノートPC（例）',acct:'equip',acq:(y-1)+'-04-10',cost:240000,life:4,openBook:180000,biz:80}] };
+  S.months = {}; for(let m=1;m<=12;m++) S.months[m]=[];
+  const add=(m,d,dr,cr,amt,partner,memo)=>S.months[m].push({id:uid(),gid:uid(),date:`${y}-${pad(m)}-${pad(d)}`,dr,cr,amt,partner,memo,t:Date.now()});
+  const sales=[310000,280000,355000,402000,298000,330000,375000,0,0,0,0,0];
+  const lastMonth = new Date().getFullYear()===y ? new Date().getMonth()+1 : 12;
+  for(let m=1;m<=Math.min(lastMonth,12);m++){
+    const s = sales[m-1] || 320000; const wh = Math.floor(s*0.1021);
+    add(m,25,'bank','sales',s-wh,'株式会社サンプル（例）','SNS運用代行 '+m+'月分');
+    add(m,25,'owner_dr','sales',wh,'株式会社サンプル（例）','源泉所得税');
+    add(m,5,'comm',  'unpaid',Math.round(9800*.6),'通信会社（例）','スマホ・回線 60%');
+    add(m,5,'owner_dr','unpaid',9800-Math.round(9800*.6),'通信会社（例）','スマホ・回線 家事分');
+    add(m,10,'rent','bank',Math.round(90000*.3),'大家さん（例）','家賃 30%');
+    add(m,10,'owner_dr','bank',90000-Math.round(90000*.3),'大家さん（例）','家賃 家事分');
+    add(m,14,'fee','unpaid',3300,'Canva（例）','デザインツール月額');
+    add(m,27,'unpaid','bank',9800+3300,'カード会社（例）','カード引落し');
+    if(m%2===0) add(m,18,'meeting','cash',1840,'カフェ（例）','打合せ');
+    if(m%3===0) add(m,20,'outsrc','bank',55000,'フリーランスAさん（例）','動画編集 外注');
+  }
+}
+
+/* ===== 集計 ===== */
+function balances(entries){
+  const b = {}; ACCTS.forEach(a=>b[a.code]=0);
+  BS_ACCTS.forEach(a=>{ b[a.code] = +(S.conf.opening[a.code]||0); });
+  for(const e of entries){
+    if(b[e.dr]!==undefined) b[e.dr] += DEBIT_SIDE(A[e.dr].type) ? e.amt : -e.amt;
+    if(b[e.cr]!==undefined) b[e.cr] += DEBIT_SIDE(A[e.cr].type) ? -e.amt : e.amt;
+  }
+  return b;
+}
+function compute(){
+  const es = allEntries(); const b = balances(es);
+  const sales = b.sales + b.misc_inc;
+  const openInv = b.inv, purchase = b.purchase, endInv = +S.conf.endInv||0;
+  const cogs = openInv + purchase - endInv;
+  const gross = sales - cogs;
+  const exps = ACCTS.filter(a=>a.type==='X').map(a=>({...a, v:b[a.code]}));
+  const expTotal = exps.reduce((s,a)=>s+a.v,0);
+  const pre = gross - expTotal;
+  const dedMax = +S.conf.ded<1000 ? +S.conf.ded*10000 : +S.conf.ded||0;
+  const ded = Math.min(dedMax, Math.max(pre,0));
+  const income = pre - ded;
+  const monthly = Array.from({length:12},()=>({sales:0,misc:0,purchase:0,exp:0}));
+  for(const e of es){
+    const m = +e.date.slice(5,7)-1; if(!(m>=0&&m<12)) continue;
+    const add=(code,sign)=>{ const t=A[code]?.type;
+      if(code==='sales') monthly[m].sales+=sign*e.amt; else if(code==='misc_inc') monthly[m].misc+=sign*e.amt;
+      else if(t==='C') monthly[m].purchase+=sign*e.amt; else if(t==='X') monthly[m].exp+=sign*e.amt; };
+    add(e.dr, A[e.dr]?.type==='R'?-1:1); add(e.cr, A[e.cr]?.type==='R'?1:-1);
+  }
+  return {es,b,sales,openInv,purchase,endInv,cogs,gross,exps,expTotal,pre,ded,income,monthly};
+}
+
+/* ===== 減価償却（定額法） ===== */
+function depOf(a, y){
+  const rate = SL_RATE[a.life] || Math.ceil(1000/Math.max(+a.life,1))/1000;
+  const acqY = +a.acq.slice(0,4), acqM = +a.acq.slice(5,7);
+  if(acqY>y) return {rate,months:0,dep:0,biz:0,priv:0,endBook:+a.openBook};
+  const months = acqY===y ? 13-acqM : 12;
+  const dep = Math.max(0, Math.min(Math.ceil(a.cost*rate*months/12), (+a.openBook||0)-1));
+  const biz = Math.floor(dep*(+a.biz||0)/100);
+  return {rate,months,dep,biz,priv:dep-biz,endBook:(+a.openBook||0)-dep};
+}
+
+/* ===== 源泉徴収（報酬・料金） ===== */
+const withholding = amt => amt<=1000000 ? Math.floor(amt*0.1021) : Math.floor((amt-1000000)*0.2042)+102100;
+
+/* ===== 入力→仕訳 ===== */
+function buildLines(f){
+  const amt = Math.round(+f.amt||0); if(!(amt>0)) return [];
+  if(f.kind==='income'){
+    if(f.wh){ const w = withholding(amt); return [{dr:f.pay,cr:f.acct,amt:amt-w,memo:f.memo},{dr:'owner_dr',cr:f.acct,amt:w,memo:(f.memo?f.memo+' ':'')+'源泉所得税'}]; }
+    return [{dr:f.pay,cr:f.acct,amt,memo:f.memo}];
+  }
+  if(f.kind==='expense'){
+    const r = Math.min(100,Math.max(0,+f.rate)); const biz = Math.round(amt*r/100);
+    const lines=[]; if(biz>0) lines.push({dr:f.acct,cr:f.pay,amt:biz,memo:f.memo+(r<100?` (${r}%)`:'')});
+    if(amt-biz>0) lines.push({dr:'owner_dr',cr:f.pay,amt:amt-biz,memo:(f.memo?f.memo+' ':'')+'家事分'});
+    return lines;
+  }
+  if(!f.dr||!f.cr||f.dr===f.cr) return [];
+  return [{dr:f.dr,cr:f.cr,amt,memo:f.memo}];
+}
+async function addLines(date, lines, partner, src){
+  const gid = uid(); const m = +date.slice(5,7);
+  for(const l of lines) S.months[m].push({id:uid(),gid,date,dr:l.dr,cr:l.cr,amt:l.amt,partner:partner||'',memo:l.memo||'',src:src||'',t:Date.now()});
+  await saveMonth(m);
+}
+
+/* ===== 描画 ===== */
+const main = document.getElementById('main');
+function render(){
+  document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===S.tab?'true':'false'));
+  document.getElementById('bizname').textContent = S.conf?.bizName || '';
+  const ys = [...new Set([...(S.meta?.years||[]), S.year])].sort();
+  document.getElementById('year-select').innerHTML = ys.map(y=>`<option value="${y}" ${y===S.year?'selected':''}>${y}年（令和${y-2018}年）</option>`).join('');
+  const c = compute();
+  const views = {home:vHome,input:vInput,journal:vJournal,ledger:vLedger,report:vReport,settings:vSettings};
+  main.innerHTML = `<div class="stack">${sampleBanner()}${storageBanner()}${views[S.tab](c)}</div>`;
+  if(S.tab==='input') syncInput();
+}
+const sampleBanner = () => S.sample ? `<div class="banner"><span><b>サンプル表示中</b>　画面の数字はすべて例です。保存されません。</span><button class="btn pri sm" data-act="start-real">自分の帳簿を始める</button></div>` : '';
+const storageBanner = () => (!S.sample && S.mode==='local' && S.tab==='home') ? `<div class="banner"><span><b>この端末のブラウザに保存しています</b>　ブラウザのデータ削除で消えるため、設定の「バックアップ」を定期的に保存してください。</span></div>` : '';
+const acctOpts = (list, sel) => list.map(a=>`<option value="${a.code}" ${a.code===sel?'selected':''}>${esc(a.name)}</option>`).join('');
+const groupedOpts = sel => [['A','資産'],['L','負債'],['E','元入金'],['R','収益'],['C','売上原価'],['X','経費']].map(([t,l])=>`<optgroup label="${l}">${acctOpts(ACCTS.filter(a=>a.type===t),sel)}</optgroup>`).join('');
+
+function vHome(c){
+  const y = S.year, dl = new Date(y+1,2,15), now = new Date();
+  const days = Math.ceil((dl - new Date(now.getFullYear(),now.getMonth(),now.getDate()))/86400000);
+  const recent = c.es.slice(-8).reverse();
+  return `
+  <div class="kpis">
+    <div class="kpi"><div class="l">売上（収入）金額</div><div class="v">${yen(c.sales)}</div><div class="s">雑収入を含む</div></div>
+    <div class="kpi"><div class="l">経費（売上原価を含む）</div><div class="v">${yen(c.cogs+c.expTotal)}</div><div class="s">家事分を除いた額</div></div>
+    <div class="kpi"><div class="l">青色申告特別控除前の所得</div><div class="v">${yen(c.pre)}</div><div class="s">決算書 ㊸</div></div>
+    <div class="kpi main"><div class="l">所得金額（控除後）</div><div class="v">${yen(c.income)}</div><div class="s">青色申告特別控除 ${yen(c.ded)}</div></div>
+  </div>
+  <div class="grid2">
+    <section class="panel chart"><div class="row" style="justify-content:space-between"><h2>月別の売上と経費</h2>
+      <div class="legend"><span><i style="background:var(--accent)"></i>売上</span><span><i style="background:var(--muted)"></i>経費</span></div></div>
+      ${chart(c.monthly)}</section>
+    <section class="panel"><h2>申告期限まで</h2>
+      ${days>=0?`<div class="deadline"><span class="big">${days}</span><span>日</span><span class="muted small">（${y+1}年3月15日まで）</span></div>`:`<p class="muted">${y}年分の申告期限（${y+1}年3月15日）は過ぎています。</p>`}
+      <p class="small muted" style="margin:6px 0 0">65万円控除の条件</p>
+      <ul class="chk"><li>複式簿記で記帳する（このアプリの仕訳で満たします）</li><li>貸借対照表と損益計算書を添付する</li><li>e-Taxで申告する、または優良な電子帳簿保存</li><li>期限内に申告する</li></ul>
+    </section>
+  </div>
+  <section class="panel"><div class="row" style="justify-content:space-between"><h2>最近の取引</h2><button class="btn pri" data-go="input">取引を入力</button></div>
+    ${recent.length?jTable(recent,false):`<div class="empty">まだ取引がありません。「取引を入力」から最初の売上や経費を登録してください。</div>`}</section>`;
+}
+function chart(mo){
+  const W=560,H=220,L=48,B=24,T=10; const max = Math.max(1,...mo.map(m=>Math.max(m.sales+m.misc,m.purchase+m.exp)));
+  const step = niceStep(max/4); const top = Math.ceil(max/step)*step; const cw=(W-L-8)/12, bw=cw*0.34;
+  const yv = v => T + (H-T-B)*(1-v/top);
+  let g=''; for(let v=0; v<=top; v+=step){ g+=`<line x1="${L}" x2="${W-4}" y1="${yv(v)}" y2="${yv(v)}" stroke="var(--line)"/><text x="${L-6}" y="${yv(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v>=10000?(v/10000)+'万':v}</text>`; }
+  const bars = mo.map((m,i)=>{ const x=L+i*cw+cw/2; const s=m.sales+m.misc, e=m.purchase+m.exp;
+    return `<rect x="${x-bw-1}" y="${yv(Math.max(s,0))}" width="${bw}" height="${Math.max(0,yv(0)-yv(Math.max(s,0)))}" fill="var(--accent)" rx="2"><title>${i+1}月 売上 ${yen(s)}</title></rect>
+      <rect x="${x+1}" y="${yv(Math.max(e,0))}" width="${bw}" height="${Math.max(0,yv(0)-yv(Math.max(e,0)))}" fill="var(--muted)" rx="2"><title>${i+1}月 経費 ${yen(e)}</title></rect>
+      <text x="${x}" y="${H-6}" text-anchor="middle" font-size="10" fill="var(--muted)">${i+1}</text>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="月別の売上と経費">${g}${bars}</svg>`;
+}
+function niceStep(x){ const p=Math.pow(10,Math.floor(Math.log10(Math.max(x,1)))); const f=x/p; return (f<=1?1:f<=2?2:f<=5?5:10)*p; }
+
+function vInput(){
+  const k = S.kind; const last = JSON.parse(lsGet('aoiro:last')||'{}');
+  const exList = ACCTS.filter(a=>a.type==='X'||a.type==='C');
+  return `<section class="panel"><form id="entry-form" class="stack" style="padding-top:0" autocomplete="off">
+    <div class="row" style="justify-content:space-between"><h2>取引を入力</h2>
+      <div class="seg" role="group" aria-label="取引の種類">
+        <button type="button" data-kind="income" aria-pressed="${k==='income'}">売上・収入</button>
+        <button type="button" data-kind="expense" aria-pressed="${k==='expense'}">経費・支出</button>
+        <button type="button" data-kind="transfer" aria-pressed="${k==='transfer'}">振替</button></div></div>
+    <div class="fgrid">
+      <label class="f">日付<input type="date" id="f-date" value="${S.year===new Date().getFullYear()?today():S.year+'-12-31'}" min="${S.year}-01-01" max="${S.year}-12-31" required></label>
+      <label class="f">金額（円・税込）<input type="number" id="f-amt" inputmode="numeric" min="1" step="1" placeholder="例 3300" required></label>
+      ${k==='income'?`
+        <label class="f">科目<select id="f-acct">${acctOpts(ACCTS.filter(a=>a.type==='R'),'sales')}</select></label>
+        <label class="f">入金先<select id="f-pay">${PAY_IN.map(p=>`<option value="${p}" ${p===(last.in||'bank')?'selected':''}>${PAY_IN_LABEL[p]}</option>`).join('')}</select></label>`:''}
+      ${k==='expense'?`
+        <label class="f">科目<select id="f-acct">${acctOpts(exList, last.ex||'supplies')}</select></label>
+        <label class="f">支払方法<select id="f-pay">${PAY_OUT.map(p=>`<option value="${p}" ${p===(last.out||'unpaid')?'selected':''}>${PAY_LABEL[p]}</option>`).join('')}</select></label>
+        <label class="f">事業で使う割合（家事按分）<select id="f-rate">${[100,90,80,70,60,50,40,30,20,10].map(r=>`<option value="${r}">${r}%</option>`).join('')}</select></label>`:''}
+      ${k==='transfer'?`
+        <label class="f">借方（増えた資産・経費）<select id="f-dr">${groupedOpts('bank')}</select></label>
+        <label class="f">貸方（減った資産・収益）<select id="f-cr">${groupedOpts('ar')}</select></label>`:''}
+      <label class="f">取引先<input type="text" id="f-partner" list="partners" placeholder="例 株式会社〇〇"></label>
+      <label class="f">摘要<input type="text" id="f-memo" placeholder="例 ${k==='income'?'SNS運用代行 10月分':k==='expense'?'撮影用ライト':'売掛金の入金'}"></label>
+    </div>
+    ${k==='income'?`<label class="check"><input type="checkbox" id="f-wh"> 源泉徴収された（報酬の10.21%を事業主貸で記帳）</label>`:''}
+    ${k==='transfer'?`<p class="small muted" style="margin:0">売掛金の入金、カード代金の引落し、口座間の移動、事業用口座から生活費を出した（事業主貸）などに使います。</p>`:''}
+    <div class="preview" id="preview"></div>
+    <div class="row"><button class="btn pri" type="submit">${S.sample?'サンプルを消して登録':'登録'}</button><span class="small muted">登録すると仕訳帳に追加されます</span></div>
+  </form>
+  <datalist id="partners">${[...new Set(allEntries().map(e=>e.partner).filter(Boolean))].slice(-80).map(p=>`<option value="${esc(p)}">`).join('')}</datalist></section>`;
+}
+function readForm(){
+  const v = id => document.getElementById(id)?.value;
+  return {kind:S.kind,date:v('f-date'),amt:v('f-amt'),acct:v('f-acct'),pay:v('f-pay'),rate:v('f-rate')||100,dr:v('f-dr'),cr:v('f-cr'),
+    partner:(v('f-partner')||'').trim(),memo:(v('f-memo')||'').trim(),wh:document.getElementById('f-wh')?.checked};
+}
+function syncInput(){
+  const p = document.getElementById('preview'); if(!p) return;
+  const f = readForm(); const lines = buildLines(f);
+  if(!lines.length){ p.innerHTML = `<span class="muted">金額を入れると、ここに仕訳が表示されます。</span>`; return; }
+  p.innerHTML = `<div class="small muted" style="margin-bottom:4px">記帳される仕訳</div><table>${lines.map(l=>`<tr><td>${esc(A[l.dr].name)}</td><td class="n num">${num(l.amt)}</td><td class="muted">／</td><td>${esc(A[l.cr].name)}</td><td class="n num">${num(l.amt)}</td></tr>`).join('')}</table>`
+    + (f.wh?`<div class="small muted" style="margin-top:4px">源泉所得税 ${yen(withholding(+f.amt))}・入金額 ${yen(+f.amt-withholding(+f.amt))}</div>`:'');
+}
+
+function jTable(list, actions){
+  return `<div class="tw"><table class="t"><thead><tr><th>日付</th><th>借方</th><th>貸方</th><th class="n">金額</th><th>取引先・摘要</th>${actions?'<th></th>':''}</tr></thead><tbody>
+  ${list.map(e=>`<tr><td class="num" style="text-align:left">${e.date.slice(5).replace('-','/')}</td><td>${esc(A[e.dr]?.name||e.dr)}</td><td>${esc(A[e.cr]?.name||e.cr)}</td><td class="n">${num(e.amt)}</td>
+    <td style="min-width:12em">${esc(e.partner)}${e.partner&&e.memo?'<br>':''}<span class="muted small">${esc(e.memo)}</span>${e.src==='dep'?' <span class="pill">償却</span>':''}${S.sample?' <span class="pill sample">例</span>':''}</td>
+    ${actions?`<td style="white-space:nowrap"><button class="btn sm" data-act="edit" data-id="${e.id}">編集</button> <button class="btn sm ${S.confirmDel===e.id?'danger':''}" data-act="del" data-id="${e.id}">${S.confirmDel===e.id?'削除する':'削除'}</button></td>`:''}</tr>`).join('')}
+  </tbody></table></div>`;
+}
+function vJournal(c){
+  let list = c.es;
+  if(S.jMonth!=='all') list = list.filter(e=>+e.date.slice(5,7)===+S.jMonth);
+  const q = S.jQuery.trim(); if(q) list = list.filter(e=>[e.partner,e.memo,A[e.dr]?.name,A[e.cr]?.name,String(e.amt)].join(' ').includes(q));
+  const total = list.reduce((s,e)=>s+e.amt,0);
+  return `<section class="panel"><div class="row" style="justify-content:space-between"><h2>仕訳帳</h2>
+    <div class="row"><select id="j-month" class="inp" style="width:auto"><option value="all">全期間</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${+S.jMonth===i+1?'selected':''}>${i+1}月</option>`).join('')}</select>
+    <input id="j-q" class="inp" style="width:12em" type="search" placeholder="取引先・科目で絞込" value="${esc(S.jQuery)}"></div></div>
+    <p class="small muted">${list.length}件　借方・貸方合計 ${yen(total)}</p>
+    ${list.length?jTable(list,true):`<div class="empty">該当する仕訳がありません。</div>`}</section>`;
+}
+function vLedger(c){
+  const a = A[S.ledger]; const isBS = ['A','L','E'].includes(a.type); const dsign = DEBIT_SIDE(a.type)?1:-1;
+  let bal = isBS ? +(S.conf.opening[a.code]||0) : 0;
+  const rows = c.es.filter(e=>e.dr===a.code||e.cr===a.code).map(e=>{
+    const dr = e.dr===a.code ? e.amt : 0, cr = e.cr===a.code ? e.amt : 0; bal += dsign*(dr-cr);
+    return `<tr><td class="num" style="text-align:left">${e.date.slice(5).replace('-','/')}</td><td>${esc(A[e.dr===a.code?e.cr:e.dr]?.name||'')}</td><td>${esc(e.partner)} <span class="muted small">${esc(e.memo)}</span></td><td class="n">${dr?num(dr):''}</td><td class="n">${cr?num(cr):''}</td><td class="n">${num(bal)}</td></tr>`; });
+  return `<section class="panel"><div class="row" style="justify-content:space-between"><h2>総勘定元帳</h2><select id="ledger-acct" class="inp" style="width:auto">${groupedOpts(a.code)}</select></div>
+    <p class="small muted">${esc(a.name)}　期末残高 <b class="num">${yen(c.b[a.code])}</b></p>
+    <div class="tw"><table class="t"><thead><tr><th>日付</th><th>相手科目</th><th>取引先・摘要</th><th class="n">借方</th><th class="n">貸方</th><th class="n">残高</th></tr></thead><tbody>
+    ${isBS?`<tr><td>1/1</td><td colspan="4" class="muted">前期繰越</td><td class="n">${num(+(S.conf.opening[a.code]||0))}</td></tr>`:''}
+    ${rows.join('')||`<tr><td colspan="6" class="empty">この科目の取引はまだありません。</td></tr>`}</tbody></table></div></section>`;
+}
+
+function vReport(c){
+  const pl = (no,label,v,cls='') => `<tr class="${cls}"><td class="no">${no}</td><td>${label}</td><td class="n">${num(v)}</td></tr>`;
+  const free = c.exps.filter(e=>['fee','books','meeting','train'].includes(e.code));
+  const plRows = [
+    pl('①','売上（収入）金額　<span class="muted small">雑収入を含む</span>',c.sales),
+    pl('②','期首商品（製品）棚卸高',c.openInv), pl('③','仕入金額（製品製造原価）',c.purchase), pl('④','小計（②＋③）',c.openInv+c.purchase,'sub'),
+    `<tr><td class="no">⑤</td><td>期末商品（製品）棚卸高</td><td class="n"><input id="end-inv" class="inp num" type="number" min="0" step="1" style="max-width:9em;min-height:34px;padding:4px 8px;text-align:right" value="${c.endInv}"></td></tr>`,
+    pl('⑥','差引原価（④－⑤）',c.cogs,'sub'), pl('⑦','差引金額（①－⑥）',c.gross,'sub'),
+    ...c.exps.filter(e=>!['fee','books','meeting','train','misc'].includes(e.code)).map(e=>pl(e.no,esc(e.name),e.v)),
+    ...free.map(e=>pl(e.no,esc(e.name)+' <span class="muted small">任意の科目</span>',e.v)),
+    pl('㉛','雑費',c.b.misc), pl('㉜','経費計',c.expTotal,'sub'), pl('㉝','差引金額（⑦－㉜）',c.pre,'sub'),
+    pl('㊸','青色申告特別控除前の所得金額',c.pre),
+    `<tr><td class="no">㊹</td><td>青色申告特別控除額 <select id="ded" class="inp" style="width:auto;min-height:32px;padding:2px 6px;margin-left:6px">${[65,55,10].map(v=>`<option value="${v*10000}" ${+S.conf.ded===v*10000||(+S.conf.ded===v)?'selected':''}>${v}万円</option>`).join('')}</select></td><td class="n">${num(c.ded)}</td></tr>`,
+    pl('㊺','所得金額（㊸－㊹）',c.income,'sum') ].join('');
+  // 貸借対照表
+  const open = S.conf.opening; const bEnd = {...c.b, inv:c.endInv};
+  const aRows = ACCTS.filter(a=>a.type==='A'&&a.code!=='owner_dr');
+  const lRows = ACCTS.filter(a=>a.type==='L'&&a.code!=='owner_cr');
+  const sumA0 = aRows.reduce((s,a)=>s+(+open[a.code]||0),0), sumA1 = aRows.reduce((s,a)=>s+bEnd[a.code],0)+c.b.owner_dr;
+  const sumL0 = lRows.reduce((s,a)=>s+(+open[a.code]||0),0)+(+open.capital||0), sumL1 = lRows.reduce((s,a)=>s+bEnd[a.code],0)+c.b.owner_cr+(+open.capital||0)+c.pre;
+  const r = (name,v0,v1) => `<tr><td>${name}</td><td class="n">${v0===null?'':num(v0)}</td><td class="n">${num(v1)}</td></tr>`;
+  const nz = a => (+open[a.code]||0)!==0 || bEnd[a.code]!==0;
+  const deps = S.conf.assets.map(a=>({a,d:depOf(a,S.year)}));
+  const depTotal = deps.reduce((s,x)=>s+x.d.biz,0);
+  const depApplied = c.es.filter(e=>e.src==='dep'&&e.dr==='dep').reduce((s,e)=>s+e.amt,0);
+  return `
+  <section class="panel"><div class="row" style="justify-content:space-between"><h2>損益計算書</h2><span class="small muted">青色申告決算書（一般用）1ページ目の欄番号</span></div>
+    <div class="tw"><table class="t"><tbody>${plRows}</tbody></table></div>
+    <p class="small muted">専従者給与・貸倒引当金（㉞〜㊷）は未対応です。該当する場合は決算書へ直接記入してください。</p></section>
+  <section class="panel"><h2>月別売上（収入）金額及び仕入金額</h2><p class="small muted">決算書2ページ目</p>
+    <div class="tw"><table class="t"><thead><tr><th>月</th><th class="n">売上（収入）金額</th><th class="n">仕入金額</th></tr></thead><tbody>
+    ${c.monthly.map((m,i)=>`<tr><td>${i+1}月</td><td class="n">${num(m.sales)}</td><td class="n">${num(m.purchase)}</td></tr>`).join('')}
+    <tr><td>雑収入</td><td class="n">${num(c.b.misc_inc)}</td><td></td></tr>
+    <tr class="sum"><td>計</td><td class="n">${num(c.sales)}</td><td class="n">${num(c.purchase)}</td></tr></tbody></table></div></section>
+  <section class="panel"><div class="row" style="justify-content:space-between"><h2>減価償却費の計算</h2><button class="btn sm" data-act="asset-new">資産を追加</button></div>
+    <p class="small muted">定額法。10万円未満は消耗品費、30万円未満は少額減価償却資産の特例で一括経費にできます。今年買った資産は、購入時に「振替」で 資産科目／普通預金 などと記帳してください。</p>
+    ${deps.length?`<div class="tw"><table class="t"><thead><tr><th>資産</th><th>取得</th><th class="n">取得価額</th><th class="n">耐用年数</th><th class="n">期首帳簿価額</th><th class="n">償却費</th><th class="n">事業割合</th><th class="n">経費算入額</th><th class="n">期末帳簿価額</th><th></th></tr></thead><tbody>
+      ${deps.map(({a,d})=>`<tr><td>${esc(a.name)}<br><span class="small muted">${esc(A[a.acct]?.name)}</span></td><td class="num">${esc(a.acq.replace(/-/g,'/'))}</td><td class="n">${num(a.cost)}</td><td class="n">${a.life}年<br><span class="small muted">${d.rate.toFixed(3)}・${d.months}/12</span></td><td class="n">${num(a.openBook)}</td><td class="n">${num(d.dep)}</td><td class="n">${a.biz}%</td><td class="n">${num(d.biz)}</td><td class="n">${num(d.endBook)}</td>
+        <td><button class="btn sm" data-act="asset-edit" data-id="${a.id}">編集</button></td></tr>`).join('')}
+      <tr class="sum"><td colspan="7">計</td><td class="n">${num(depTotal)}</td><td></td><td></td></tr></tbody></table></div>
+      <div class="row" style="margin-top:10px"><button class="btn pri" data-act="dep-apply">12/31付で仕訳に反映</button><span class="small muted">${depApplied===depTotal&&depTotal>0?'反映済み':`反映済み ${yen(depApplied)}（もう一度押すと置き換えます）`}</span></div>`
+    :`<div class="empty">登録された固定資産はありません。</div>`}</section>
+  <section class="panel"><h2>貸借対照表</h2><p class="small muted">決算書4ページ目　${S.year}年1月1日（期首）／12月31日（期末）</p>
+    <div class="grid2">
+      <div class="tw"><table class="t"><thead><tr><th>資産の部</th><th class="n">期首</th><th class="n">期末</th></tr></thead><tbody>
+        ${aRows.filter(nz).map(a=>r(esc(a.name),+open[a.code]||0,bEnd[a.code])).join('')}
+        ${r('事業主貸',null,c.b.owner_dr)}<tr class="sum"><td>合計</td><td class="n">${num(sumA0)}</td><td class="n">${num(sumA1)}</td></tr></tbody></table></div>
+      <div class="tw"><table class="t"><thead><tr><th>負債・資本の部</th><th class="n">期首</th><th class="n">期末</th></tr></thead><tbody>
+        ${lRows.filter(nz).map(a=>r(esc(a.name),+open[a.code]||0,bEnd[a.code])).join('')}
+        ${r('事業主借',null,c.b.owner_cr)}${r('元入金',+open.capital||0,+open.capital||0)}${r('青色申告特別控除前の所得金額',null,c.pre)}
+        <tr class="sum"><td>合計</td><td class="n">${num(sumL0)}</td><td class="n">${num(sumL1)}</td></tr></tbody></table></div>
+    </div>
+    <p class="small ${sumA0===sumL0&&sumA1===sumL1?'pos':'neg'}">${sumA0===sumL0&&sumA1===sumL1?'資産と負債・資本の合計が一致しています。':`合計が一致していません（期首差額 ${yen(sumA0-sumL0)}）。設定の「期首残高」で元入金を確認してください。`}</p></section>`;
+}
+
+function vSettings(){
+  const o = S.conf.opening;
+  const aSum = BS_ACCTS.filter(a=>a.type==='A').reduce((s,a)=>s+(+o[a.code]||0),0);
+  const lSum = BS_ACCTS.filter(a=>a.type==='L').reduce((s,a)=>s+(+o[a.code]||0),0);
+  const field = a => `<label class="f">${esc(a.name)}<input class="num" type="number" step="1" id="op-${a.code}" data-open="${a.code}" value="${+o[a.code]||0}" ${['owner_dr','owner_cr'].includes(a.code)?'disabled title="期首は0円です"':''}></label>`;
+  return `
+  <section class="panel"><h2>事業の情報</h2><div class="fgrid" style="margin-top:12px">
+    <label class="f">屋号・事業名<input type="text" id="s-biz" value="${esc(S.conf.bizName)}" placeholder="例 〇〇デザイン"></label>
+    <label class="f">保存先<input type="text" disabled value="${S.mode==='cloud'?'claude.ai（あなた専用・他の人からは見えません）':'この端末のブラウザ'}"></label></div></section>
+  <section class="panel"><h2>期首残高（${S.year}年1月1日）</h2>
+    <p class="small muted">開業した年や、このアプリを使い始めた年に入力します。翌年からは「翌年の帳簿を作成」で自動で引き継がれます。</p>
+    <h3 style="margin-top:10px">資産</h3><div class="fgrid" style="margin-top:8px">${BS_ACCTS.filter(a=>a.type==='A').map(field).join('')}</div>
+    <h3 style="margin-top:16px">負債・元入金</h3><div class="fgrid" style="margin-top:8px">${BS_ACCTS.filter(a=>a.type!=='A').map(field).join('')}</div>
+    <div class="row" style="margin-top:12px"><span class="small">資産合計 <b class="num">${yen(aSum)}</b>　負債合計 <b class="num">${yen(lSum)}</b>　元入金の目安 <b class="num">${yen(aSum-lSum)}</b></span>
+      <button class="btn sm" data-act="capital-auto">元入金を自動計算</button></div></section>
+  <section class="panel"><h2>年度</h2><p class="small muted">12月31日までの記帳と決算（減価償却・期末棚卸）が終わったら、翌年の帳簿を作ります。期末残高が翌年の期首残高になり、事業主貸・事業主借は元入金に振り替えます。</p>
+    <div class="row"><button class="btn" data-act="next-year">${S.year+1}年の帳簿を作成</button></div></section>
+  <section class="panel"><h2>バックアップと書き出し</h2><p class="small muted">帳簿は7年間の保存が必要です。年に一度は書き出して保管してください。</p>
+    <div class="row"><button class="btn" data-act="export-csv">仕訳帳をCSVで保存</button><button class="btn" data-act="export-json">バックアップを保存（JSON）</button>
+      <label class="btn" for="import-file" style="display:inline-flex;align-items:center">バックアップから復元</label><input type="file" id="import-file" accept="application/json,.json" hidden></div></section>`;
+}
+
+/* ===== シート（編集） ===== */
+const overlay = document.getElementById('overlay');
+function openSheet(html){ overlay.innerHTML = `<div class="sheet-bg" data-act="close-bg"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`; overlay.querySelector('input,select')?.focus(); }
+function closeSheet(){ overlay.innerHTML=''; }
+function editEntry(id){
+  const e = allEntries().find(x=>x.id===id); if(!e) return;
+  openSheet(`<form id="edit-form" data-id="${id}" class="stack" style="padding-top:0"><h2>仕訳を編集</h2><div class="fgrid">
+    <label class="f">日付<input type="date" id="e-date" value="${e.date}" min="${S.year}-01-01" max="${S.year}-12-31" required></label>
+    <label class="f">金額<input type="number" id="e-amt" min="1" step="1" value="${e.amt}" required></label>
+    <label class="f">借方<select id="e-dr">${groupedOpts(e.dr)}</select></label><label class="f">貸方<select id="e-cr">${groupedOpts(e.cr)}</select></label>
+    <label class="f">取引先<input type="text" id="e-partner" value="${esc(e.partner)}"></label><label class="f">摘要<input type="text" id="e-memo" value="${esc(e.memo)}"></label></div>
+    <div class="row"><button class="btn pri" type="submit">保存</button><button class="btn" type="button" data-act="close">キャンセル</button></div></form>`);
+}
+function editAsset(id){
+  const a = S.conf.assets.find(x=>x.id===id) || {id:'',name:'',acct:'equip',acq:`${S.year}-01-01`,cost:'',life:4,openBook:'',biz:100};
+  const fixed = ACCTS.filter(x=>['bldg','equip','vehicle','soft'].includes(x.code));
+  openSheet(`<form id="asset-form" data-id="${a.id}" class="stack" style="padding-top:0"><h2>${a.id?'資産を編集':'資産を追加'}</h2><div class="fgrid">
+    <label class="f">名称<input type="text" id="a-name" value="${esc(a.name)}" required placeholder="例 カメラ"></label>
+    <label class="f">科目<select id="a-acct">${acctOpts(fixed,a.acct)}</select></label>
+    <label class="f">取得年月日<input type="date" id="a-acq" value="${a.acq}" required></label>
+    <label class="f">取得価額<input type="number" id="a-cost" min="1" step="1" value="${a.cost}" required></label>
+    <label class="f">耐用年数<input type="number" id="a-life" min="2" max="50" step="1" value="${a.life}" required></label>
+    <label class="f">期首帳簿価額 <span class="small">今年取得なら取得価額</span><input type="number" id="a-book" min="0" step="1" value="${a.openBook}" placeholder="空欄＝取得価額"></label>
+    <label class="f">事業で使う割合（%）<input type="number" id="a-biz" min="0" max="100" step="1" value="${a.biz}"></label></div>
+    <p class="small muted" style="margin:0">耐用年数の例：パソコン4年、カメラ5年、普通自動車6年（中古は短くなります）。</p>
+    <div class="row"><button class="btn pri" type="submit">保存</button>${a.id?`<button class="btn danger" type="button" data-act="asset-del" data-id="${a.id}">削除</button>`:''}<button class="btn" type="button" data-act="close">キャンセル</button></div></form>`);
+}
+function confirmSheet(title, body, okLabel, onOk){
+  openSheet(`<div class="stack" style="padding-top:0"><h2>${title}</h2><p style="margin:0">${body}</p><div class="row"><button class="btn pri" id="ok-btn">${okLabel}</button><button class="btn" data-act="close">キャンセル</button></div></div>`);
+  document.getElementById('ok-btn').onclick = async()=>{ closeSheet(); await onOk(); };
+}
+
+/* ===== 操作 ===== */
+let toastT;
+function toast(msg){ clearTimeout(toastT); let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t);} t.textContent=msg; toastT=setTimeout(()=>t.remove(),2800); }
+async function startReal(){
+  S.sample = false; S.conf = defaultConf(S.year); S.months = {}; for(let m=1;m<=12;m++) S.months[m]=[];
+  S.meta = {years:[S.year], bizName:''}; await saveMeta(); await saveConf(); render(); toast('自分の帳簿を作りました');
+}
+async function findEntry(id){ for(const m in S.months){ const i=S.months[m].findIndex(e=>e.id===id); if(i>=0) return {m:+m,i}; } return null; }
+async function download(filename, text, type){
+  try{
+    const dl = window.claude?.use ? await window.claude.use('downloads') : null;
+    if(dl){ await dl.save({filename, data:new Blob([text],{type})}); return; }
+  }catch(e){ if(e?.code && e.code!=='unavailable'){ toast('保存を取りやめました'); return; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+}
+const csvCell = v => /[",\n]/.test(String(v)) ? '"'+String(v).replace(/"/g,'""')+'"' : String(v);
+
+document.addEventListener('click', async ev=>{
+  const t = ev.target.closest('[data-tab],[data-go],[data-kind],[data-act]'); if(!t) return;
+  if(t.dataset.tab||t.dataset.go){ S.tab = t.dataset.tab||t.dataset.go; S.confirmDel=null; render(); window.scrollTo(0,0); lsSet('aoiro:tab',S.tab); return; }
+  if(t.dataset.kind){ S.kind = t.dataset.kind; render(); return; }
+  const act = t.dataset.act;
+  if(act==='close-bg' && ev.target!==t) return;
+  if(act==='close'||act==='close-bg'){ closeSheet(); return; }
+  if(act==='start-real'){ await startReal(); return; }
+  if(act==='edit'){ editEntry(t.dataset.id); return; }
+  if(act==='del'){
+    if(S.sample){ toast('サンプルは編集できません'); return; }
+    if(S.confirmDel!==t.dataset.id){ S.confirmDel=t.dataset.id; render(); return; }
+    const p = await findEntry(t.dataset.id); if(p){ S.months[p.m].splice(p.i,1); S.confirmDel=null; await saveMonth(p.m); render(); toast('削除しました'); } return; }
+  if(act==='asset-new'){ editAsset(''); return; }
+  if(act==='asset-edit'){ editAsset(t.dataset.id); return; }
+  if(act==='asset-del'){ S.conf.assets = S.conf.assets.filter(a=>a.id!==t.dataset.id); await saveConf(); closeSheet(); render(); toast('資産を削除しました'); return; }
+  if(act==='dep-apply'){
+    if(S.sample){ toast('サンプルでは反映できません'); return; }
+    S.months[12] = S.months[12].filter(e=>e.src!=='dep');
+    for(const a of S.conf.assets){ const d = depOf(a,S.year); const lines=[];
+      if(d.biz>0) lines.push({dr:'dep',cr:a.acct,amt:d.biz,memo:a.name+' 減価償却'});
+      if(d.priv>0) lines.push({dr:'owner_dr',cr:a.acct,amt:d.priv,memo:a.name+' 減価償却 家事分'});
+      if(lines.length) await addLines(`${S.year}-12-31`, lines, '', 'dep'); }
+    await saveMonth(12); render(); toast('減価償却費を12/31付で記帳しました'); return; }
+  if(act==='capital-auto'){
+    const o=S.conf.opening; const aS=BS_ACCTS.filter(a=>a.type==='A').reduce((s,a)=>s+(+o[a.code]||0),0), lS=BS_ACCTS.filter(a=>a.type==='L').reduce((s,a)=>s+(+o[a.code]||0),0);
+    o.capital = aS-lS; await saveConf(); render(); toast('元入金を '+yen(o.capital)+' にしました'); return; }
+  if(act==='next-year'){
+    if(S.sample){ toast('サンプルでは作成できません'); return; }
+    const ny = S.year+1;
+    if(await getDoc('c'+ny)){ toast(ny+'年の帳簿はすでにあります。上の年度から切り替えてください'); return; }
+    confirmSheet(`${ny}年の帳簿を作成`, `${S.year}年12月31日の残高を、${ny}年の期首残高として引き継ぎます。後から${S.year}年分を直した場合は、${ny}年の設定で期首残高を修正してください。`, '作成する', async()=>{
+      const c = compute(); const op = {};
+      BS_ACCTS.forEach(a=>{ if(!['owner_dr','owner_cr','capital'].includes(a.code)) op[a.code] = a.code==='inv' ? c.endInv : c.b[a.code]; });
+      const aS = BS_ACCTS.filter(a=>a.type==='A').reduce((s,a)=>s+(op[a.code]||0),0), lS = BS_ACCTS.filter(a=>a.type==='L').reduce((s,a)=>s+(op[a.code]||0),0);
+      op.capital = aS-lS;
+      const assets = S.conf.assets.map(a=>({...a, openBook:depOf(a,S.year).endBook})).filter(a=>a.openBook>1||a.cost<=1);
+      const conf = {year:ny,bizName:S.conf.bizName,ded:S.conf.ded,opening:op,endInv:0,assets};
+      await putDoc('c'+ny, conf); S.meta.years = [...new Set([...(S.meta.years||[]),ny])]; await saveMeta();
+      await loadYear(ny); render(); toast(ny+'年の帳簿を作成しました'); });
+    return; }
+  if(act==='export-csv'){
+    const rows = [['日付','借方科目','借方金額','貸方科目','貸方金額','取引先','摘要']].concat(allEntries().map(e=>[e.date,A[e.dr]?.name,e.amt,A[e.cr]?.name,e.amt,e.partner,e.memo]));
+    await download(`仕訳帳_${S.year}.csv`, '﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'), 'text/csv'); return; }
+  if(act==='export-json'){
+    await download(`青色帳簿_${S.year}_バックアップ.json`, JSON.stringify({app:'aoiro',version:1,conf:S.conf,months:S.months},null,1), 'application/json'); return; }
+});
+
+document.addEventListener('input', ev=>{
+  const id = ev.target.id;
+  if(id && id.startsWith('f-')) syncInput();
+  if(id==='j-q'){ S.jQuery = ev.target.value; const pos=ev.target.selectionStart; render(); const q=document.getElementById('j-q'); q.focus(); q.setSelectionRange(pos,pos); }
+});
+document.addEventListener('change', async ev=>{
+  const el = ev.target, id = el.id;
+  if(id==='year-select'){ await loadYear(+el.value); S.sample=false; render(); return; }
+  if(id==='j-month'){ S.jMonth = el.value; render(); return; }
+  if(id==='ledger-acct'){ S.ledger = el.value; render(); return; }
+  if(S.sample && ['end-inv','ded','s-biz'].includes(id) || S.sample && el.dataset.open){ toast('サンプルは変更できません。「自分の帳簿を始める」を押してください'); render(); return; }
+  if(id==='end-inv'){ S.conf.endInv = Math.max(0,Math.round(+el.value||0)); await saveConf(); render(); return; }
+  if(id==='ded'){ S.conf.ded = +el.value; await saveConf(); render(); return; }
+  if(id==='s-biz'){ S.conf.bizName = el.value.trim(); S.meta.bizName = S.conf.bizName; await saveConf(); await saveMeta(); render(); return; }
+  if(el.dataset.open){ S.conf.opening[el.dataset.open] = Math.round(+el.value||0); await saveConf(); render(); return; }
+  if(id==='import-file' && el.files[0]){
+    try{ const d = JSON.parse(await el.files[0].text()); if(d.app!=='aoiro'||!d.conf||!d.months) throw 0;
+      const y = +d.conf.year;
+      confirmSheet(`${y}年の帳簿を復元`, `バックアップの内容で${y}年分を上書きします。現在の${y}年分のデータは置き換わります。`, '復元する', async()=>{
+        S.sample=false; await putDoc('c'+y, d.conf);
+        for(let m=1;m<=12;m++) await putDoc(mKey(y,m), {entries:d.months[m]||[]});
+        S.meta = S.meta || {years:[]}; S.meta.years=[...new Set([...(S.meta.years||[]),y])]; await saveMeta();
+        await loadYear(y); render(); toast(y+'年の帳簿を復元しました'); });
+    }catch(e){ toast('このファイルは青色帳簿のバックアップではありません'); }
+    el.value=''; }
+});
+document.addEventListener('submit', async ev=>{
+  ev.preventDefault(); const f = ev.target;
+  if(f.id==='entry-form'){
+    const d = readForm(); const lines = buildLines(d);
+    if(!d.date || d.date.slice(0,4)!==String(S.year)){ toast(S.year+'年の日付を入れてください'); return; }
+    if(!lines.length){ toast(S.kind==='transfer'?'借方と貸方に別の科目を選んでください':'金額を入れてください'); return; }
+    if(S.sample) await startReal();
+    await addLines(d.date, lines, d.partner, '');
+    const last = JSON.parse(lsGet('aoiro:last')||'{}');
+    if(d.kind==='income') last.in=d.pay; if(d.kind==='expense'){ last.out=d.pay; last.ex=d.acct; } lsSet('aoiro:last',JSON.stringify(last));
+    render(); toast(`登録しました（${lines.length}行の仕訳）`); document.getElementById('f-amt')?.focus(); return; }
+  if(f.id==='edit-form'){
+    if(S.sample){ toast('サンプルは編集できません'); closeSheet(); return; }
+    const p = await findEntry(f.dataset.id); if(!p) return; const e = S.months[p.m][p.i];
+    const v = id => document.getElementById(id).value;
+    const nd = v('e-date'); if(nd.slice(0,4)!==String(S.year)){ toast(S.year+'年の日付を入れてください'); return; }
+    if(v('e-dr')===v('e-cr')){ toast('借方と貸方に別の科目を選んでください'); return; }
+    const ne = {...e, date:nd, amt:Math.round(+v('e-amt')), dr:v('e-dr'), cr:v('e-cr'), partner:v('e-partner').trim(), memo:v('e-memo').trim()};
+    if(!(ne.amt>0)){ toast('金額を入れてください'); return; }
+    const nm = +nd.slice(5,7); S.months[p.m].splice(p.i,1); S.months[nm].push(ne);
+    await saveMonth(p.m); if(nm!==p.m) await saveMonth(nm); closeSheet(); render(); toast('保存しました'); return; }
+  if(f.id==='asset-form'){
+    if(S.sample){ toast('サンプルは編集できません'); closeSheet(); return; }
+    const v = id => document.getElementById(id).value;
+    const cost = Math.round(+v('a-cost'));
+    const a = {id:f.dataset.id||uid(), name:v('a-name').trim(), acct:v('a-acct'), acq:v('a-acq'), cost, life:Math.round(+v('a-life')),
+      openBook: v('a-book')===''?cost:Math.round(+v('a-book')), biz:Math.min(100,Math.max(0,Math.round(+v('a-biz'))))};
+    const i = S.conf.assets.findIndex(x=>x.id===a.id); if(i>=0) S.conf.assets[i]=a; else S.conf.assets.push(a);
+    await saveConf(); closeSheet(); render(); toast('資産を保存しました'); }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
+
+/* ===== 起動 ===== */
+(async function boot(){
+  const saved = lsGet('aoiro:tab'); if(saved) S.tab = saved;
+  await storeInit();
+  try{
+    S.meta = await getDoc('meta');
+    if(S.meta && S.meta.years?.length){
+      const cur = new Date().getFullYear();
+      await loadYear(S.meta.years.includes(cur) ? cur : Math.max(...S.meta.years));
+    } else { S.meta = {years:[],bizName:''}; loadSample(); }
+  }catch(e){
+    S.meta = {years:[],bizName:''}; loadSample();
+    toast('帳簿を読み込めませんでした。再読み込みしてください');
+  }
+  render();
+})();
+</script>
+
+</body></html>
