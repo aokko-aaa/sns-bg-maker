@@ -75,13 +75,7 @@
   .pillar .ph{width:56px;height:56px;font-size:10px;}
   .pillar p{color:var(--muted);font-size:14px;margin-top:4px;}
 
-  /* 04 事例 */
-  #case .ph{aspect-ratio:16/10;margin-bottom:24px;}
-  .case-steps{display:grid;gap:16px;}
-  .case-steps dt{font-size:13px;font-weight:500;letter-spacing:.08em;border-left:2px solid var(--ink);padding-left:10px;margin-bottom:4px;}
-  .case-steps dd{padding-left:13px;}
-
-  /* 05 料金 */
+  /* 04 料金 */
   .lead{margin-bottom:24px;}
   .plans{display:grid;gap:16px;margin-bottom:24px;}
   .plan{border:1px solid var(--line-soft);padding:20px;}
@@ -96,20 +90,20 @@
   .common li{position:relative;padding-left:16px;}
   .common li::before{content:"";position:absolute;left:0;top:.85em;width:8px;height:1px;background:var(--ink);}
 
-  /* 06 比較 */
+  /* 05 比較 */
   .compare{display:grid;gap:12px;}
   .compare-item{border:1px solid var(--line-soft);padding:20px;}
   .compare-item h3{margin-bottom:8px;}
   .compare-item p{font-size:14px;}
   .compare-item.ours{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
-  /* 07 スポット */
+  /* 06 スポット */
   .menu-group{margin-bottom:24px;}
   .menu-group h3{font-size:13px;letter-spacing:.08em;margin-bottom:8px;}
   .menu li{padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:14px;}
   .note{font-size:13px;color:var(--muted);}
 
-  /* 08 流れ */
+  /* 07 流れ */
   .flow{counter-reset:step;display:grid;gap:20px;}
   .flow li{counter-increment:step;display:grid;grid-template-columns:36px 1fr;gap:14px;}
   .flow li::before{
@@ -121,12 +115,12 @@
   }
   .flow p{font-size:14px;color:var(--muted);}
 
-  /* 09 プロフィール */
+  /* 08 プロフィール */
   #profile{text-align:center;}
   #profile .ph{width:120px;height:120px;border-radius:50%;margin:0 auto 16px;}
   .profile-name{font-weight:500;margin-bottom:12px;}
 
-  /* 10 お問い合わせ */
+  /* 09 お問い合わせ */
   #contact{text-align:center;border-bottom:none;}
   #contact h2{margin-bottom:12px;}
   #contact p{margin-bottom:24px;}
@@ -187,30 +181,9 @@
     </div>
   </section>
 
-  <!-- 04 事例（店名は掲載許可が取れるまで出さない） -->
-  <section id="case">
-    <span class="num">04</span>
-    <h2>事例「ある車屋さんの場合」</h2>
-    <div class="ph">[事例の写真]</div><!-- TODO: 事例の写真に差し替え -->
-    <dl class="case-steps">
-      <div>
-        <dt>はじめに</dt>
-        <dd class="tbd">[困っていたこと]</dd><!-- TODO: 困っていたこと -->
-      </div>
-      <div>
-        <dt>整えたこと</dt>
-        <dd>SNS発信、LINE配信、友だちの整理、イベント告知、売れ筋の情報収集</dd>
-      </div>
-      <div>
-        <dt>いま</dt>
-        <dd class="tbd">[変化・店主さんの声]</dd><!-- TODO: 変化・店主さんの声 -->
-      </div>
-    </dl>
-  </section>
-
-  <!-- 05 料金プラン -->
+  <!-- 04 料金プラン -->
   <section id="plans">
-    <span class="num">05</span>
+    <span class="num">04</span>
     <h2>料金プラン「右腕サポート」</h2>
     <p class="lead">パートさん週2日分くらいの費用で、SNSも仕組みづくりも任せられます。</p>
     <div class="plans">
@@ -239,9 +212,9 @@
     </div>
   </section>
 
-  <!-- 06 比べてみると -->
+  <!-- 05 比べてみると -->
   <section id="compare">
-    <span class="num">06</span>
+    <span class="num">05</span>
     <h2>比べてみると</h2>
     <div class="compare">
       <div class="compare-item">
@@ -259,9 +232,9 @@
     </div>
   </section>
 
-  <!-- 07 スポット -->
+  <!-- 06 スポット -->
   <section id="spot">
-    <span class="num">07</span>
+    <span class="num">06</span>
     <h2>スポットでも頼めます「これだけ頼みたい、もOK」</h2>
     <div class="menu-group">
       <h3>制作だけ</h3>
@@ -285,9 +258,9 @@
     <p class="note">料金は内容をうかがってお見積りします。<br>右腕サポート中の方は、会員価格でご依頼いただけます。</p>
   </section>
 
-  <!-- 08 はじめるまでの流れ -->
+  <!-- 07 はじめるまでの流れ -->
   <section id="flow">
-    <span class="num">08</span>
+    <span class="num">07</span>
     <h2>はじめるまでの流れ</h2>
     <ol class="flow">
       <li>
@@ -311,18 +284,18 @@
     </ol>
   </section>
 
-  <!-- 09 プロフィール -->
+  <!-- 08 プロフィール -->
   <section id="profile">
-    <span class="num">09</span>
+    <span class="num">08</span>
     <h2>プロフィール</h2>
     <div class="ph">[写真]</div><!-- TODO: プロフィール写真に差し替え -->
     <p class="profile-name">AOKOWORKS / <span class="tbd">[お名前]</span></p><!-- TODO: お名前 -->
     <p class="tbd">[自己紹介文]</p><!-- TODO: 自己紹介文 -->
   </section>
 
-  <!-- 10 お問い合わせ -->
+  <!-- 09 お問い合わせ -->
   <section id="contact">
-    <span class="num">10</span>
+    <span class="num">09</span>
     <h2>まずは、話してみませんか</h2>
     <p>まとまっていなくても大丈夫です。</p>
     <!-- TODO: LINE URLに差し替え -->
