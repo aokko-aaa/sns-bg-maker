@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AOKOWORKS｜地域の社長の右腕</title>
+<meta name="description" content="地域の社長の右腕として、SNS・LINE・事務の仕組みづくりまで。愛知県西尾市周辺。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* 色はここだけ差し替えればOK */
+  :root{
+    --ink:#111;
+    --paper:#fff;
+    --line:#d4d4d4;
+    --muted:#666;
+    --soft:#f4f4f4;
+    --placeholder:#999;
+    --max:440px;
+    --gutter:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Noto Sans JP',sans-serif;
+    background:var(--soft);
+    color:var(--ink);
+    line-height:1.8;
+    font-size:15px;
+    -webkit-text-size-adjust:100%;
+  }
+  .page{max-width:var(--max);margin:0 auto;background:var(--paper);min-height:100vh;}
+  section{padding:56px var(--gutter);border-bottom:1px solid var(--line);}
+  .num{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:6px;}
+  h2{font-size:21px;font-weight:700;line-height:1.5;margin-bottom:24px;}
+  h3{font-size:16px;font-weight:700;line-height:1.5;}
+  p+p{margin-top:12px;}
+  ul{list-style:none;}
+
+  .ph{
+    border:2px dashed var(--line);
+    color:var(--placeholder);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;text-align:center;
+    background:var(--paper);
+  }
+  .tbd{color:var(--muted);}
+
+  .btn{
+    display:flex;align-items:center;justify-content:center;
+    min-height:52px;padding:12px 20px;
+    background:var(--ink);color:var(--paper);
+    font-weight:700;font-size:16px;text-decoration:none;
+    border-radius:4px;
+  }
+
+  /* 01 ファーストビュー */
+  #hero{padding-top:40px;}
+  .brand{font-size:13px;font-weight:700;letter-spacing:.2em;margin-bottom:28px;}
+  .catch{font-size:26px;font-weight:700;line-height:1.55;margin-bottom:16px;}
+  .sub{color:var(--muted);margin-bottom:28px;}
+  #hero .ph{aspect-ratio:4/3;margin-bottom:28px;}
+
+  /* 02 お悩み */
+  .worries{display:grid;gap:12px;margin-bottom:28px;}
+  .worries li{border:1px solid var(--line);padding:16px;font-weight:500;line-height:1.7;}
+  .closing{background:var(--soft);padding:20px;}
+
+  /* 03 できること */
+  .pillars{display:grid;gap:20px;}
+  .pillar{display:grid;grid-template-columns:56px 1fr;gap:16px;align-items:start;}
+  .pillar .ph{width:56px;height:56px;font-size:10px;}
+  .pillar p{color:var(--muted);font-size:14px;margin-top:4px;}
+
+  /* 04 事例 */
+  #case .ph{aspect-ratio:16/10;margin-bottom:24px;}
+  .case-steps{display:grid;gap:16px;}
+  .case-steps dt{font-size:13px;font-weight:700;border-left:3px solid var(--ink);padding-left:10px;margin-bottom:4px;}
+  .case-steps dd{padding-left:13px;}
+
+  /* 05 料金 */
+  .lead{margin-bottom:24px;}
+  .plans{display:grid;gap:16px;margin-bottom:24px;}
+  .plan{border:1px solid var(--line);padding:20px;}
+  .plan.featured{border:2px solid var(--ink);}
+  .plan-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;}
+  .plan-name{font-size:17px;font-weight:700;}
+  .plan-price{font-size:22px;font-weight:700;white-space:nowrap;}
+  .plan-price small{font-size:13px;font-weight:500;}
+  .plan p{font-size:14px;color:var(--muted);}
+  .common{background:var(--soft);padding:20px;}
+  .common h3{font-size:14px;margin-bottom:8px;}
+  .common li{position:relative;padding-left:16px;}
+  .common li::before{content:"";position:absolute;left:0;top:.8em;width:6px;height:6px;background:var(--ink);}
+
+  /* 06 比較 */
+  .compare{display:grid;gap:12px;}
+  .compare-item{border:1px solid var(--line);padding:20px;}
+  .compare-item h3{margin-bottom:8px;}
+  .compare-item p{font-size:14px;}
+  .compare-item.ours{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+  /* 07 スポット */
+  .price-group{margin-bottom:24px;}
+  .price-group h3{font-size:14px;margin-bottom:8px;}
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th,td{padding:12px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+  td:last-child{text-align:right;white-space:nowrap;padding-left:12px;font-weight:500;}
+  .note{font-size:13px;color:var(--muted);}
+
+  /* 08 流れ */
+  .flow{counter-reset:step;display:grid;gap:20px;}
+  .flow li{counter-increment:step;display:grid;grid-template-columns:36px 1fr;gap:14px;}
+  .flow li::before{
+    content:counter(step);
+    width:36px;height:36px;border-radius:50%;
+    background:var(--ink);color:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;
+  }
+  .flow p{font-size:14px;color:var(--muted);}
+
+  /* 09 プロフィール */
+  #profile{text-align:center;}
+  #profile .ph{width:120px;height:120px;border-radius:50%;margin:0 auto 16px;}
+  .profile-name{font-weight:700;margin-bottom:12px;}
+
+  /* 10 お問い合わせ */
+  #contact{text-align:center;border-bottom:none;}
+  #contact h2{margin-bottom:12px;}
+  #contact p{margin-bottom:24px;}
+  footer{padding:24px var(--gutter);text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 01 ファーストビュー -->
+  <section id="hero">
+    <p class="brand">AOKOWORKS</p>
+    <h1 class="catch">言葉にならない「つまり」を、ほどく人。</h1>
+    <p class="sub">地域の社長の右腕として、SNS・LINE・事務の仕組みづくりまで。</p>
+    <div class="ph">[メインビジュアル]</div><!-- TODO: メインビジュアル画像に差し替え -->
+    <a class="btn" href="#contact">まずは相談する</a>
+  </section>
+
+  <!-- 02 こんなこと、ありませんか？ -->
+  <section id="worries">
+    <span class="num">02</span>
+    <h2>こんなこと、ありませんか？</h2>
+    <ul class="worries">
+      <li>SNSやらなきゃと思いながら、半年止まってる</li>
+      <li>LINEの友だちは増えたけど、誰が誰だかわからない</li>
+      <li>イベントに出たいけど、告知まで手が回らない</li>
+      <li>事務作業に追われて、本業の時間が削られている</li>
+    </ul>
+    <p class="closing">何から頼めばいいかわからなくても大丈夫。話しながら「つまり、こういうことですよね」と一緒にほどいていきます。</p>
+  </section>
+
+  <!-- 03 わたしにできること -->
+  <section id="services">
+    <span class="num">03</span>
+    <h2>わたしにできること</h2>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="ph">[アイコン]</div><!-- TODO: アイコンに差し替え -->
+        <div>
+          <h3>発信を整える</h3>
+          <p>SNSの立ち上げ・投稿画像、イベント告知物、紹介ページ</p>
+        </div>
+      </div>
+      <div class="pillar">
+        <div class="ph">[アイコン]</div><!-- TODO: アイコンに差し替え -->
+        <div>
+          <h3>お客さんとのつながりを整える</h3>
+          <p>LINE公式アカウントの整理、配信の型づくり</p>
+        </div>
+      </div>
+      <div class="pillar">
+        <div class="ph">[アイコン]</div><!-- TODO: アイコンに差し替え -->
+        <div>
+          <h3>事務を軽くする</h3>
+          <p>作業の自動化、紙の帳票のデジタル化、情報収集の仕組み</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 事例（店名は掲載許可が取れるまで出さない） -->
+  <section id="case">
+    <span class="num">04</span>
+    <h2>事例「ある車屋さんの場合」</h2>
+    <div class="ph">[事例の写真]</div><!-- TODO: 事例の写真に差し替え -->
+    <dl class="case-steps">
+      <div>
+        <dt>はじめに</dt>
+        <dd class="tbd">[困っていたこと]</dd><!-- TODO: 困っていたこと -->
+      </div>
+      <div>
+        <dt>整えたこと</dt>
+        <dd>SNS発信、LINE配信、友だちの整理、イベント告知、売れ筋の情報収集</dd>
+      </div>
+      <div>
+        <dt>いま</dt>
+        <dd class="tbd">[変化・店主さんの声]</dd><!-- TODO: 変化・店主さんの声 -->
+      </div>
+    </dl>
+  </section>
+
+  <!-- 05 料金プラン -->
+  <section id="plans">
+    <span class="num">05</span>
+    <h2>料金プラン「右腕サポート」</h2>
+    <p class="lead">パートさん週2日分くらいの費用で、SNSも仕組みづくりも任せられます。</p>
+    <div class="plans">
+      <div class="plan">
+        <div class="plan-head">
+          <span class="plan-name">ライト</span>
+          <span class="plan-price">月3万円</span>
+        </div>
+        <p>ひとつのテーマに絞ってお手伝い（LINEだけ、SNSだけ、など）。小さな改善を重ねていきます。</p>
+      </div>
+      <div class="plan featured">
+        <div class="plan-head">
+          <span class="plan-name">スタンダード</span>
+          <span class="plan-price">月5万円</span>
+        </div>
+        <p>発信も事務も、まるごと。新しい仕組みづくりも含みます。</p>
+      </div>
+    </div>
+    <div class="common">
+      <h3>共通</h3>
+      <ul>
+        <li>相談はいつでも、なんでもOK</li>
+        <li>近隣（西尾市周辺）なら伺います</li>
+        <li>いつでもやめられます</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 06 比べてみると -->
+  <section id="compare">
+    <span class="num">06</span>
+    <h2>比べてみると</h2>
+    <div class="compare">
+      <div class="compare-item">
+        <h3>人を雇うと？</h3>
+        <p>求人を出して、面接して、仕事を教えて。給料のほかにも手間と時間がかかります。しかも、SNSの組み立てや事務の仕組み化までできる人は、なかなか見つかりません。</p>
+      </div>
+      <div class="compare-item">
+        <h3>バラバラに外注すると？</h3>
+        <p>LINEの整理 5万円 ＋ SNSの立ち上げ 5万円 ＋ 事務の自動化 3万円 ＝ 13万円。作ったあとの運用は、また別の料金です。</p>
+      </div>
+      <div class="compare-item ours">
+        <h3>右腕サポートなら</h3>
+        <p>作るところから、回していくところまで。月額ひとつで、まるごとお任せいただけます。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 スポット -->
+  <section id="spot">
+    <span class="num">07</span>
+    <h2>スポットでも頼めます「これだけ頼みたい、もOK」</h2>
+    <div class="price-group">
+      <h3>制作だけ</h3>
+      <table>
+        <tr><td>Instagram投稿画像</td><td>1投稿 8,000円〜</td></tr>
+        <tr><td>イベント告知物一式</td><td>4万円〜</td></tr>
+        <tr><td>小さなWebページ</td><td>5万円〜</td></tr>
+        <tr><td>イラスト・名入れ</td><td>5,000円〜</td></tr>
+      </table>
+    </div>
+    <div class="price-group">
+      <h3>構築だけ</h3>
+      <table>
+        <tr><td>LINE公式の整理</td><td>5万円〜</td></tr>
+        <tr><td>SNSの立ち上げ</td><td>5万円〜</td></tr>
+        <tr><td>事務作業の自動化</td><td>3万円〜</td></tr>
+        <tr><td>紙の帳票のデジタル化</td><td>3万円〜</td></tr>
+        <tr><td>情報収集の仕組み</td><td>10万円〜</td></tr>
+      </table>
+    </div>
+    <p class="note">右腕サポート中の方は、会員価格でご依頼いただけます。</p>
+  </section>
+
+  <!-- 08 はじめるまでの流れ -->
+  <section id="flow">
+    <span class="num">08</span>
+    <h2>はじめるまでの流れ</h2>
+    <ol class="flow">
+      <li>
+        <div>
+          <h3>相談</h3>
+          <p>困っていることを、そのまま話してください。<span class="tbd">[初回相談の料金]</span></p><!-- TODO: 初回相談の料金 -->
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>ご提案</h3>
+          <p>何から整えるか、どのプランが合うかをお伝えします。</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>スタート</h3>
+          <p>合わなければ、いつでもやめられます。</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- 09 プロフィール -->
+  <section id="profile">
+    <span class="num">09</span>
+    <h2>プロフィール</h2>
+    <div class="ph">[写真]</div><!-- TODO: プロフィール写真に差し替え -->
+    <p class="profile-name">AOKOWORKS / <span class="tbd">[お名前]</span></p><!-- TODO: お名前 -->
+    <p class="tbd">[自己紹介文]</p><!-- TODO: 自己紹介文 -->
+  </section>
+
+  <!-- 10 お問い合わせ -->
+  <section id="contact">
+    <span class="num">10</span>
+    <h2>まずは、話してみませんか</h2>
+    <p>まとまっていなくても大丈夫です。</p>
+    <!-- TODO: LINE URLに差し替え -->
+    <a class="btn" href="#">[LINEで相談する]</a>
+  </section>
+
+  <footer>© AOKOWORKS</footer>
+</div>
+</body>
+</html>
