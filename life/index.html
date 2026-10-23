@@ -117,7 +117,26 @@
   .flow p{font-size:14px;color:var(--muted);}
 
   /* 05 料金 */
-  .common{background:var(--soft);padding:20px;}
+  .acc{border-top:1px solid var(--line);}
+  .acc details{border-bottom:1px solid var(--line);}
+  .acc summary{
+    list-style:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    min-height:56px;padding:12px 0;font-weight:700;
+  }
+  .acc summary::-webkit-details-marker{display:none;}
+  .acc summary::after{
+    content:"";flex:none;width:9px;height:9px;margin-right:6px;
+    border-right:2px solid var(--brand);border-bottom:2px solid var(--brand);
+    transform:rotate(45deg) translateY(-3px);transition:transform .25s ease;
+  }
+  .acc details[open] summary::after{transform:rotate(-135deg) translateY(-3px);}
+  .acc-body{padding:0 0 20px;font-size:14px;}
+  .acc details[open] .acc-body{animation:accOpen .35s ease;}
+  @keyframes accOpen{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  .price{width:100%;border-collapse:collapse;margin-top:8px;}
+  .price td{padding:10px 0;border-bottom:1px dashed var(--line);vertical-align:top;}
+  .price td:last-child{text-align:right;white-space:nowrap;padding-left:12px;}
 
   /* 06 名前 */
   .meanings{display:grid;gap:14px;margin-bottom:28px;}
@@ -152,6 +171,8 @@
     html{scroll-behavior:auto;}
     .js .reveal{opacity:1;transform:none;transition:none;}
     .btn{transition:none;}
+    .acc summary::after{transition:none;}
+    .acc details[open] .acc-body{animation:none;}
   }
 </style>
 </head>
@@ -246,13 +267,45 @@
     <span class="num">05</span>
     <h2>料金</h2>
     <p class="lead">内容をうかがって、ご提案します。</p>
-    <div class="common">
-      <ul class="dots">
-        <li>相談はいつでも、なんでもOK</li>
-        <li>新しいツールを覚えなくても大丈夫です</li>
-        <li>いつでもやめられます</li>
-        <li class="tbd">[初回相談の料金]</li><!-- TODO: 初回相談の料金 -->
-      </ul>
+    <div class="acc">
+      <details>
+        <summary>月額でお任せ</summary>
+        <div class="acc-body">
+          <p>内容に合わせて、プランをご提案します。</p>
+          <table class="price">
+            <tr><td class="tbd">[プラン名]</td><td class="tbd">[金額]</td></tr><!-- TODO: 月額プランと金額 -->
+            <tr><td class="tbd">[プラン名]</td><td class="tbd">[金額]</td></tr>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>スポット（これだけ頼みたい）</summary>
+        <div class="acc-body">
+          <table class="price">
+            <tr><td>リサーチ・比較資料作成</td><td class="tbd">[金額]</td></tr><!-- TODO: スポットのメニューと金額 -->
+            <tr><td>デザイン・資料・文章作成</td><td class="tbd">[金額]</td></tr>
+            <tr><td>イラスト制作</td><td class="tbd">[金額]</td></tr>
+            <tr><td>SNS運用サポート</td><td class="tbd">[金額]</td></tr>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>はじめての相談</summary>
+        <div class="acc-body">
+          <p>頭の中にあることを、そのまま話してください。</p>
+          <p class="tbd">[初回相談の料金]</p><!-- TODO: 初回相談の料金 -->
+        </div>
+      </details>
+      <details>
+        <summary>共通のこと</summary>
+        <div class="acc-body">
+          <ul class="dots">
+            <li>相談はいつでも、なんでもOK</li>
+            <li>新しいツールを覚えなくても大丈夫です</li>
+            <li>いつでもやめられます</li>
+          </ul>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -299,7 +352,7 @@
   (function(){
     var targets = document.querySelectorAll(
       '#hero > *, section > .num, section > h2, .worries li, .closing, .motto, .pillar, .help-note,' +
-      '.flow li, .common, .meanings > div, .belief, .portrait, #profile p, #contact > p, #contact .btn'
+      '.flow li, .acc details, .meanings > div, .belief, .portrait, #profile p, #contact > p, #contact .btn'
     );
     targets.forEach(function(el){
       el.classList.add('reveal');
