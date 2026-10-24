@@ -108,6 +108,23 @@
   .pillar .extra{font-size:13px;color:var(--muted);margin-top:10px;}
   .help-note{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);}
 
+  /* 03のあと：人を増やす前に */
+  #extra-hand{background:#f6f1fa;}
+  .hand-lead{font-size:18px;font-weight:700;line-height:1.7;margin-bottom:24px;word-break:auto-phrase;}
+  .hand-card{background:var(--paper);padding:18px 20px;}
+  .hand-card ul{font-size:14px;}
+  .hand-card li{position:relative;padding-left:20px;}
+  .hand-card li+li{margin-top:6px;}
+  .hand-label{font-weight:700;font-size:14px;letter-spacing:.06em;margin-bottom:8px;}
+  .hand-hire{border:1px solid var(--line);color:var(--muted);}
+  .hand-hire li::before{content:"";position:absolute;left:2px;top:.85em;width:10px;height:1.5px;background:var(--gray);}
+  .hand-ours{border:2px solid var(--brand);}
+  .hand-ours .hand-label{color:var(--brand);}
+  .hand-ours li::before{content:"";position:absolute;left:0;top:.45em;width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);background:var(--brand);box-sizing:border-box;}
+  .hand-arrow{width:14px;height:14px;margin:6px auto 10px;border-right:2px solid var(--brand);border-bottom:2px solid var(--brand);transform:rotate(45deg);}
+  .hand-body{margin:24px 0 28px;}
+  .btn-line{background:var(--paper);color:var(--brand);border:2px solid var(--brand);}
+
   /* 04 流れ */
   .flow{counter-reset:step;display:grid;gap:18px;}
   .flow li{counter-increment:step;display:grid;grid-template-columns:36px 1fr;gap:14px;}
@@ -239,8 +256,8 @@
       <li>「あれもこれもやりたいけれど、何から始めよう」</li>
       <li>「頭の中では考えているけれど、形にできていない」</li>
       <li>「ちょっと相談できる相手がほしい」</li>
-      <li>「調べものや細かな仕事に時間を取られる」</li>
-      <li>「雑用がたまり本来の業務が滞る」</li>
+      <li>「調べものや雑用に追われて、本来の仕事が後回しになる」</li>
+      <li>「人手は足りないけれど、従業員を増やすのはためらう」</li>
       <li>「AIも使いたいけれど、何から取り入れたらいいか分からない」</li>
     </ul>
     <p class="closing">何から頼めばいいかわからなくても大丈夫。話しながら「つまり、こういうことですよね」と一緒にほどいていきます。</p>
@@ -287,6 +304,32 @@
       </div>
     </div>
     <p class="note help-note">猫の手を借りたいときは、現場にも駆けつけます。</p>
+  </section>
+
+  <!-- 03のあと：人を増やす前に -->
+  <section id="extra-hand">
+    <p class="hand-lead">従業員を増やすほどではないけれど、<br>ひとりでは、手が足りない。<br>採用する余裕はない。でも、任せたい仕事はある。</p>
+    <div class="hand-compare">
+      <div class="hand-card hand-hire">
+        <p class="hand-label">人を増やすと</p>
+        <ul>
+          <li>求人・面接・教育に、時間と手間がかかる</li>
+          <li>仕事が少ない月も、人件費は毎月かかる</li>
+          <li>一度雇うと、気軽には減らせない</li>
+        </ul>
+      </div>
+      <p class="hand-arrow" aria-hidden="true"></p>
+      <div class="hand-card hand-ours">
+        <p class="hand-label">あれこれサポートなら</p>
+        <ul>
+          <li>採用の手間をかけずに、相談できる</li>
+          <li>必要な仕事から、小さく頼める</li>
+          <li>手が空いた分、本来の仕事に集中できる</li>
+        </ul>
+      </div>
+    </div>
+    <p class="hand-body">HITO IROは、そんな事業のとなりで、必要な分だけお手伝いします。何をどこまで頼むかは、内容とペースを一緒に決めます。</p>
+    <a class="btn btn-line" href="#contact">任せたい「あれこれ」を相談する</a>
   </section>
 
   <!-- 04 一緒に進める5つのステップ -->
@@ -412,7 +455,7 @@
 <script>
   (function(){
     var targets = document.querySelectorAll(
-      '#hero > *, section > .num, section > h2, .worries li, .closing, .motto, .pillar, .help-note,' +
+      '#hero > *, #extra-hand > *, section > .num, section > h2, .worries li, .closing, .motto, .pillar, .help-note,' +
       '.flow li, .acc details, .meanings > div, .belief, .portrait, #profile p, #contact > p, #contact .btn'
     );
     targets.forEach(function(el){
