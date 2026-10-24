@@ -164,6 +164,26 @@
   .bio-head{font-size:20px;font-weight:700;line-height:1.5;color:var(--brand);text-align:center;margin-bottom:20px;}
   .bio-quote{border-left:4px solid var(--accent);padding:4px 0 4px 14px;}
   .bio-strong{font-weight:700;word-break:auto-phrase;text-wrap:pretty;}
+  .more{margin-top:14px;}
+  .more summary{
+    list-style:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    min-height:48px;margin:0 auto;width:fit-content;padding:0 24px;
+    border:1px solid var(--brand);border-radius:999px;
+    color:var(--brand);font-weight:700;font-size:14px;letter-spacing:.08em;
+  }
+  .more summary::-webkit-details-marker{display:none;}
+  .more summary::after{
+    content:"";width:8px;height:8px;
+    border-right:2px solid var(--brand);border-bottom:2px solid var(--brand);
+    transform:rotate(45deg) translateY(-2px);transition:transform .25s ease;
+  }
+  .more[open] summary::after{transform:rotate(-135deg) translateY(-2px);}
+  .more .more-close, .more[open] .more-open{display:none;}
+  .more[open] .more-close{display:inline;}
+  .more-body{margin-top:20px;}
+  .more-body p+p{margin-top:14px;}
+  .more[open] .more-body{animation:accOpen .35s ease;}
   .bio-close{font-weight:700;color:var(--brand);text-align:center;margin-top:24px !important;}
 
   /* 08 お問い合わせ */
@@ -189,6 +209,8 @@
     .acc summary::after{transition:none;}
     .js .crow .crow-stem,.js .crow .crow-head{clip-path:none;transform:none;opacity:1;animation:none;}
     .acc details[open] .acc-body{animation:none;}
+    .more[open] .more-body{animation:none;}
+    .more summary::after{transition:none;}
   }
 </style>
 </head>
@@ -354,15 +376,20 @@
       <p>気になることがあると調べずにはいられないし、思いついたアイデアはどんどん膨らんでいく。</p>
       <p>でも、やりたいことが多すぎて、結局どこから手をつけたらいいのかわからなくなる。</p>
       <p>実は、私自身がそんなタイプです。</p>
-      <p>だからこそ、頭の中にたくさんのアイデアを抱えている方の気持ちが、よくわかります。</p>
-      <p>これまでさまざまな業種で働き、現在はオンラインでの事務サポート、SNS運用、デザイン、リサーチなど、幅広いお仕事に携わっています。</p>
-      <p>私が好きなのは、誰かの「こうしたい！」を聞いて、一緒に考え、カタチにしていくこと。</p>
-      <p class="bio-quote">「それなら、こんな方法もありますよ」<br>「まずは、ここから始めてみませんか？」</p>
-      <p>そんなふうに、アイデアを具体的な行動につなげていくことを大切にしています。</p>
-      <p>AIや便利なツールも活用しながら、効率よく。でも、人と人との温かさは忘れずに。</p>
-      <p>完璧に整理された依頼でなくても大丈夫。</p>
-      <p class="bio-strong">考えることは好き。でも、全部ひとりでやるのは大変。</p>
-      <p>そんな方の、気軽に相談できる「もうひとりの右腕」でありたいと思っています。</p>
+      <details class="more">
+        <summary><span class="more-open">続きを読む</span><span class="more-close">閉じる</span></summary>
+        <div class="more-body">
+        <p>だからこそ、頭の中にたくさんのアイデアを抱えている方の気持ちが、よくわかります。</p>
+        <p>これまでさまざまな業種で働き、現在はオンラインでの事務サポート、SNS運用、デザイン、リサーチなど、幅広いお仕事に携わっています。</p>
+        <p>私が好きなのは、誰かの「こうしたい！」を聞いて、一緒に考え、カタチにしていくこと。</p>
+        <p class="bio-quote">「それなら、こんな方法もありますよ」<br>「まずは、ここから始めてみませんか？」</p>
+        <p>そんなふうに、アイデアを具体的な行動につなげていくことを大切にしています。</p>
+        <p>AIや便利なツールも活用しながら、効率よく。でも、人と人との温かさは忘れずに。</p>
+        <p>完璧に整理された依頼でなくても大丈夫。</p>
+        <p class="bio-strong">考えることは好き。でも、全部ひとりでやるのは大変。</p>
+        <p>そんな方の、気軽に相談できる「もうひとりの右腕」でありたいと思っています。</p>
+        </div>
+      </details>
       <p class="bio-close">頭の中の「あれこれ」を、一緒にカタチに。</p>
     </div>
   </section>
