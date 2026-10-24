@@ -52,6 +52,8 @@
     background:var(--paper);
   }
   .tbd{color:var(--muted);}
+  /* 文を意味の区切りでまとめ、変な位置で改行させない（Safariでも効く） */
+  .wb{display:inline-block;}
 
   .btn{
     display:flex;align-items:center;justify-content:center;
@@ -253,22 +255,22 @@
     <span class="num">02</span>
     <h2>こんなこと、ありませんか？</h2>
     <ul class="worries">
-      <li>「あれもこれもやりたいけれど、何から始めよう」</li>
-      <li>「頭の中では考えているけれど、形にできていない」</li>
+      <li><span class="wb">「あれもこれもやりたいけれど、</span><span class="wb">何から始めよう」</span></li>
+      <li><span class="wb">「頭の中では考えているけれど、</span><span class="wb">形にできていない」</span></li>
       <li>「ちょっと相談できる相手がほしい」</li>
-      <li>「調べものや雑用に追われて、本来の仕事が後回しになる」</li>
-      <li>「人手は足りないけれど、従業員を増やすのはためらう」</li>
-      <li>「AIも使いたいけれど、何から取り入れたらいいか分からない」</li>
+      <li><span class="wb">「調べものや雑用に追われて、</span><span class="wb">本来の仕事が後回しになる」</span></li>
+      <li><span class="wb">「人手は足りないけれど、</span><span class="wb">従業員を増やすのはためらう」</span></li>
+      <li><span class="wb">「AIも使いたいけれど、</span><span class="wb">何から取り入れたらいいか分からない」</span></li>
     </ul>
-    <p class="closing">何から頼めばいいかわからなくても大丈夫。話しながら「つまり、こういうことですよね」と一緒にほどいていきます。</p>
+    <p class="closing"><span class="wb">何から頼めばいいか</span><span class="wb">わからなくても大丈夫。</span><span class="wb">話しながら</span><span class="wb">「つまり、こういうことですよね」と</span><span class="wb">一緒にほどいていきます。</span></p>
   </section>
 
   <!-- 03 あれこれサポートでできること -->
   <section id="services">
     <span class="num">03</span>
-    <h2>あれこれサポートでできること</h2>
+    <h2><span class="wb">あれこれサポートで</span><span class="wb">できること</span></h2>
     <p class="motto">効率はAIで。彩りは人で。</p>
-    <p>AIは、わたしが使う道具です。新しいツールを覚えたり、設定したりする手間は、わたしの側で引き受けます。</p>
+    <p><span class="wb">AIは、わたしが使う道具です。</span><span class="wb">新しいツールを覚えたり、</span><span class="wb">設定したりする手間は、</span><span class="wb">わたしの側で引き受けます。</span></p>
     <div class="pillars">
       <div class="pillar">
         <span class="pillar-tag">A</span>
@@ -297,10 +299,10 @@
         <span class="pillar-tag">C</span>
         <h3>AIを活用した効率化</h3>
         <ul class="dots">
-          <li>AIを使った下調べ・情報整理・資料作成の効率化</li>
+          <li><span class="wb">AIを使った下調べ・</span><span class="wb">情報整理・資料作成の効率化</span></li>
           <li>定型業務の見直しやツール活用支援</li>
         </ul>
-        <p class="extra">AIの出力は人が確認し、目的や相手に合わせて仕上げます。</p>
+        <p class="extra"><span class="wb">AIの出力は人が確認し、</span><span class="wb">目的や相手に合わせて仕上げます。</span></p>
       </div>
     </div>
     <p class="note help-note">猫の手を借りたいときは、現場にも駆けつけます。</p>
@@ -308,12 +310,12 @@
 
   <!-- 03のあと：人を増やす前に -->
   <section id="extra-hand">
-    <p class="hand-lead">従業員を増やすほどではないけれど、<br>ひとりでは、手が足りない。<br>採用する余裕はない。でも、任せたい仕事はある。</p>
+    <p class="hand-lead">従業員を増やすほどではないけれど、<br>ひとりでは、手が足りない。<br><span class="wb">採用する余裕はない。</span><span class="wb">でも、任せたい仕事はある。</span></p>
     <div class="hand-compare">
       <div class="hand-card hand-hire">
         <p class="hand-label">人を増やすと</p>
         <ul>
-          <li>求人・面接・教育に、時間と手間がかかる</li>
+          <li><span class="wb">求人・面接・教育に、</span><span class="wb">時間と手間がかかる</span></li>
           <li>仕事が少ない月も、人件費は毎月かかる</li>
           <li>一度雇うと、気軽には減らせない</li>
         </ul>
@@ -328,7 +330,7 @@
         </ul>
       </div>
     </div>
-    <p class="hand-body">HITO IROは、そんな事業のとなりで、必要な分だけお手伝いします。何をどこまで頼むかは、内容とペースを一緒に決めます。</p>
+    <p class="hand-body"><span class="wb">そんな事業のとなりで、</span><span class="wb">必要な分だけお手伝いします。</span><br><span class="wb">何をどこまで頼むかは、</span><span class="wb">内容とペースを一緒に決めます。</span></p>
     <a class="btn btn-line" href="#contact">任せたい「あれこれ」を相談する</a>
   </section>
 
@@ -337,11 +339,11 @@
     <span class="num">04</span>
     <h2>一緒に進める5つのステップ</h2>
     <ol class="flow">
-      <li><div><h3>相談する</h3><p class="point">まずは、頭の中にあることを聞かせてください。</p><p>まとまっていなくても大丈夫。やりたいことや困っていることを、気軽にお話しください。</p></div></li>
-      <li><div><h3>整理する</h3><p class="point">あれこれを整理して、進む方向を見つけます。</p><p>お話をもとに、考えや課題を整理。優先順位をつけながら、今やるべきことを明確にします。</p></div></li>
-      <li><div><h3>段取りを組む</h3><p class="point">やりたいことを、具体的な行動に変えます。</p><p>必要な作業を洗い出し、無理なく進められるようにスケジュールや手順を整えます。</p></div></li>
-      <li><div><h3>実行する</h3><p class="point">考えるだけで終わらせず、実務までサポート。</p><p>事務作業や制作、情報収集など、必要な業務を引き受け、実現に向けて動きます。</p></div></li>
-      <li><div><h3>振り返る</h3><p class="point">進み具合を確かめながら、次の一歩へ。</p><p>できたことや課題を一緒に振り返り、状況に合わせて次の行動を考えます。</p></div></li>
+      <li><div><h3>相談する</h3><p class="point"><span class="wb">まずは、頭の中にあることを</span><span class="wb">聞かせてください。</span></p><p><span class="wb">まとまっていなくても大丈夫。</span><span class="wb">やりたいことや困っていることを、</span><span class="wb">気軽にお話しください。</span></p></div></li>
+      <li><div><h3>整理する</h3><p class="point"><span class="wb">あれこれを整理して、</span><span class="wb">進む方向を見つけます。</span></p><p><span class="wb">お話をもとに、</span><span class="wb">考えや課題を整理。</span><span class="wb">優先順位をつけながら、</span><span class="wb">今やるべきことを明確にします。</span></p></div></li>
+      <li><div><h3>段取りを組む</h3><p class="point"><span class="wb">やりたいことを、</span><span class="wb">具体的な行動に変えます。</span></p><p><span class="wb">必要な作業を洗い出し、</span><span class="wb">無理なく進められるように</span><span class="wb">スケジュールや手順を整えます。</span></p></div></li>
+      <li><div><h3>実行する</h3><p class="point"><span class="wb">考えるだけで終わらせず、</span><span class="wb">実務までサポート。</span></p><p><span class="wb">事務作業や制作、</span><span class="wb">情報収集など、</span><span class="wb">必要な業務を引き受け、</span><span class="wb">実現に向けて動きます。</span></p></div></li>
+      <li><div><h3>振り返る</h3><p class="point"><span class="wb">進み具合を確かめながら、</span><span class="wb">次の一歩へ。</span></p><p><span class="wb">できたことや課題を一緒に振り返り、</span><span class="wb">状況に合わせて</span><span class="wb">次の行動を考えます。</span></p></div></li>
     </ol>
   </section>
 
@@ -397,10 +399,10 @@
     <span class="num">06</span>
     <h2>HITO IROという名前</h2>
     <dl class="meanings">
-      <div><dt>人 × 色</dt><dd>人それぞれ、会社それぞれの個性を大切にする</dd></div>
-      <div><dt>ひとり × ひといろ</dt><dd>もうひとり加わることで、新しい視点や彩りが生まれる</dd></div>
-      <div><dt>人の温度</dt><dd>AIを使っても、人と人との関わりや温かさを失わない</dd></div>
-      <div><dt>彩る</dt><dd>今ある色を塗り替えるのではなく、そこに新しい一色を添える</dd></div>
+      <div><dt>人 × 色</dt><dd><span class="wb">人それぞれ、</span><span class="wb">会社それぞれの個性を大切にする</span></dd></div>
+      <div><dt>ひとり × ひといろ</dt><dd><span class="wb">もうひとり加わることで、</span><span class="wb">新しい視点や彩りが生まれる</span></dd></div>
+      <div><dt>人の温度</dt><dd><span class="wb">AIを使っても、</span><span class="wb">人と人との関わりや温かさを失わない</span></dd></div>
+      <div><dt>彩る</dt><dd><span class="wb">今ある色を塗り替えるのではなく、</span><span class="wb">そこに新しい一色を添える</span></dd></div>
     </dl>
     <p class="belief">事業の色を塗り替えない。<br>今ある色を大切にしながら、<br>もうひといろを添える。</p>
   </section>
@@ -415,22 +417,22 @@
     <p class="profile-roman">AIKO OKOCHI</p>
     <div class="bio">
       <p class="bio-head">あれもやりたい！<br>これもやってみたい！</p>
-      <p>そんな「やりたい」が、いつも頭の中で大渋滞。</p>
-      <p>気になることがあると調べずにはいられないし、思いついたアイデアはどんどん膨らんでいく。</p>
-      <p>でも、やりたいことが多すぎて、結局どこから手をつけたらいいのかわからなくなる。</p>
-      <p>実は、私自身がそんなタイプです。</p>
+      <p><span class="wb">そんな「やりたい」が、</span><span class="wb">いつも頭の中で大渋滞。</span></p>
+      <p><span class="wb">気になることがあると</span><span class="wb">調べずにはいられないし、</span><span class="wb">思いついたアイデアは</span><span class="wb">どんどん膨らんでいく。</span></p>
+      <p><span class="wb">でも、</span><span class="wb">やりたいことが多すぎて、</span><span class="wb">結局どこから手をつけたらいいのか</span><span class="wb">わからなくなる。</span></p>
+      <p><span class="wb">実は、</span><span class="wb">私自身がそんなタイプです。</span></p>
       <details class="more">
         <summary><span class="more-open">続きを読む</span><span class="more-close">閉じる</span></summary>
         <div class="more-body">
-        <p>だからこそ、頭の中にたくさんのアイデアを抱えている方の気持ちが、よくわかります。</p>
-        <p>これまでさまざまな業種で働き、現在はオンラインでの事務サポート、SNS運用、デザイン、リサーチなど、幅広いお仕事に携わっています。</p>
-        <p>私が好きなのは、誰かの「こうしたい！」を聞いて、一緒に考え、カタチにしていくこと。</p>
+        <p><span class="wb">だからこそ、</span><span class="wb">頭の中にたくさんのアイデアを</span><span class="wb">抱えている方の気持ちが、</span><span class="wb">よくわかります。</span></p>
+        <p><span class="wb">これまでさまざまな業種で働き、</span><span class="wb">現在はオンラインでの事務サポート、</span><span class="wb">SNS運用、デザイン、リサーチなど、</span><span class="wb">幅広いお仕事に携わっています。</span></p>
+        <p><span class="wb">私が好きなのは、</span><span class="wb">誰かの「こうしたい！」を聞いて、</span><span class="wb">一緒に考え、</span><span class="wb">カタチにしていくこと。</span></p>
         <p class="bio-quote">「それなら、こんな方法もありますよ」<br>「まずは、ここから始めてみませんか？」</p>
-        <p>そんなふうに、アイデアを具体的な行動につなげていくことを大切にしています。</p>
-        <p>AIや便利なツールも活用しながら、効率よく。でも、人と人との温かさは忘れずに。</p>
-        <p>完璧に整理された依頼でなくても大丈夫。</p>
-        <p class="bio-strong">考えることは好き。でも、全部ひとりでやるのは大変。</p>
-        <p>そんな方の、気軽に相談できる「もうひとりの右腕」でありたいと思っています。</p>
+        <p><span class="wb">そんなふうに、</span><span class="wb">アイデアを具体的な行動に</span><span class="wb">つなげていくことを</span><span class="wb">大切にしています。</span></p>
+        <p><span class="wb">AIや便利なツールも活用しながら、</span><span class="wb">効率よく。</span><span class="wb">でも、</span><span class="wb">人と人との温かさは忘れずに。</span></p>
+        <p><span class="wb">完璧に整理された依頼でなくても</span><span class="wb">大丈夫。</span></p>
+        <p class="bio-strong"><span class="wb">考えることは好き。</span><span class="wb">でも、全部ひとりでやるのは大変。</span></p>
+        <p><span class="wb">そんな方の、</span><span class="wb">気軽に相談できる「もうひとりの右腕」で</span><span class="wb">ありたいと思っています。</span></p>
         </div>
       </details>
       <p class="bio-close">頭の中の「あれこれ」を、一緒にカタチに。</p>
