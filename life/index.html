@@ -203,6 +203,9 @@
   .more-body{margin-top:20px;}
   .more-body p+p{margin-top:14px;}
   .more[open] .more-body{animation:accOpen .35s ease;}
+  .career{text-align:left;margin-top:32px;padding:20px;background:var(--soft);}
+  .career-title{font-weight:700;font-size:14px;letter-spacing:.12em;color:var(--brand);margin-bottom:10px;}
+  .career li+li{margin-top:8px;}
   .bio-close{font-weight:700;color:var(--brand);text-align:center;margin-top:24px !important;}
 
   /* 08 お問い合わせ */
@@ -435,6 +438,15 @@
       </details>
       <p class="bio-close">頭の中の「あれこれ」を、一緒にカタチに。</p>
     </div>
+    <div class="career">
+      <p class="career-title">経歴</p>
+      <ul class="dots">
+        <li><span class="wb">眼鏡店や葬儀社など、</span><span class="wb">ひとと距離の近い接客販売に</span><span class="wb">トータル15年</span></li>
+        <li><span class="wb">オンライン秘書として、</span><span class="wb">SNS運用・デザイン・事務サポート</span></li>
+        <li><span class="wb">オンライン講座のサポート業務、</span><span class="wb">コミュニティスタッフ</span></li>
+        <li><span class="wb">実は、</span><span class="wb">僧侶としての顔も…</span></li>
+      </ul>
+    </div>
   </section>
 
   <!-- 08 お問い合わせ -->
@@ -456,7 +468,7 @@
   (function(){
     var targets = document.querySelectorAll(
       '#hero > *, #extra-hand > *, section > .num, section > h2, .worries li, .closing, .motto, .pillar, .help-note,' +
-      '.flow li, .acc details, .meanings > div, .belief, .portrait, #profile p, #contact > p, #contact .btn'
+      '.flow li, .acc details, .meanings > div, .belief, .portrait, #profile p, .career li, #contact > p, #contact .btn'
     );
     targets.forEach(function(el){
       el.classList.add('reveal');
