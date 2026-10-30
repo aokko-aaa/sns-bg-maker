@@ -862,6 +862,13 @@ function buildAngles() {
 function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 
 function drawPat(ctx, id, w, h, sc, op, rot) {
+  if(rot && id!=='flat' && id!=='gradient'){
+    const D=Math.ceil(Math.sqrt(w*w+h*h))+4;
+    const off=document.createElement('canvas'); off.width=D; off.height=D;
+    drawPat(off.getContext('2d'), id, D, D, sc, op, 0);
+    ctx.save(); ctx.translate(w/2,h/2); ctx.rotate(rot*Math.PI/180); ctx.drawImage(off,-D/2,-D/2); ctx.restore();
+    return;
+  }
   const rnd = mulberry32(S.seed);  // 同じ「並び」なら毎回同じ模様になる（スライダーを動かしても模様がチラつかない）
   if(id==='flat'||id==='gradient') return;
   ctx.save();
@@ -890,7 +897,7 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       break;
     case 'stripe_diag':
       ctx.lineWidth=sc*.4;
-      for(let x=-ext;x<ext*2;x+=sc*1.5){nc();ctx.beginPath();ctx.moveTo(x-ext*.5,-ext*.5);ctx.lineTo(x+ext-ext*.5,ext-ext*.5);ctx.stroke();}
+      for(let x=-ext*2;x<ext*2;x+=sc*1.5){nc();ctx.beginPath();ctx.moveTo(x-ext,-ext);ctx.lineTo(x+ext*2,ext*2);ctx.stroke();}
       break;
     case 'grid':
       ctx.lineWidth=sc*.07;
@@ -954,7 +961,7 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
       break;
     case 'memphis':{
       const step=sc*2.2;
-      const sr=n=>((n*1664525+1013904223)>>>0)/4294967295;
+      const sr=n=>mulberry32(((n+1)*2654435761 ^ S.seed)>>>0)();
       const jitter=step*1.4; // グリッドの140%移動でカオス感
       let idx=0;
       for(let gy=-step*2;gy<h+step*3;gy+=step){
@@ -1161,9 +1168,11 @@ function drawPat(ctx, id, w, h, sc, op, rot) {
     }
 
     case 'paisley':{
-      const count=Math.min(60, Math.max(8, Math.round(w*h/(sc*sc*10))));
-      for(let i=0;i<count;i++){
-        const bx=rnd()*w, by=rnd()*h;
+      const count=Math.min(400, Math.max(8, Math.round(w*h/(sc*sc*10))));
+      const pcols=Math.max(1,Math.round(Math.sqrt(count*w/h))), prows=Math.max(1,Math.ceil(count/pcols));
+      const cw=w/pcols, ch=h/prows;
+      for(let i=0;i<pcols*prows;i++){
+        const bx=(i%pcols+.5+(rnd()-.5)*.9)*cw, by=(Math.floor(i/pcols)+.5+(rnd()-.5)*.9)*ch;
         const sz=sc*(1.5+rnd()*1.8);
         const ang=rnd()*Math.PI*2;
         const co=Math.cos(ang), si=Math.sin(ang);
