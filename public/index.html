@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>背景メーカー｜my pouch</title>
 <meta name="description" content="SNSのヘッダーやサムネ、noteの見出し画像に使える背景を、色と模様を選ぶだけで作れる無料ツール。">
-<meta name="theme-color" content="#6c63ff">
+<meta name="theme-color" content="#fffaf1">
 <meta property="og:title" content="背景メーカー">
 <meta property="og:description" content="色と模様を選ぶだけで、SNSやnoteに使える背景画像ができあがります。">
 <meta property="og:image" content="https://bg.aokoworks.com/og.jpg">
@@ -19,7 +19,7 @@
 
   header{background:#fff;border-bottom:1px solid #e0e0e0;padding:14px 28px;display:flex;align-items:center;gap:12px;}
   header h1{font-size:19px;font-weight:700;color:#222;}
-  header span{font-size:12px;color:#888;}
+  header > span{font-size:12px;color:#888;}
 
   .app{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 53px);}
 
@@ -29,44 +29,44 @@
   /* Sizes */
   .size-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
   .size-btn{border:2px solid #e0e0e0;background:#fafafa;border-radius:8px;padding:9px 7px;cursor:pointer;text-align:center;transition:all .15s;}
-  .size-btn:hover{border-color:#6c63ff;background:#f3f2ff;}
-  .size-btn.active{border-color:#6c63ff;background:#6c63ff;color:#fff;}
+  .size-btn:hover{border-color:var(--ink);background:var(--pink-soft);}
+  .size-btn.active{border-color:var(--ink);background:var(--ink);color:#fff;}
   .size-btn .lbl{font-size:11px;font-weight:600;display:block;}
   .size-btn .dim{font-size:10px;opacity:.7;display:block;margin-top:2px;}
 
   /* Tabs */
   .tabs{display:flex;border-bottom:1px solid #eee;margin-bottom:11px;overflow-x:auto;}
   .tab-btn{padding:7px 12px;font-size:11px;font-weight:700;color:#999;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
-  .tab-btn:hover{color:#6c63ff;}
-  .tab-btn.on{color:#6c63ff;border-bottom-color:#6c63ff;}
+  .tab-btn:hover{color:var(--ink);}
+  .tab-btn.on{color:var(--ink);border-bottom-color:var(--ink);}
 
   /* Preset palette */
   .pal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
   .pal-item{border:2px solid #e0e0e0;border-radius:7px;overflow:hidden;cursor:pointer;height:40px;transition:all .15s;}
-  .pal-item:hover{border-color:#6c63ff;transform:scale(1.04);}
+  .pal-item:hover{border-color:var(--ink);transform:scale(1.04);}
   .pal-item canvas{display:block;width:100%;height:100%;}
-  .pal-item.on{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.3);}
+  .pal-item.on{border-color:var(--ink);box-shadow:0 0 0 3px rgba(255,95,162,.35);}
 
   /* Mood */
   .mood-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
   .mood-btn{border:2px solid #e0e0e0;border-radius:9px;padding:8px 5px;cursor:pointer;text-align:center;background:#fafafa;transition:all .15s;}
-  .mood-btn:hover{border-color:#6c63ff;background:#f3f2ff;}
-  .mood-btn.on{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.3);}
+  .mood-btn:hover{border-color:var(--ink);background:var(--pink-soft);}
+  .mood-btn.on{border-color:var(--ink);box-shadow:0 0 0 3px rgba(255,95,162,.35);}
   .mood-swatch{width:100%;height:20px;border-radius:5px;margin-bottom:5px;display:block;}
   .mood-lbl{font-size:11px;font-weight:700;color:#555;display:block;}
   .mood-desc{font-size:9px;color:#aaa;display:block;margin-top:1px;}
-  .mood-btn.on .mood-lbl{color:#6c63ff;}
+  .mood-btn.on .mood-lbl{color:var(--ink);}
 
   /* Custom */
   .custom-row{display:flex;gap:10px;}
   .sw-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
   .sw-wrap label{font-size:10px;color:#888;}
   input.cswatch{width:48px;height:48px;border:2px solid #ddd;border-radius:8px;cursor:pointer;padding:2px;transition:border-color .15s;}
-  input.cswatch:hover{border-color:#6c63ff;}
+  input.cswatch:hover{border-color:var(--ink);}
 
   /* Extract */
   #dropZone{border:2px dashed #d0d0d0;border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa;}
-  #dropZone:hover,#dropZone.over{border-color:#6c63ff;background:#f3f2ff;}
+  #dropZone:hover,#dropZone.over{border-color:var(--ink);background:var(--pink-soft);}
   #dropZone .dz-icon{font-size:24px;margin-bottom:5px;}
   #dropZone p{font-size:11px;color:#888;line-height:1.6;}
   #imgInput{display:none;}
@@ -80,53 +80,53 @@
   .ext-pal-lbl{font-size:10px;color:#999;margin-bottom:6px;}
   .ext-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;}
   .ext-sw{height:34px;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:all .15s;position:relative;}
-  .ext-sw:hover{transform:scale(1.1);border-color:#6c63ff;}
+  .ext-sw:hover{transform:scale(1.1);border-color:var(--ink);}
   .ext-sw .chk{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);font-weight:700;}
 
   .slot-row{display:flex;gap:8px;margin-top:10px;}
   .slot{flex:1;border:2px dashed #ddd;border-radius:8px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .15s;}
-  .slot:hover{border-color:#6c63ff;}
-  .slot.on{border-color:#6c63ff;border-style:solid;background:#ede9ff;}
+  .slot:hover{border-color:var(--ink);}
+  .slot.on{border-color:var(--ink);border-style:solid;background:var(--pink-soft);}
   .slot-color{width:100%;height:26px;border-radius:5px;margin-bottom:4px;border:1px solid rgba(0,0,0,.08);}
   .slot-lbl{font-size:10px;color:#888;}
-  .slot.on .slot-lbl{color:#6c63ff;font-weight:700;}
+  .slot.on .slot-lbl{color:var(--ink);font-weight:700;}
 
-  .suggest-btn{display:block;width:100%;margin-top:8px;padding:8px;border:1.5px solid #6c63ff;background:#fff;border-radius:8px;font-size:12px;color:#6c63ff;font-weight:700;cursor:pointer;transition:all .15s;}
-  .suggest-btn:hover{background:#f3f2ff;}
+  .suggest-btn{display:block;width:100%;margin-top:8px;padding:8px;border:1.5px solid var(--ink);background:#fff;border-radius:8px;font-size:12px;color:var(--ink);font-weight:700;cursor:pointer;transition:all .15s;}
+  .suggest-btn:hover{background:var(--pink-soft);}
 
   /* Patterns */
   .pat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
   .pat-item{border:2px solid #e0e0e0;border-radius:8px;overflow:hidden;cursor:pointer;height:60px;transition:all .15s;background:#fafafa;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;}
-  .pat-item:hover{border-color:#6c63ff;}
-  .pat-item.on{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.3);}
+  .pat-item:hover{border-color:var(--ink);}
+  .pat-item.on{border-color:var(--ink);box-shadow:0 0 0 3px rgba(255,95,162,.35);}
   .pat-item canvas{width:48px;height:34px;display:block;border-radius:3px;}
   .pat-item span{font-size:9px;color:#888;}
-  .pat-item.on span{color:#6c63ff;font-weight:700;}
+  .pat-item.on span{color:var(--ink);font-weight:700;}
 
   /* Options */
   .slider-row{display:flex;flex-direction:column;gap:5px;}
   .slider-row label{font-size:12px;color:#666;display:flex;justify-content:space-between;}
-  input[type=range]{width:100%;accent-color:#6c63ff;}
+  input[type=range]{width:100%;accent-color:var(--ink);}
 
   .angle-row{display:flex;gap:6px;flex-wrap:wrap;}
   .angle-btn{border:1.5px solid #e0e0e0;background:#fafafa;border-radius:6px;padding:5px 9px;font-size:11px;cursor:pointer;transition:all .15s;}
-  .angle-btn:hover{border-color:#6c63ff;}
-  .angle-btn.on{border-color:#6c63ff;background:#6c63ff;color:#fff;}
+  .angle-btn:hover{border-color:var(--ink);}
+  .angle-btn.on{border-color:var(--ink);background:var(--ink);color:#fff;}
 
   .bgt-btn{flex:1;padding:6px 4px;font-size:11px;font-weight:700;border:1.5px solid #e0e0e0;border-radius:7px;background:#fafafa;color:#888;cursor:pointer;transition:all .15s;}
-  .bgt-btn:hover{border-color:#6c63ff;color:#6c63ff;}
-  .bgt-btn.on{border-color:#6c63ff;background:#6c63ff;color:#fff;}
+  .bgt-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .bgt-btn.on{border-color:var(--ink);background:var(--ink);color:#fff;}
 
-  .dl-btn{display:block;width:100%;padding:13px;background:linear-gradient(135deg,#6c63ff,#a78bfa);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+  .dl-btn{display:block;width:100%;padding:13px;background:linear-gradient(135deg,var(--ink),#a78bfa);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
   .dl-btn:hover{opacity:.9;}
   .dl-note{font-size:10px;color:#aaa;text-align:center;margin-top:6px;line-height:1.6;}
   .shuffle-btn{display:block;width:100%;margin-top:8px;padding:7px;border:1.5px solid #e0e0e0;background:#fafafa;border-radius:8px;font-size:12px;color:#666;font-weight:700;cursor:pointer;transition:all .15s;}
-  .shuffle-btn:hover{border-color:#6c63ff;color:#6c63ff;}
+  .shuffle-btn:hover{border-color:var(--ink);color:var(--ink);}
   .size-btn.wide{grid-column:1 / -1;}
   .custom-size{display:none;gap:6px;align-items:center;margin-top:8px;font-size:12px;color:#666;}
   .custom-size.show{display:flex;}
   .custom-size input{width:84px;padding:7px 8px;border:1.5px solid #e0e0e0;border-radius:7px;font-size:13px;}
-  .custom-size input:focus{outline:none;border-color:#6c63ff;}
+  .custom-size input:focus{outline:none;border-color:var(--ink);}
   .credit{font-size:11px;color:#aaa;text-align:center;line-height:1.8;padding:4px 0 8px;}
   .credit a{color:#7b4fa0;text-decoration:none;font-weight:700;}
 
@@ -155,15 +155,91 @@
     #previewInfo{font-size:11px;}
     header{padding:10px 14px;}
     header h1{font-size:15px;}
-    header span{font-size:11px;}
+    header > span{font-size:11px;}
     .pat-grid{grid-template-columns:repeat(4,1fr);}
   }
+
+/* ===== ポップテーマ（共通） ===== */
+:root{
+  --cream:#fffaf1; --ink:#1f1d2b; --sub:#8a8597; --line:#efe7da;
+  --pink:#ff5fa2; --pink-soft:#fff0f7; --card:#ffffff;
+  --shadow:0 10px 30px rgba(120,90,60,.10),0 2px 6px rgba(120,90,60,.06);
+}
+html,body{background-color:var(--cream)!important;}
+body{
+  font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Hiragino Sans',sans-serif!important;
+  color:var(--ink);
+  background-image:radial-gradient(#e8dcc8 1.1px,transparent 1.3px)!important;
+  background-size:20px 20px!important;
+}
+button,input,select{font-family:inherit;}
+.pop-logo{font-weight:800;letter-spacing:.02em;}
+.pop-deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.pop-cloud{position:absolute;width:240px;height:240px;}
+.pop-cloud svg{width:100%;height:100%;display:block;}
+.pop-cloud.ctl{left:-70px;top:-70px;}
+.pop-cloud.ctr{right:-80px;top:-90px;}
+.pop-cloud.cbl{left:-90px;bottom:-80px;width:300px;height:300px;}
+.pop-cloud.cbl2{left:60px;bottom:-110px;}
+.pop-cloud.cbr{right:-80px;bottom:-80px;}
+.pop-bit{position:absolute;display:block;}
+.pop-bit svg{width:100%;height:100%;display:block;}
+@media(max-width:768px){
+  .pop-cloud{width:150px;height:150px;}
+  .pop-cloud.cbl{width:180px;height:180px;}
+  .pop-bit{display:none;}
+}
+@media (prefers-reduced-motion:no-preference){
+  .pop-bit{animation:popfloat 6s ease-in-out infinite alternate;}
+  .pop-bit:nth-child(odd){animation-duration:7.5s;}
+}
+@keyframes popfloat{to{translate:0 -6px;}}
+
+/* ===== 背景メーカー用 ===== */
+header{position:relative;z-index:2;background:transparent!important;border-bottom:none!important;padding:22px 32px 6px!important;}
+header h1{font-size:26px!important;}
+header > span{color:var(--sub)!important;font-weight:700;}
+.app{position:relative;z-index:1;gap:28px;padding:0 28px 28px;min-height:auto!important;align-items:start;}
+.panel{background:var(--card)!important;border:1.5px solid var(--line)!important;border-radius:28px;box-shadow:var(--shadow);padding:24px 22px!important;}
+.sec-title{color:var(--sub)!important;font-size:12px!important;letter-spacing:.08em!important;}
+.size-btn,.mood-btn,.pat-item,.pal-item,.angle-btn,.bgt-btn,.slot{border-color:var(--line)!important;}
+.size-btn{border-radius:16px!important;background:#fff!important;}
+.size-btn.active{background:var(--ink)!important;border-color:var(--ink)!important;}
+.pal-item{border-radius:12px!important;}
+.pat-item{border-radius:14px!important;background:#fff!important;}
+.mood-btn{border-radius:14px!important;background:#fff!important;}
+.tabs{border-bottom:none!important;background:#f6f1e8;border-radius:999px;padding:4px;gap:2px;}
+.tab-btn{border-radius:999px;border-bottom:none!important;flex:1;color:var(--sub)!important;}
+.tab-btn.on{background:var(--ink);color:#fff!important;}
+.angle-btn,.bgt-btn{border-radius:999px!important;background:#fff!important;}
+.angle-btn.on,.bgt-btn.on{background:var(--ink)!important;color:#fff!important;border-color:var(--ink)!important;}
+input[type=range]{accent-color:var(--pink)!important;}
+.suggest-btn{border-radius:999px!important;border-color:var(--ink)!important;color:var(--ink)!important;}
+.shuffle-btn{border-radius:999px!important;background:#fff!important;border-color:var(--line)!important;color:var(--ink)!important;}
+.dl-btn{background:var(--ink)!important;border-radius:999px!important;padding:15px!important;box-shadow:0 5px 0 #000;font-weight:800!important;}
+.dl-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #000;}
+.custom-size input{border-radius:999px!important;border-color:var(--line)!important;text-align:center;}
+.preview-area{background:transparent!important;padding:10px 0!important;}
+#preview{border-radius:20px!important;outline:10px solid #fff;box-shadow:var(--shadow)!important;}
+#previewInfo{color:var(--sub)!important;font-weight:700;margin-top:8px;}
+#dropZone{border-radius:18px!important;border-color:#e3d8c5!important;background:#fffdf8!important;}
+@media(max-width:700px){
+  header{padding:14px 16px 4px!important;}
+  header h1{font-size:21px!important;}
+  header > span{display:none;}
+  .app{padding:0;gap:0;}
+  .preview-area{background:rgba(255,250,241,.94)!important;padding:10px 16px 12px!important;box-shadow:none!important;}
+  #preview{outline:5px solid #fff;border-radius:14px!important;}
+  .panel{border-radius:26px 26px 0 0!important;border-left:none!important;border-right:none!important;}
+}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+<div class="pop-deco" aria-hidden="true"><div class="pop-cloud ctl"><svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#ffb3d6"><circle cx="40" cy="40" r="120"/><circle cx="170" cy="30" r="70"/><circle cx="60" cy="170" r="70"/><circle cx="150" cy="110" r="55"/></g></svg></div><div class="pop-cloud ctr"><svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#9ff0f6"><circle cx="260" cy="40" r="110"/><circle cx="140" cy="20" r="60"/><circle cx="250" cy="160" r="60"/><circle cx="180" cy="95" r="45"/></g></svg></div><div class="pop-cloud cbl"><svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#d6f59a"><circle cx="40" cy="260" r="130"/><circle cx="180" cy="270" r="70"/><circle cx="50" cy="120" r="70"/><circle cx="140" cy="200" r="55"/></g></svg></div><div class="pop-cloud cbl2"><svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#ffe782"><circle cx="150" cy="300" r="70"/><circle cx="230" cy="290" r="45"/></g></svg></div><div class="pop-cloud cbr"><svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#ffb3d6"><circle cx="260" cy="260" r="120"/><circle cx="130" cy="280" r="65"/><circle cx="270" cy="130" r="65"/><circle cx="170" cy="190" r="50"/></g></svg></div><i class="pop-bit" style="left:14%;top:30%;width:18px;height:18px;transform:rotate(0deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffc93c" d="M12 0c.8 6.4 3.6 9.6 12 12-8.4 2.4-11.2 5.6-12 12-.8-6.4-3.6-9.6-12-12C8.4 9.6 11.2 6.4 12 0z"/></svg></i><i class="pop-bit" style="left:26%;top:12%;width:14px;height:14px;transform:rotate(35deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="1" width="6" height="22" rx="3" fill="#ff7ab8"/></svg></i><i class="pop-bit" style="left:8%;top:58%;width:12px;height:12px;transform:rotate(0deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#7fd8f0"/></svg></i><i class="pop-bit" style="left:20%;top:82%;width:18px;height:18px;transform:rotate(0deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff7ab8" d="M12 0c.8 6.4 3.6 9.6 12 12-8.4 2.4-11.2 5.6-12 12-.8-6.4-3.6-9.6-12-12C8.4 9.6 11.2 6.4 12 0z"/></svg></i><i class="pop-bit" style="left:86%;top:22%;width:16px;height:16px;transform:rotate(0deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#b48cff" d="M12 0c.8 6.4 3.6 9.6 12 12-8.4 2.4-11.2 5.6-12 12-.8-6.4-3.6-9.6-12-12C8.4 9.6 11.2 6.4 12 0z"/></svg></i><i class="pop-bit" style="left:74%;top:9%;width:14px;height:14px;transform:rotate(-30deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="1" width="6" height="22" rx="3" fill="#ffa94d"/></svg></i><i class="pop-bit" style="left:92%;top:52%;width:12px;height:12px;transform:rotate(0deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#ffc93c"/></svg></i><i class="pop-bit" style="left:80%;top:88%;width:18px;height:18px;transform:rotate(0deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#9adf5f" d="M12 0c.8 6.4 3.6 9.6 12 12-8.4 2.4-11.2 5.6-12 12-.8-6.4-3.6-9.6-12-12C8.4 9.6 11.2 6.4 12 0z"/></svg></i><i class="pop-bit" style="left:60%;top:94%;width:14px;height:14px;transform:rotate(50deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="1" width="6" height="22" rx="3" fill="#b48cff"/></svg></i><i class="pop-bit" style="left:40%;top:6%;width:10px;height:10px;transform:rotate(0deg)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#9adf5f"/></svg></i></div>
 
 <header>
-  <h1>背景メーカー</h1>
+  <h1><span class="pop-logo"><span style="color:#ff5fa2">背</span><span style="color:#22bfe3">景</span><span style="color:#ffb21f">メ</span><span style="color:#7fcf3f">ー</span><span style="color:#a57aff">カ</span><span style="color:#ff8a3d">ー</span></span></h1>
   <span>色と模様を選ぶだけ。SNSやnoteの背景に</span>
 </header>
 
@@ -200,9 +276,9 @@
 
       <div id="tab-custom" style="display:none">
         <div class="custom-row">
-          <div class="sw-wrap"><label>色 1</label><input type="color" class="cswatch" id="sw0" value="#6c63ff"></div>
-          <div class="sw-wrap"><label>色 2</label><input type="color" class="cswatch" id="sw1" value="#a78bfa"></div>
-          <div class="sw-wrap"><label>色 3</label><input type="color" class="cswatch" id="sw2" value="#f9a8d4"></div>
+          <div class="sw-wrap"><label>色 1</label><input type="color" class="cswatch" id="sw0" value="#ff9ac9"></div>
+          <div class="sw-wrap"><label>色 2</label><input type="color" class="cswatch" id="sw1" value="#ffe27a"></div>
+          <div class="sw-wrap"><label>色 3</label><input type="color" class="cswatch" id="sw2" value="#8fe3f2"></div>
         </div>
         <p style="font-size:10px;color:#aaa;margin-top:7px">3色を選ぶとグラデーションに使用されます</p>
       </div>
@@ -271,7 +347,7 @@
           <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">模様の色 <span style="color:#aaa;font-weight:400">(複数登録で交互に使用)</span></label>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <div id="patColorSlots" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-            <button id="addPatColorBtn" title="色を追加" style="width:30px;height:30px;border:2px dashed #ccc;border-radius:7px;background:#fafafa;cursor:pointer;font-size:18px;color:#aaa;line-height:1;transition:all .15s;" onmouseenter="this.style.borderColor='#6c63ff';this.style.color='#6c63ff'" onmouseleave="this.style.borderColor='#ccc';this.style.color='#aaa'">+</button>
+            <button id="addPatColorBtn" title="色を追加" style="width:30px;height:30px;border:2px dashed #ccc;border-radius:7px;background:#fafafa;cursor:pointer;font-size:18px;color:#aaa;line-height:1;transition:all .15s;" onmouseenter="this.style.borderColor='#1f1d2b';this.style.color='#1f1d2b'" onmouseleave="this.style.borderColor='#ccc';this.style.color='#aaa'">+</button>
           </div>
           <input type="color" id="patColorHidden" style="display:none">
         </div>
@@ -319,7 +395,7 @@ const SIZES = [
 ];
 
 const PALETTES = [
-  {name:'バイオレット', c:['#6c63ff','#a78bfa','#f9a8d4']},
+  {name:'ポップ',       c:['#ff9ac9','#ffe27a','#8fe3f2']},
   {name:'サンセット',   c:['#f97316','#fb923c','#fde68a']},
   {name:'オーシャン',   c:['#0ea5e9','#38bdf8','#bae6fd']},
   {name:'フォレスト',   c:['#16a34a','#4ade80','#bbf7d0']},
@@ -387,7 +463,7 @@ const ANGLES = ['0°','45°','90°','135°','180°','225°','270°','315°'];
 const S = {
   sizeIdx:   0,
   patId:     'gradient',
-  colors:    ['#6c63ff','#a78bfa','#f9a8d4'],
+  colors:    ['#ff9ac9','#ffe27a','#8fe3f2'],
   patColors: ['#ffffff'],
   bgType:    'gradient',
   scale:     50,
