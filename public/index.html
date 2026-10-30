@@ -232,6 +232,15 @@ input[type=range]{accent-color:var(--pink)!important;}
   #preview{outline:5px solid #fff;border-radius:14px!important;}
   .panel{border-radius:26px 26px 0 0!important;border-left:none!important;border-right:none!important;}
 }
+
+/* 配色の見本（名前つき・グループ分け） */
+.pal-grid{gap:8px!important;}
+.pal-group{grid-column:1/-1;font-size:11px;font-weight:800;color:var(--sub);margin-top:6px;}
+.pal-group:first-child{margin-top:0;}
+.pal-item{height:auto!important;background:#fff;padding:4px 4px 3px;display:flex;flex-direction:column;gap:3px;border-radius:14px!important;}
+.pal-item canvas{height:30px!important;border-radius:9px;}
+.pal-name{font-size:10px;font-weight:700;color:var(--ink);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pal-item.on{border-color:var(--ink)!important;box-shadow:0 0 0 2px var(--ink)!important;}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
 </head>
@@ -395,37 +404,45 @@ const SIZES = [
 ];
 
 const PALETTES = [
-  {name:'ポップ',       c:['#ff9ac9','#ffe27a','#8fe3f2']},
-  {name:'サンセット',   c:['#f97316','#fb923c','#fde68a']},
-  {name:'オーシャン',   c:['#0ea5e9','#38bdf8','#bae6fd']},
-  {name:'フォレスト',   c:['#16a34a','#4ade80','#bbf7d0']},
-  {name:'ローズ',       c:['#e11d48','#fb7185','#fecdd3']},
-  {name:'ゴールド',     c:['#b45309','#fbbf24','#fef9c3']},
-  {name:'ダーク',       c:['#1e293b','#334155','#64748b']},
-  {name:'ミント',       c:['#0d9488','#2dd4bf','#a7f3d0']},
-  {name:'モノクロ',     c:['#111111','#555555','#aaaaaa']},
-  {name:'ネオン',       c:['#a21caf','#7c3aed','#06b6d4']},
-  {name:'ピーチ',       c:['#f43f5e','#fb923c','#fde68a']},
-  {name:'スカイ',       c:['#4f46e5','#818cf8','#c7d2fe']},
-  {name:'ペールピンク', c:['#fce7f3','#fbcfe8','#f9a8d4']},
-  {name:'アース',       c:['#78350f','#a16207','#d97706']},
-  {name:'ドーン',       c:['#dc2626','#f97316','#fbbf24']},
-  {name:'ナイト',       c:['#0f172a','#1e3a5f','#3b82f6']},
+  // ポップ
+  {g:'ポップ',     name:'ポップ',       c:['#ff9ac9','#ffe27a','#8fe3f2']},
+  {g:'ポップ',     name:'キャンディ',   c:['#ffc2dc','#d9c2ff','#bdeeff']},
+  {g:'ポップ',     name:'ゆめかわ',     c:['#ffb8e0','#c8b8ff','#9fe8ff']},
+  {g:'ポップ',     name:'ソーダ',       c:['#7fe3f2','#b8f5e6','#fffbd1']},
+  {g:'ポップ',     name:'レモネード',   c:['#fff3a8','#ffd36e','#ff9e7a']},
+  {g:'ポップ',     name:'メロン',       c:['#d6f59a','#a8ecc0','#fff6c2']},
+  {g:'ポップ',     name:'ラベンダー',   c:['#e3d4ff','#c7b2ff','#ffd6ee']},
+  {g:'ポップ',     name:'ピーチ',       c:['#ffd1b8','#ffb3c7','#ffe9d6']},
+  // ビビッド
+  {g:'ビビッド',   name:'ビタミン',     c:['#ff6b8b','#ffb13b','#ffe14d']},
+  {g:'ビビッド',   name:'トロピカル',   c:['#00c2c7','#7ee081','#ffd23f']},
+  {g:'ビビッド',   name:'ベリー',       c:['#ff3d8b','#b54dff','#5b6bff']},
+  {g:'ビビッド',   name:'サンセット',   c:['#ff7a59','#ff4f8b','#8a5cff']},
+  // おちついた
+  {g:'おちついた', name:'くすみピンク', c:['#e6b8b4','#f2dcd5','#c9a9a6']},
+  {g:'おちついた', name:'ミルクティー', c:['#d9c3a5','#f1e4d1','#b89b7a']},
+  {g:'おちついた', name:'セージ',       c:['#b7c9a8','#e3ead6','#8fa58a']},
+  {g:'おちついた', name:'モノトーン',   c:['#3a3a3a','#9a9a9a','#ececec']},
+  // 夜
+  {g:'夜',         name:'ミッドナイト', c:['#1f1d2b','#3a2f5b','#ff5fa2']},
+  {g:'夜',         name:'ネイビー',     c:['#14213d','#2a4a7f','#7fb3ff']},
+  {g:'夜',         name:'ネオン',       c:['#2a0845','#a21caf','#00e5ff']},
+  {g:'夜',         name:'ボルドー',     c:['#3b0d1e','#7a1f3d','#d9a5b3']},
 ];
 
 const MOODS = [
-  {k:'bright',   lbl:'明るい',    desc:'元気・活発',       c:['#facc15','#fb923c','#f87171']},
-  {k:'dark',     lbl:'ダーク',    desc:'重厚・クール',     c:['#0f172a','#1e3a5f','#334155']},
-  {k:'pop',      lbl:'POP',       desc:'カラフル・楽しい', c:['#f43f5e','#a855f7','#3b82f6']},
-  {k:'soft',     lbl:'やさしい',  desc:'ナチュラル・温かい',c:['#fde68a','#fca5a5','#c4b5fd']},
-  {k:'cool',     lbl:'クール',    desc:'洗練・スタイリッシュ',c:['#0ea5e9','#6366f1','#818cf8']},
-  {k:'natural',  lbl:'ナチュラル',desc:'森・土・木',       c:['#78350f','#92400e','#d97706']},
-  {k:'romantic', lbl:'ロマンチック',desc:'甘い・夢',       c:['#ec4899','#f9a8d4','#fce7f3']},
-  {k:'fresh',    lbl:'フレッシュ',desc:'清潔・爽やか',     c:['#10b981','#6ee7b7','#d1fae5']},
-  {k:'retro',    lbl:'レトロ',    desc:'懐かし・ビンテージ',c:['#b45309','#ca8a04','#eab308']},
-  {k:'minimal',  lbl:'ミニマル',  desc:'シンプル・余白',   c:['#e2e8f0','#cbd5e1','#94a3b8']},
-  {k:'neon',     lbl:'ネオン',    desc:'派手・夜・都会',   c:['#a21caf','#7c3aed','#06b6d4']},
-  {k:'japanese', lbl:'和風',      desc:'伝統・雅・落ち着き',c:['#5f4b32','#8b6347','#c8a97e']},
+  {k:'bright',   lbl:'明るい',      desc:'元気・活発',         c:['#ffe14d','#ffb13b','#ff6b8b']},
+  {k:'dark',     lbl:'ダーク',      desc:'重厚・クール',       c:['#1f1d2b','#2f2a45','#4a4266']},
+  {k:'pop',      lbl:'POP',         desc:'カラフル・楽しい',   c:['#ff5fa2','#ffc93c','#22bfe3']},
+  {k:'soft',     lbl:'やさしい',    desc:'ナチュラル・温かい', c:['#ffe9c7','#ffd1dc','#d9cfff']},
+  {k:'cool',     lbl:'クール',      desc:'洗練・スタイリッシュ',c:['#22bfe3','#5b7cff','#a5b4ff']},
+  {k:'natural',  lbl:'ナチュラル',  desc:'森・土・木',         c:['#b7c9a8','#d9c3a5','#8c6e54']},
+  {k:'romantic', lbl:'ロマンチック',desc:'甘い・夢',           c:['#ff8ab8','#ffc2dc','#fff0f6']},
+  {k:'fresh',    lbl:'フレッシュ',  desc:'清潔・爽やか',       c:['#5fd6b0','#b8f5e6','#f2fff9']},
+  {k:'retro',    lbl:'レトロ',      desc:'懐かし・ビンテージ', c:['#d4a853','#c0784a','#2c7744']},
+  {k:'minimal',  lbl:'ミニマル',    desc:'シンプル・余白',     c:['#f2efe9','#dedad2','#b9b4ab']},
+  {k:'neon',     lbl:'ネオン',      desc:'派手・夜・都会',     c:['#ff00e5','#8a5cff','#00f0ff']},
+  {k:'japanese', lbl:'和風',        desc:'伝統・雅・落ち着き', c:['#5f4b32','#a8794f','#e2cfa8']},
 ];
 
 const PATTERNS = [
@@ -521,16 +538,23 @@ function gradH(canvas, colors) {
 // ============================================================
 function buildPalettes() {
   const grid = document.getElementById('palGrid');
+  let lastG = '';
   PALETTES.forEach((p,i) => {
+    if (p.g !== lastG) {
+      lastG = p.g;
+      const h = document.createElement('div'); h.className='pal-group'; h.textContent=p.g; grid.appendChild(h);
+    }
     const item = document.createElement('div');
     item.className = 'pal-item'+(i===0?' on':'');
     item.title = p.name;
-    const c = document.createElement('canvas'); c.width=60;c.height=40;
+    const c = document.createElement('canvas'); c.width=120;c.height=60;
     gradH(c, p.c);
     item.appendChild(c);
+    const nm = document.createElement('span'); nm.className='pal-name'; nm.textContent=p.name;
+    item.appendChild(nm);
     item.onclick = () => {
       S.colors = [...p.c];
-      document.querySelectorAll('.pal-item').forEach((el,j)=>el.classList.toggle('on',j===i));
+      document.querySelectorAll('.pal-item').forEach(el=>el.classList.toggle('on',el===item));
       syncSwatches(); refreshPatThumbs(); render();
     };
     grid.appendChild(item);
