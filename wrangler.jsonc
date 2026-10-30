@@ -1,0 +1,10 @@
+{
+  // 背景メーカーを Cloudflare Workers で公開するための設定
+  // 公開URL：https://bg.aokoworks.com（予備：https://bg-maker.aokoworks.workers.dev）
+  "name": "bg-maker",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // この中のファイルがそのままサイトになる（schedule-app など他のフォルダは公開されない）
+    "directory": "./public"
+  }
+}

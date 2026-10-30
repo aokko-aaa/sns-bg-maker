@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>背景メーカー｜my pouch</title>
+<meta name="description" content="SNSのヘッダーやサムネ、noteの見出し画像に使える背景を、色と模様を選ぶだけで作れる無料ツール。">
+<meta name="theme-color" content="#6c63ff">
+<meta property="og:title" content="背景メーカー">
+<meta property="og:description" content="色と模様を選ぶだけで、SNSやnoteに使える背景画像ができあがります。">
+<meta property="og:image" content="https://bg.aokoworks.com/og.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Hiragino Sans','Yu Gothic',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;}
+
+  header{background:#fff;border-bottom:1px solid #e0e0e0;padding:14px 28px;display:flex;align-items:center;gap:12px;}
+  header h1{font-size:19px;font-weight:700;color:#222;}
+  header span{font-size:12px;color:#888;}
+
+  .app{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 53px);}
+
+  .panel{background:#fff;border-right:1px solid #e0e0e0;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:20px;}
+  .sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:9px;}
+
+  /* Sizes */
+  .size-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .size-btn{border:2px solid #e0e0e0;background:#fafafa;border-radius:8px;padding:9px 7px;cursor:pointer;text-align:center;transition:all .15s;}
+  .size-btn:hover{border-color:#6c63ff;background:#f3f2ff;}
+  .size-btn.active{border-color:#6c63ff;background:#6c63ff;color:#fff;}
+  .size-btn .lbl{font-size:11px;font-weight:600;display:block;}
+  .size-btn .dim{font-size:10px;opacity:.7;display:block;margin-top:2px;}
+
+  /* Tabs */
+  .tabs{display:flex;border-bottom:1px solid #eee;margin-bottom:11px;overflow-x:auto;}
+  .tab-btn{padding:7px 12px;font-size:11px;font-weight:700;color:#999;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
+  .tab-btn:hover{color:#6c63ff;}
+  .tab-btn.on{color:#6c63ff;border-bottom-color:#6c63ff;}
+
+  /* Preset palette */
+  .pal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  .pal-item{border:2px solid #e0e0e0;border-radius:7px;overflow:hidden;cursor:pointer;height:40px;transition:all .15s;}
+  .pal-item:hover{border-color:#6c63ff;transform:scale(1.04);}
+  .pal-item canvas{display:block;width:100%;height:100%;}
+  .pal-item.on{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.3);}
+
+  /* Mood */
+  .mood-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .mood-btn{border:2px solid #e0e0e0;border-radius:9px;padding:8px 5px;cursor:pointer;text-align:center;background:#fafafa;transition:all .15s;}
+  .mood-btn:hover{border-color:#6c63ff;background:#f3f2ff;}
+  .mood-btn.on{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.3);}
+  .mood-swatch{width:100%;height:20px;border-radius:5px;margin-bottom:5px;display:block;}
+  .mood-lbl{font-size:11px;font-weight:700;color:#555;display:block;}
+  .mood-desc{font-size:9px;color:#aaa;display:block;margin-top:1px;}
+  .mood-btn.on .mood-lbl{color:#6c63ff;}
+
+  /* Custom */
+  .custom-row{display:flex;gap:10px;}
+  .sw-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .sw-wrap label{font-size:10px;color:#888;}
+  input.cswatch{width:48px;height:48px;border:2px solid #ddd;border-radius:8px;cursor:pointer;padding:2px;transition:border-color .15s;}
+  input.cswatch:hover{border-color:#6c63ff;}
+
+  /* Extract */
+  #dropZone{border:2px dashed #d0d0d0;border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa;}
+  #dropZone:hover,#dropZone.over{border-color:#6c63ff;background:#f3f2ff;}
+  #dropZone .dz-icon{font-size:24px;margin-bottom:5px;}
+  #dropZone p{font-size:11px;color:#888;line-height:1.6;}
+  #imgInput{display:none;}
+
+  .img-prev-wrap{position:relative;margin-top:10px;border-radius:8px;overflow:hidden;border:1.5px solid #e0e0e0;display:none;}
+  .img-prev-wrap canvas{display:block;width:100%;cursor:crosshair;}
+  .eyedrop-hint{font-size:10px;color:#888;text-align:center;padding:4px;background:#f8f8f8;}
+  .eyedrop-cur{position:absolute;width:22px;height:22px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #333;pointer-events:none;display:none;transform:translate(-50%,-50%);transition:background .05s;}
+
+  .ext-pal-wrap{margin-top:10px;display:none;}
+  .ext-pal-lbl{font-size:10px;color:#999;margin-bottom:6px;}
+  .ext-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;}
+  .ext-sw{height:34px;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:all .15s;position:relative;}
+  .ext-sw:hover{transform:scale(1.1);border-color:#6c63ff;}
+  .ext-sw .chk{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);font-weight:700;}
+
+  .slot-row{display:flex;gap:8px;margin-top:10px;}
+  .slot{flex:1;border:2px dashed #ddd;border-radius:8px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .15s;}
+  .slot:hover{border-color:#6c63ff;}
+  .slot.on{border-color:#6c63ff;border-style:solid;background:#ede9ff;}
+  .slot-color{width:100%;height:26px;border-radius:5px;margin-bottom:4px;border:1px solid rgba(0,0,0,.08);}
+  .slot-lbl{font-size:10px;color:#888;}
+  .slot.on .slot-lbl{color:#6c63ff;font-weight:700;}
+
+  .suggest-btn{display:block;width:100%;margin-top:8px;padding:8px;border:1.5px solid #6c63ff;background:#fff;border-radius:8px;font-size:12px;color:#6c63ff;font-weight:700;cursor:pointer;transition:all .15s;}
+  .suggest-btn:hover{background:#f3f2ff;}
+
+  /* Patterns */
+  .pat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  .pat-item{border:2px solid #e0e0e0;border-radius:8px;overflow:hidden;cursor:pointer;height:60px;transition:all .15s;background:#fafafa;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;}
+  .pat-item:hover{border-color:#6c63ff;}
+  .pat-item.on{border-color:#6c63ff;box-shadow:0 0 0 3px rgba(108,99,255,.3);}
+  .pat-item canvas{width:48px;height:34px;display:block;border-radius:3px;}
+  .pat-item span{font-size:9px;color:#888;}
+  .pat-item.on span{color:#6c63ff;font-weight:700;}
+
+  /* Options */
+  .slider-row{display:flex;flex-direction:column;gap:5px;}
+  .slider-row label{font-size:12px;color:#666;display:flex;justify-content:space-between;}
+  input[type=range]{width:100%;accent-color:#6c63ff;}
+
+  .angle-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .angle-btn{border:1.5px solid #e0e0e0;background:#fafafa;border-radius:6px;padding:5px 9px;font-size:11px;cursor:pointer;transition:all .15s;}
+  .angle-btn:hover{border-color:#6c63ff;}
+  .angle-btn.on{border-color:#6c63ff;background:#6c63ff;color:#fff;}
+
+  .bgt-btn{flex:1;padding:6px 4px;font-size:11px;font-weight:700;border:1.5px solid #e0e0e0;border-radius:7px;background:#fafafa;color:#888;cursor:pointer;transition:all .15s;}
+  .bgt-btn:hover{border-color:#6c63ff;color:#6c63ff;}
+  .bgt-btn.on{border-color:#6c63ff;background:#6c63ff;color:#fff;}
+
+  .dl-btn{display:block;width:100%;padding:13px;background:linear-gradient(135deg,#6c63ff,#a78bfa);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+  .dl-btn:hover{opacity:.9;}
+  .dl-note{font-size:10px;color:#aaa;text-align:center;margin-top:6px;line-height:1.6;}
+  .shuffle-btn{display:block;width:100%;margin-top:8px;padding:7px;border:1.5px solid #e0e0e0;background:#fafafa;border-radius:8px;font-size:12px;color:#666;font-weight:700;cursor:pointer;transition:all .15s;}
+  .shuffle-btn:hover{border-color:#6c63ff;color:#6c63ff;}
+  .size-btn.wide{grid-column:1 / -1;}
+  .custom-size{display:none;gap:6px;align-items:center;margin-top:8px;font-size:12px;color:#666;}
+  .custom-size.show{display:flex;}
+  .custom-size input{width:84px;padding:7px 8px;border:1.5px solid #e0e0e0;border-radius:7px;font-size:13px;}
+  .custom-size input:focus{outline:none;border-color:#6c63ff;}
+  .credit{font-size:11px;color:#aaa;text-align:center;line-height:1.8;padding:4px 0 8px;}
+  .credit a{color:#7b4fa0;text-decoration:none;font-weight:700;}
+
+  /* Preview */
+  .preview-area{display:flex;align-items:flex-start;justify-content:center;background:#e8eaf0;padding:28px;}
+  .preview-wrap{position:sticky;top:28px;}
+  .preview-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  #preview{border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);max-width:100%;max-height:72vh;}
+  #previewInfo{font-size:12px;color:#888;}
+
+  /* モバイル対応 */
+  @media(max-width:700px){
+    .app{grid-template-columns:1fr;min-height:auto;}
+    .panel{border-right:none;border-bottom:1px solid #e0e0e0;overflow-y:visible;}
+    /* プレビューをコントロールの上に固定表示 */
+    .preview-area{
+      order:-1;
+      padding:12px 16px;
+      min-height:auto;
+      position:sticky;
+      top:0;
+      z-index:20;
+      box-shadow:0 2px 8px rgba(0,0,0,.12);
+    }
+    #preview{max-height:38vw;}
+    #previewInfo{font-size:11px;}
+    header{padding:10px 14px;}
+    header h1{font-size:15px;}
+    header span{font-size:11px;}
+    .pat-grid{grid-template-columns:repeat(4,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>背景メーカー</h1>
+  <span>色と模様を選ぶだけ。SNSやnoteの背景に</span>
+</header>
+
+<div class="app">
+  <div class="panel">
+
+    <!-- サイズ -->
+    <div>
+      <div class="sec-title">サイズ</div>
+      <div class="size-grid" id="sizeGrid"></div>
+      <div class="custom-size" id="customSize">
+        <input type="number" id="cw" min="100" max="4000" value="1200" inputmode="numeric" aria-label="横"> ×
+        <input type="number" id="ch" min="100" max="4000" value="800" inputmode="numeric" aria-label="縦"> px
+      </div>
+    </div>
+
+    <!-- 配色 -->
+    <div>
+      <div class="sec-title">配色</div>
+      <div class="tabs">
+        <button class="tab-btn on"  onclick="showTab('preset')">プリセット</button>
+        <button class="tab-btn"     onclick="showTab('mood')">イメージ</button>
+        <button class="tab-btn"     onclick="showTab('custom')">カスタム</button>
+        <button class="tab-btn"     onclick="showTab('extract')">📷 写真</button>
+      </div>
+
+      <div id="tab-preset">
+        <div class="pal-grid" id="palGrid"></div>
+      </div>
+
+      <div id="tab-mood" style="display:none">
+        <div class="mood-grid" id="moodGrid"></div>
+      </div>
+
+      <div id="tab-custom" style="display:none">
+        <div class="custom-row">
+          <div class="sw-wrap"><label>色 1</label><input type="color" class="cswatch" id="sw0" value="#6c63ff"></div>
+          <div class="sw-wrap"><label>色 2</label><input type="color" class="cswatch" id="sw1" value="#a78bfa"></div>
+          <div class="sw-wrap"><label>色 3</label><input type="color" class="cswatch" id="sw2" value="#f9a8d4"></div>
+        </div>
+        <p style="font-size:10px;color:#aaa;margin-top:7px">3色を選ぶとグラデーションに使用されます</p>
+      </div>
+
+      <div id="tab-extract" style="display:none">
+        <div id="dropZone" onclick="document.getElementById('imgInput').click()">
+          <div class="dz-icon">🖼</div>
+          <p>クリックまたはドラッグ&ドロップ<br>で画像・写真をアップロード</p>
+        </div>
+        <input type="file" id="imgInput" accept="image/*">
+
+        <div class="img-prev-wrap" id="imgPrevWrap">
+          <canvas id="imgPrevCanvas"></canvas>
+          <div class="eyedrop-cur" id="eyedropCur"></div>
+          <div class="eyedrop-hint">クリックでスポイト取得 → 色スロットに追加</div>
+        </div>
+
+        <div class="ext-pal-wrap" id="extPalWrap">
+          <div class="ext-pal-lbl">抽出した色 (クリックで色スロットに割り当て)</div>
+          <div class="ext-grid" id="extGrid"></div>
+
+          <div class="slot-row">
+            <div class="slot on" id="slot0" onclick="pickSlot(0)">
+              <div class="slot-color" id="slotC0"></div>
+              <div class="slot-lbl">色 1</div>
+            </div>
+            <div class="slot" id="slot1" onclick="pickSlot(1)">
+              <div class="slot-color" id="slotC1"></div>
+              <div class="slot-lbl">色 2</div>
+            </div>
+            <div class="slot" id="slot2" onclick="pickSlot(2)">
+              <div class="slot-color" id="slotC2"></div>
+              <div class="slot-lbl">色 3</div>
+            </div>
+          </div>
+
+          <button class="suggest-btn" id="suggestBtn">✨ 相性の良い3色を自動提案</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 模様 -->
+    <div>
+      <div class="sec-title">模様</div>
+      <div class="pat-grid" id="patGrid"></div>
+      <button class="shuffle-btn" id="shuffleBtn">🎲 模様の並びを変える</button>
+    </div>
+
+    <!-- オプション -->
+    <div>
+      <div class="sec-title">オプション</div>
+      <div style="display:flex;flex-direction:column;gap:13px">
+        <div class="slider-row">
+          <label>模様の大きさ <span id="scaleV">50</span></label>
+          <input type="range" id="scaleR" min="10" max="150" value="50">
+        </div>
+        <div class="slider-row">
+          <label>模様の濃さ <span><span id="opacityV">80</span>%</span></label>
+          <input type="range" id="opacityR" min="5" max="100" value="80">
+        </div>
+        <div class="slider-row">
+          <label>模様の回転 <span><span id="rotateV">0</span>°</span></label>
+          <input type="range" id="rotateR" min="0" max="360" value="0">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">模様の色 <span style="color:#aaa;font-weight:400">(複数登録で交互に使用)</span></label>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <div id="patColorSlots" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            <button id="addPatColorBtn" title="色を追加" style="width:30px;height:30px;border:2px dashed #ccc;border-radius:7px;background:#fafafa;cursor:pointer;font-size:18px;color:#aaa;line-height:1;transition:all .15s;" onmouseenter="this.style.borderColor='#6c63ff';this.style.color='#6c63ff'" onmouseleave="this.style.borderColor='#ccc';this.style.color='#aaa'">+</button>
+          </div>
+          <input type="color" id="patColorHidden" style="display:none">
+        </div>
+        <div>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">背景スタイル</label>
+          <div style="display:flex;gap:6px">
+            <button class="bgt-btn on" id="bgtGrad" onclick="setBgType('gradient')">グラデーション</button>
+            <button class="bgt-btn"    id="bgtSolid" onclick="setBgType('solid')">単色（色1）</button>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:12px;color:#666;display:block;margin-bottom:6px">グラデーション方向</label>
+          <div class="angle-row" id="angleRow"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="dl-btn" id="dlBtn">⬇ 画像を保存（PNG）</button>
+    <p class="dl-note">スマホでは、出てきたメニューの「画像を保存」で写真に入ります。</p>
+    <p class="credit">背景メーカーは、<a href="https://aokoworks.com/pouch/" target="_blank" rel="noopener">my pouch</a> の道具です。<br>つくった人：<a href="https://aokoworks.com/" target="_blank" rel="noopener">HITO IRO</a></p>
+  </div>
+
+  <div class="preview-area">
+    <div class="preview-wrap">
+      <canvas id="preview"></canvas>
+      <div id="previewInfo"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const SIZES = [
+  {label:'X（Twitter）ヘッダー', dim:'1500×500',  w:1500,h:500},
+  {label:'Instagram 縦（4:5）',   dim:'1080×1350', w:1080,h:1350},
+  {label:'Instagram 正方形',     dim:'1080×1080', w:1080,h:1080},
+  {label:'ストーリーズ・リール', dim:'1080×1920', w:1080,h:1920},
+  {label:'YouTube サムネイル',   dim:'1280×720',  w:1280,h:720},
+  {label:'note 見出し画像',       dim:'1280×670',  w:1280,h:670},
+  {label:'スマホの壁紙',         dim:'1179×2556', w:1179,h:2556},
+  {label:'Facebook カバー',      dim:'820×312',   w:820, h:312},
+  {label:'自由なサイズ',         dim:'横と縦を入力', w:1200,h:800, custom:true},
+];
+
+const PALETTES = [
+  {name:'バイオレット', c:['#6c63ff','#a78bfa','#f9a8d4']},
+  {name:'サンセット',   c:['#f97316','#fb923c','#fde68a']},
+  {name:'オーシャン',   c:['#0ea5e9','#38bdf8','#bae6fd']},
+  {name:'フォレスト',   c:['#16a34a','#4ade80','#bbf7d0']},
+  {name:'ローズ',       c:['#e11d48','#fb7185','#fecdd3']},
+  {name:'ゴールド',     c:['#b45309','#fbbf24','#fef9c3']},
+  {name:'ダーク',       c:['#1e293b','#334155','#64748b']},
+  {name:'ミント',       c:['#0d9488','#2dd4bf','#a7f3d0']},
+  {name:'モノクロ',     c:['#111111','#555555','#aaaaaa']},
+  {name:'ネオン',       c:['#a21caf','#7c3aed','#06b6d4']},
+  {name:'ピーチ',       c:['#f43f5e','#fb923c','#fde68a']},
+  {name:'スカイ',       c:['#4f46e5','#818cf8','#c7d2fe']},
+  {name:'ペールピンク', c:['#fce7f3','#fbcfe8','#f9a8d4']},
+  {name:'アース',       c:['#78350f','#a16207','#d97706']},
+  {name:'ドーン',       c:['#dc2626','#f97316','#fbbf24']},
+  {name:'ナイト',       c:['#0f172a','#1e3a5f','#3b82f6']},
+];
+
+const MOODS = [
+  {k:'bright',   lbl:'明るい',    desc:'元気・活発',       c:['#facc15','#fb923c','#f87171']},
+  {k:'dark',     lbl:'ダーク',    desc:'重厚・クール',     c:['#0f172a','#1e3a5f','#334155']},
+  {k:'pop',      lbl:'POP',       desc:'カラフル・楽しい', c:['#f43f5e','#a855f7','#3b82f6']},
+  {k:'soft',     lbl:'やさしい',  desc:'ナチュラル・温かい',c:['#fde68a','#fca5a5','#c4b5fd']},
+  {k:'cool',     lbl:'クール',    desc:'洗練・スタイリッシュ',c:['#0ea5e9','#6366f1','#818cf8']},
+  {k:'natural',  lbl:'ナチュラル',desc:'森・土・木',       c:['#78350f','#92400e','#d97706']},
+  {k:'romantic', lbl:'ロマンチック',desc:'甘い・夢',       c:['#ec4899','#f9a8d4','#fce7f3']},
+  {k:'fresh',    lbl:'フレッシュ',desc:'清潔・爽やか',     c:['#10b981','#6ee7b7','#d1fae5']},
+  {k:'retro',    lbl:'レトロ',    desc:'懐かし・ビンテージ',c:['#b45309','#ca8a04','#eab308']},
+  {k:'minimal',  lbl:'ミニマル',  desc:'シンプル・余白',   c:['#e2e8f0','#cbd5e1','#94a3b8']},
+  {k:'neon',     lbl:'ネオン',    desc:'派手・夜・都会',   c:['#a21caf','#7c3aed','#06b6d4']},
+  {k:'japanese', lbl:'和風',      desc:'伝統・雅・落ち着き',c:['#5f4b32','#8b6347','#c8a97e']},
+];
+
+const PATTERNS = [
+  {id:'flat',       lbl:'単色'},
+  {id:'gradient',   lbl:'グラデーション'},
+  {id:'dots',       lbl:'ドット'},
+  {id:'border',     lbl:'ボーダー'},
+  {id:'stripe_diag',lbl:'斜めストライプ'},
+  {id:'grid',       lbl:'グリッド'},
+  {id:'memphis',    lbl:'メンフィス'},
+  {id:'diamonds',   lbl:'ダイヤ'},
+  {id:'triangles',  lbl:'三角'},
+  {id:'waves',      lbl:'ウェーブ'},
+  {id:'hexagon',    lbl:'ハニカム'},
+  {id:'cross',      lbl:'クロス'},
+  {id:'zigzag',     lbl:'ジグザグ'},
+  {id:'checkers',   lbl:'市松'},
+  {id:'confetti',   lbl:'紙吹雪'},
+  {id:'marble',     lbl:'マーブル'},
+  {id:'noise',      lbl:'ノイズ'},
+  {id:'scanlines',  lbl:'スキャンライン'},
+  {id:'sunburst',   lbl:'サンバースト'},
+  {id:'multistripe',lbl:'マルチストライプ'},
+  {id:'tartan',     lbl:'タータン'},
+  {id:'splash',     lbl:'スプラッシュ'},
+  {id:'paisley',    lbl:'フラワー'},
+  {id:'camo',       lbl:'カモフラ'},
+];
+
+const ANGLES = ['0°','45°','90°','135°','180°','225°','270°','315°'];
+
+// ============================================================
+// STATE
+// ============================================================
+const S = {
+  sizeIdx:   0,
+  patId:     'gradient',
+  colors:    ['#6c63ff','#a78bfa','#f9a8d4'],
+  patColors: ['#ffffff'],
+  bgType:    'gradient',
+  scale:     50,
+  opacity:   80,
+  rotate:    0,
+  angle:     '135°',
+  seed:      20261030,
+};
+let activeSlot    = 0;
+let extractedHexs = [];
+
+// ============================================================
+// TAB
+// ============================================================
+function showTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('on', btn.getAttribute('onclick') === `showTab('${name}')`);
+  });
+  ['preset','mood','custom','extract'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if(el) el.style.display = t===name ? '' : 'none';
+  });
+}
+
+// ============================================================
+// SIZES
+// ============================================================
+function buildSizes() {
+  SIZES.forEach((s,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'size-btn'+(i===0?' active':'')+(s.custom?' wide':'');
+    btn.innerHTML = `<span class="lbl">${s.label}</span><span class="dim">${s.dim}</span>`;
+    btn.onclick = () => {
+      S.sizeIdx = i;
+      document.querySelectorAll('.size-btn').forEach((b,j) => b.classList.toggle('active',j===i));
+      document.getElementById('customSize').classList.toggle('show', !!s.custom);
+      render();
+    };
+    document.getElementById('sizeGrid').appendChild(btn);
+  });
+}
+
+// ============================================================
+// GRADIENT HELPER
+// ============================================================
+function gradH(canvas, colors) {
+  const ctx = canvas.getContext('2d');
+  const g = ctx.createLinearGradient(0,0,canvas.width,0);
+  g.addColorStop(0,colors[0]); g.addColorStop(.5,colors[1]); g.addColorStop(1,colors[2]);
+  ctx.fillStyle = g; ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+// ============================================================
+// PALETTES
+// ============================================================
+function buildPalettes() {
+  const grid = document.getElementById('palGrid');
+  PALETTES.forEach((p,i) => {
+    const item = document.createElement('div');
+    item.className = 'pal-item'+(i===0?' on':'');
+    item.title = p.name;
+    const c = document.createElement('canvas'); c.width=60;c.height=40;
+    gradH(c, p.c);
+    item.appendChild(c);
+    item.onclick = () => {
+      S.colors = [...p.c];
+      document.querySelectorAll('.pal-item').forEach((el,j)=>el.classList.toggle('on',j===i));
+      syncSwatches(); refreshPatThumbs(); render();
+    };
+    grid.appendChild(item);
+  });
+}
+
+// ============================================================
+// MOODS
+// ============================================================
+function buildMoods() {
+  const grid = document.getElementById('moodGrid');
+  MOODS.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'mood-btn';
+    const sw = document.createElement('canvas');
+    sw.className = 'mood-swatch'; sw.width=80; sw.height=20;
+    gradH(sw, m.c);
+    btn.appendChild(sw);
+    const lbl = document.createElement('span'); lbl.className='mood-lbl'; lbl.textContent=m.lbl; btn.appendChild(lbl);
+    const desc= document.createElement('span'); desc.className='mood-desc'; desc.textContent=m.desc; btn.appendChild(desc);
+    btn.onclick = () => {
+      S.colors = [...m.c];
+      document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      syncSwatches(); refreshPatThumbs(); render();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ============================================================
+// CUSTOM SWATCHES
+// ============================================================
+function syncSwatches() {
+  for(let i=0;i<3;i++){
+    const sw = document.getElementById('sw'+i);
+    if(sw) sw.value = S.colors[i];
+    const sc = document.getElementById('slotC'+i);
+    if(sc) sc.style.background = S.colors[i];
+  }
+}
+
+function initSwatches() {
+  for(let i=0;i<3;i++){
+    document.getElementById('sw'+i).addEventListener('input', e => {
+      S.colors[i] = e.target.value;
+      const sc = document.getElementById('slotC'+i);
+      if(sc) sc.style.background = e.target.value;
+      refreshPatThumbs(); render();
+    });
+  }
+  // Init slot colors
+  for(let i=0;i<3;i++){
+    const sc = document.getElementById('slotC'+i);
+    if(sc) sc.style.background = S.colors[i];
+  }
+}
+
+// ============================================================
+// IMAGE EXTRACT
+// ============================================================
+function initImageExtract() {
+  const input = document.getElementById('imgInput');
+  const dz    = document.getElementById('dropZone');
+
+  input.addEventListener('change', e => { if(e.target.files[0]) loadFile(e.target.files[0]); });
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', ()  => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if(f && f.type.startsWith('image/')) loadFile(f);
+  });
+
+  document.getElementById('suggestBtn').onclick = autoSuggest;
+}
+
+function loadFile(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => { URL.revokeObjectURL(url); showImgPreview(img); extractColors(img); };
+  img.src = url;
+}
+
+function showImgPreview(img) {
+  const wrap   = document.getElementById('imgPrevWrap');
+  const canvas = document.getElementById('imgPrevCanvas');
+  const maxW   = 340, maxH = 200;
+  const ratio  = Math.min(maxW/img.naturalWidth, maxH/img.naturalHeight, 1);
+  canvas.width  = Math.round(img.naturalWidth  * ratio);
+  canvas.height = Math.round(img.naturalHeight * ratio);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  wrap.style.display = 'block';
+  initEyedropper(canvas);
+}
+
+function initEyedropper(canvas) {
+  const cur = document.getElementById('eyedropCur');
+
+  canvas.onmousemove = e => {
+    const r = canvas.getBoundingClientRect();
+    const px = Math.round((e.clientX-r.left) * canvas.width/r.width);
+    const py = Math.round((e.clientY-r.top)  * canvas.height/r.height);
+    const d  = canvas.getContext('2d').getImageData(Math.max(0,px),Math.max(0,py),1,1).data;
+    cur.style.display    = 'block';
+    cur.style.left       = (e.clientX-r.left)+'px';
+    cur.style.top        = (e.clientY-r.top)+'px';
+    cur.style.background = rgb2hex(d[0],d[1],d[2]);
+  };
+  canvas.onmouseleave = () => cur.style.display='none';
+  canvas.onclick = e => {
+    const r = canvas.getBoundingClientRect();
+    const px = Math.round((e.clientX-r.left) * canvas.width/r.width);
+    const py = Math.round((e.clientY-r.top)  * canvas.height/r.height);
+    const d  = canvas.getContext('2d').getImageData(Math.max(0,px),Math.max(0,py),1,1).data;
+    putColor(rgb2hex(d[0],d[1],d[2]), activeSlot);
+    nextSlot();
+  };
+}
+
+function rgb2hex(r,g,b){ return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+
+// ---- k-means++ extraction ----
+function extractColors(img) {
+  const c = document.createElement('canvas');
+  const r = Math.min(1, 160/Math.max(img.naturalWidth,img.naturalHeight));
+  c.width=Math.round(img.naturalWidth*r); c.height=Math.round(img.naturalHeight*r);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const data = c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+
+  const pixels=[];
+  for(let i=0;i<data.length;i+=4*4){
+    const a=data[i+3]; if(a<100) continue;
+    const r=data[i],g=data[i+1],b=data[i+2];
+    const br=(r+g+b)/3;
+    if(br>250||br<5) continue;
+    pixels.push([r,g,b]);
+  }
+  if(!pixels.length) return;
+
+  const K = 12;
+  const centers = kmeanspp(pixels, Math.min(K,pixels.length));
+
+  // Sort by saturation desc (vivid first)
+  centers.sort((a,b)=>sat(b)-sat(a));
+  extractedHexs = centers.map(c=>rgb2hex(Math.round(c[0]),Math.round(c[1]),Math.round(c[2])));
+
+  renderExtracted(extractedHexs);
+  document.getElementById('extPalWrap').style.display = '';
+
+  // Auto-assign top 3
+  for(let i=0;i<3&&i<extractedHexs.length;i++) putColor(extractedHexs[i], i);
+}
+
+function kmeanspp(px, k) {
+  const centers = [px[Math.floor(Math.random()*px.length)].slice()];
+  while(centers.length<k){
+    const ds = px.map(p=>Math.min(...centers.map(c=>d2(p,c))));
+    const tot = ds.reduce((s,d)=>s+d,0);
+    let rnd = Math.random()*tot;
+    for(let i=0;i<px.length;i++){ rnd-=ds[i]; if(rnd<=0){centers.push(px[i].slice());break;} }
+  }
+  for(let it=0;it<25;it++){
+    const sums=Array.from({length:k},()=>[0,0,0]), cnt=new Array(k).fill(0);
+    for(const p of px){
+      let best=0,bestD=Infinity;
+      for(let i=0;i<k;i++){const dd=d2(p,centers[i]);if(dd<bestD){bestD=dd;best=i;}}
+      sums[best][0]+=p[0];sums[best][1]+=p[1];sums[best][2]+=p[2];cnt[best]++;
+    }
+    let moved=false;
+    for(let i=0;i<k;i++){
+      if(!cnt[i]) continue;
+      const nc=[sums[i][0]/cnt[i],sums[i][1]/cnt[i],sums[i][2]/cnt[i]];
+      if(d2(nc,centers[i])>1) moved=true;
+      centers[i]=nc;
+    }
+    if(!moved) break;
+  }
+  return centers;
+}
+function d2(a,b){return (a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2;}
+function sat([r,g,b]){const mx=Math.max(r,g,b),mn=Math.min(r,g,b);return mx?( mx-mn)/mx:0;}
+
+function renderExtracted(hexs) {
+  const grid = document.getElementById('extGrid');
+  grid.innerHTML='';
+  hexs.forEach(hex => {
+    const div = document.createElement('div');
+    div.className='ext-sw'; div.style.background=hex; div.title=hex;
+    div.innerHTML='<div class="chk"></div>';
+    div.onclick = () => { putColor(hex,activeSlot); nextSlot(); };
+    grid.appendChild(div);
+  });
+}
+
+function markUsed() {
+  document.querySelectorAll('.ext-sw').forEach(sw => {
+    sw.classList.remove('used'); sw.querySelector('.chk').textContent='';
+  });
+  S.colors.forEach((hex,si) => {
+    const h2r = h => { const n=parseInt(h.slice(1),16); return `rgb(${n>>16},${(n>>8)&255},${n&255})`; };
+    document.querySelectorAll('.ext-sw').forEach(sw => {
+      if(sw.title===hex||(sw.style.background===h2r(hex))){
+        sw.classList.add('used');
+        sw.querySelector('.chk').textContent = si+1;
+      }
+    });
+  });
+}
+
+function putColor(hex, slot) {
+  S.colors[slot] = hex;
+  document.getElementById('sw'+slot).value = hex;
+  document.getElementById('slotC'+slot).style.background = hex;
+  markUsed(); refreshPatThumbs(); render();
+}
+
+function pickSlot(i) {
+  activeSlot = i;
+  document.querySelectorAll('.slot').forEach((el,j)=>el.classList.toggle('on',j===i));
+}
+function nextSlot() { pickSlot((activeSlot+1)%3); }
+
+function autoSuggest() {
+  if(extractedHexs.length<3) return;
+  const picked = pickDistinct(extractedHexs,3);
+  picked.forEach((hex,i) => putColor(hex,i));
+}
+
+function pickDistinct(hexs,n) {
+  const rgb = hexs.map(h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]);
+  const chosen=[0];
+  while(chosen.length<n&&chosen.length<rgb.length){
+    let best=0,bestD=0;
+    for(let i=0;i<rgb.length;i++){
+      if(chosen.includes(i)) continue;
+      const min=Math.min(...chosen.map(j=>d2(rgb[i],rgb[j])));
+      if(min>bestD){bestD=min;best=i;}
+    }
+    chosen.push(best);
+  }
+  return chosen.map(i=>hexs[i]);
+}
+
+// ============================================================
+// PATTERNS
+// ============================================================
+function patThumb(canvas, id, colors) {
+  const ctx=canvas.getContext('2d'), w=canvas.width, h=canvas.height;
+  if(id==='flat'){
+    ctx.fillStyle=colors[0]; ctx.fillRect(0,0,w,h);
+  } else {
+    const g=ctx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,colors[0]);g.addColorStop(.5,colors[1]);g.addColorStop(1,colors[2]);
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+  }
+  drawPat(ctx,id,w,h,9,0.65,0);
+}
+
+function buildPatterns() {
+  const grid = document.getElementById('patGrid');
+  PATTERNS.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'pat-item'+(p.id===S.patId?' on':'');
+    const c = document.createElement('canvas'); c.width=48;c.height=34;
+    patThumb(c, p.id, S.colors);
+    item.appendChild(c);
+    const lbl=document.createElement('span'); lbl.textContent=p.lbl;
+    item.appendChild(lbl);
+    item.onclick=()=>{
+      S.patId=p.id;
+      document.querySelectorAll('.pat-item').forEach(el=>el.classList.toggle('on',el===item));
+      render();
+    };
+    grid.appendChild(item);
+  });
+}
+
+function refreshPatThumbs() {
+  document.querySelectorAll('.pat-item').forEach((item,i)=>{
+    patThumb(item.querySelector('canvas'), PATTERNS[i].id, S.colors);
+  });
+}
+
+// ============================================================
+// ANGLES
+// ============================================================
+function buildAngles() {
+  ANGLES.forEach(a=>{
+    const btn=document.createElement('button');
+    btn.className='angle-btn'+(a===S.angle?' on':'');
+    btn.textContent=a;
+    btn.onclick=()=>{
+      S.angle=a;
+      document.querySelectorAll('.angle-btn').forEach(b=>b.classList.toggle('on',b===btn));
+      render();
+    };
+    document.getElementById('angleRow').appendChild(btn);
+  });
+}
+
+// ============================================================
+// PATTERN ENGINE
+// ============================================================
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+function drawPat(ctx, id, w, h, sc, op, rot) {
+  const rnd = mulberry32(S.seed);  // 同じ「並び」なら毎回同じ模様になる（スライダーを動かしても模様がチラつかない）
+  if(id==='flat'||id==='gradient') return;
+  ctx.save();
+  ctx.globalAlpha=op;
+  const ext=Math.max(w,h)*1.5;
+  if(rot){ ctx.translate(w/2,h/2); ctx.rotate(rot*Math.PI/180); ctx.translate(-w/2,-h/2); }
+
+  // 複数色サイクル
+  const pcs = S.patColors.length ? S.patColors : ['#ffffff'];
+  let ei=0;
+  const nc = ()=>{ const c=pcs[ei%pcs.length]; ei++; ctx.fillStyle=c; ctx.strokeStyle=c; return c; };
+
+  switch(id){
+    case 'dots':
+      for(let row=0;row*sc*2<ext*2+sc;row++){
+        const ox=(row%2)*sc;
+        for(let col=0;col*sc*2<ext*2+sc;col++){
+          const x=col*sc*2+ox-ext*.5, y=row*sc*1.73-ext*.5;
+          nc();ctx.beginPath();ctx.arc(x,y,sc*.42,0,Math.PI*2);ctx.fill();
+        }
+      }
+      break;
+    case 'border':
+      ctx.lineWidth=sc*.5;
+      for(let y=0;y<ext*2;y+=sc*2.5){nc();ctx.beginPath();ctx.moveTo(-ext*.5,y-ext*.5);ctx.lineTo(ext*1.5,y-ext*.5);ctx.stroke();}
+      break;
+    case 'stripe_diag':
+      ctx.lineWidth=sc*.4;
+      for(let x=-ext;x<ext*2;x+=sc*1.5){nc();ctx.beginPath();ctx.moveTo(x-ext*.5,-ext*.5);ctx.lineTo(x+ext-ext*.5,ext-ext*.5);ctx.stroke();}
+      break;
+    case 'grid':
+      ctx.lineWidth=sc*.07;
+      for(let x=0;x<ext*2;x+=sc){nc();ctx.beginPath();ctx.moveTo(x-ext*.5,-ext*.5);ctx.lineTo(x-ext*.5,ext*1.5);ctx.stroke();}
+      for(let y=0;y<ext*2;y+=sc){nc();ctx.beginPath();ctx.moveTo(-ext*.5,y-ext*.5);ctx.lineTo(ext*1.5,y-ext*.5);ctx.stroke();}
+      break;
+    case 'checkers':
+      for(let x=0;x<ext*2;x+=sc) for(let y=0;y<ext*2;y+=sc)
+        if((Math.floor(x/sc)+Math.floor(y/sc))%2===0){nc();ctx.fillRect(x-ext*.5,y-ext*.5,sc,sc);}
+      break;
+    case 'diamonds':
+      for(let x=-sc;x<ext*2;x+=sc*2) for(let y=-sc;y<ext*2;y+=sc*2){
+        nc();ctx.beginPath();
+        ctx.moveTo(x+sc-ext*.5,y-ext*.5);ctx.lineTo(x+sc*2-ext*.5,y+sc-ext*.5);
+        ctx.lineTo(x+sc-ext*.5,y+sc*2-ext*.5);ctx.lineTo(x-ext*.5,y+sc-ext*.5);
+        ctx.closePath();ctx.fill();
+      }
+      break;
+    case 'triangles':
+      for(let x=-sc*2;x<ext*2;x+=sc*2) for(let y=-sc;y<ext*2;y+=sc){
+        const off=(Math.floor(y/sc)%2)*sc;
+        nc();ctx.beginPath();
+        ctx.moveTo(x+off-ext*.5,y-ext*.5);ctx.lineTo(x+sc+off-ext*.5,y+sc-ext*.5);ctx.lineTo(x+sc*2+off-ext*.5,y-ext*.5);
+        ctx.closePath();ctx.fill();
+      }
+      break;
+    case 'waves':
+      ctx.lineWidth=sc*.12;
+      for(let y=-sc;y<ext*2;y+=sc){
+        nc();ctx.beginPath();ctx.moveTo(-ext*.5,y-ext*.5);
+        for(let x=0;x<ext*2;x+=3) ctx.lineTo(x-ext*.5,y-ext*.5+Math.sin(x/(sc*.8)*Math.PI)*sc*.35);
+        ctx.stroke();
+      }
+      break;
+    case 'hexagon':{
+      const r=sc*.55; ctx.lineWidth=sc*.07;
+      const rows=Math.ceil(ext*2/(r*1.5))+2,cols=Math.ceil(ext*2/(r*1.732))+2;
+      for(let row=-2;row<rows;row++) for(let col=-2;col<cols;col++){
+        const cx=col*r*1.732+(row%2)*r*.866-ext*.5,cy=row*r*1.5-ext*.5;
+        nc();ctx.beginPath();
+        for(let i=0;i<6;i++){const a=Math.PI/3*i;ctx.lineTo(cx+r*.88*Math.cos(a),cy+r*.88*Math.sin(a));}
+        ctx.closePath();ctx.stroke();
+      }
+      break;
+    }
+    case 'cross':
+      ctx.lineWidth=sc*.1;
+      for(let x=sc;x<ext*2;x+=sc*2) for(let y=sc;y<ext*2;y+=sc*2){
+        nc();
+        ctx.beginPath();ctx.moveTo(x-sc*.45-ext*.5,y-ext*.5);ctx.lineTo(x+sc*.45-ext*.5,y-ext*.5);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x-ext*.5,y-sc*.45-ext*.5);ctx.lineTo(x-ext*.5,y+sc*.45-ext*.5);ctx.stroke();
+      }
+      break;
+    case 'zigzag':
+      ctx.lineWidth=sc*.1;
+      for(let y=-sc;y<ext*2;y+=sc*1.4){
+        nc();ctx.beginPath();ctx.moveTo(-ext*.5,y-ext*.5);
+        for(let x=0;x<ext*2;x+=sc){ctx.lineTo(x+sc*.5-ext*.5,y-sc*.4-ext*.5);ctx.lineTo(x+sc-ext*.5,y-ext*.5);}
+        ctx.stroke();
+      }
+      break;
+    case 'memphis':{
+      const step=sc*2.2;
+      const sr=n=>((n*1664525+1013904223)>>>0)/4294967295;
+      const jitter=step*1.4; // グリッドの140%移動でカオス感
+      let idx=0;
+      for(let gy=-step*2;gy<h+step*3;gy+=step){
+        const rowOff=(Math.round(gy/step)%2)*step*.5;
+        for(let gx=-step*2+rowOff;gx<w+step*3;gx+=step){
+          const ox=gx+(sr(idx)*2-1)*jitter;
+          const oy=gy+(sr(idx+5000)*2-1)*jitter;
+          const ang=sr(idx+10000)*Math.PI*2;
+          const sz=0.45+sr(idx+15000)*1.1; // 0.45〜1.55倍
+          const co=Math.cos(ang),si=Math.sin(ang);
+          const R=(px,py)=>[ox+px*co-py*si,oy+px*si+py*co];
+          ctx.lineWidth=sc*.15*sz;
+          nc();
+          // 形状もランダム選択（順序依存しない）
+          switch(Math.floor(sr(idx+25000)*6)){
+            case 0:
+              ctx.beginPath();ctx.arc(ox,oy,sc*.38*sz,0,Math.PI*2);ctx.stroke();break;
+            case 1:{
+              const s=sc*sz;
+              const[ax,ay]=R(-s*.35,-s*.08),[bx,by]=R(s*.35,-s*.08);
+              const[cx2,cy2]=R(s*.35,s*.08),[dx,dy]=R(-s*.35,s*.08);
+              ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.lineTo(dx,dy);ctx.closePath();ctx.fill();break;
+            }
+            case 2:{
+              const s=sc*sz;
+              const[ax,ay]=R(0,-s*.38),[bx,by]=R(s*.33,s*.22),[cx2,cy2]=R(-s*.33,s*.22);
+              ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.lineTo(cx2,cy2);ctx.closePath();ctx.stroke();break;
+            }
+            case 3:
+              ctx.beginPath();ctx.arc(ox,oy,sc*.18*sz,0,Math.PI*2);ctx.fill();break;
+            case 4:
+              ctx.beginPath();ctx.arc(ox,oy,sc*.36*sz,ang,ang+Math.PI);ctx.stroke();break;
+            case 5:{
+              const d=sc*.28*sz;
+              ctx.beginPath();ctx.moveTo(ox-d,oy-d);ctx.lineTo(ox+d,oy+d);ctx.stroke();
+              ctx.beginPath();ctx.moveTo(ox+d,oy-d);ctx.lineTo(ox-d,oy+d);ctx.stroke();break;
+            }
+          }
+          idx++;
+        }
+      }
+      ctx.lineWidth=sc*.15;
+      break;
+    }
+    case 'marble':{
+      // 低解像度で描いてスケールアップ → 滑らかな液体感
+      const res=Math.max(2, Math.round(Math.min(w,h)/240));
+      const sw=Math.ceil(w/res), sh=Math.ceil(h/res);
+      const off=document.createElement('canvas');
+      off.width=sw; off.height=sh;
+      const octx=off.getContext('2d');
+      const img=octx.createImageData(sw,sh);
+      const dd=img.data;
+      const pcs2=S.patColors.length?S.patColors:['#ffffff'];
+      const cols=pcs2.map(hx=>[parseInt(hx.slice(1,3),16),parseInt(hx.slice(3,5),16),parseInt(hx.slice(5,7),16)]);
+      const cn=cols.length;
+      const freq=Math.PI*2*(55/Math.max(sc,1));
+      for(let py=0;py<sh;py++){
+        for(let px=0;px<sw;px++){
+          const x=px/sw, y=py/sh;
+          // 複数の正弦波を重ねて液体の流れを表現
+          const v=Math.sin(
+            x*freq*.5+y*freq*.35+
+            Math.sin(x*freq*.28+y*freq*.42)*1.5+
+            Math.sin(x*freq*.15+y*freq*.6)*0.9+
+            Math.sin(x*freq*.6+y*freq*.18)*0.65
+          )*0.5+0.5;
+          const t=Math.max(0,Math.min(0.9999,v));
+          const ci=Math.floor(t*cn);
+          const fr=t*cn-ci;
+          const ca=cols[ci%cn], cb=cols[(ci+1)%cn];
+          const ii=(py*sw+px)*4;
+          dd[ii  ]=Math.round(ca[0]+(cb[0]-ca[0])*fr);
+          dd[ii+1]=Math.round(ca[1]+(cb[1]-ca[1])*fr);
+          dd[ii+2]=Math.round(ca[2]+(cb[2]-ca[2])*fr);
+          dd[ii+3]=Math.round(op*255);
+        }
+      }
+      octx.putImageData(img,0,0);
+      ctx.globalAlpha=1;
+      ctx.imageSmoothingEnabled=true;
+      ctx.imageSmoothingQuality='high';
+      ctx.drawImage(off,0,0,w,h);
+      break;
+    }
+    case 'noise':
+      for(let i=0;i<w*h/(sc*sc)*12;i++){
+        nc();ctx.globalAlpha=op*(rnd()*.5+.1);
+        ctx.beginPath();ctx.arc(rnd()*ext*2-ext*.5,rnd()*ext*2-ext*.5,rnd()*sc*.12+.5,0,Math.PI*2);ctx.fill();
+      }
+      break;
+    case 'scanlines':
+      ctx.lineWidth=sc*.15;
+      for(let y=0;y<ext*2;y+=sc*.8){nc();ctx.beginPath();ctx.moveTo(-ext*.5,y-ext*.5);ctx.lineTo(ext*1.5,y-ext*.5);ctx.stroke();}
+      break;
+    case 'confetti':{
+      // scale小→ピース小・密度高、scale大→ピース大・密度低
+      const count=Math.min(12000, Math.round(w*h/(sc*sc)*2.5));
+      for(let i=0;i<count;i++){
+        const fx=rnd()*w, fy=rnd()*h;
+        const fa=rnd()*Math.PI, co2=Math.cos(fa), si2=Math.sin(fa);
+        const hw=sc*.32, hh=sc*.1;
+        const R2=(px,py)=>[fx+px*co2-py*si2, fy+px*si2+py*co2];
+        const [x1,y1]=R2(-hw,-hh),[x2,y2]=R2(hw,-hh);
+        const [x3,y3]=R2(hw,hh),[x4,y4]=R2(-hw,hh);
+        nc();ctx.globalAlpha=op*(rnd()*.6+.4);
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x3,y3);ctx.lineTo(x4,y4);ctx.closePath();ctx.fill();
+      }
+      ctx.globalAlpha=op;
+      break;
+    }
+    case 'sunburst':{
+      const cx=w/2, cy=h/2;
+      const len=Math.sqrt(w*w+h*h);
+      const rays=Math.max(24, Math.round(2400/Math.max(sc,1)));
+      ctx.lineWidth=Math.max(0.4, sc*0.04);
+      for(let i=0;i<rays;i++){
+        const a=(i/rays)*Math.PI*2;
+        nc();
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(cx+Math.cos(a)*len, cy+Math.sin(a)*len);
+        ctx.stroke();
+      }
+      break;
+    }
+    case 'multistripe':{
+      // 太さの異なるストライプ＋ギャップで背景を透かす
+      const widths=[sc*.4, sc*.8, sc*1.6, sc*.8, sc*.4, sc*2.4];
+      const gap=sc*.7;
+      let x=-ext*.5, wi=0;
+      while(x<ext*1.5){
+        const bw=widths[wi%widths.length];
+        nc();ctx.fillRect(x,0,bw,h);
+        x+=bw+gap; wi++;
+      }
+      break;
+    }
+    case 'tartan':{
+      const tw=sc*.35, pitch=sc*2.2;
+      // 縦帯（半透明）
+      ctx.globalAlpha=op*.5;
+      for(let x=-ext*.5;x<ext*1.5;x+=pitch){nc();ctx.fillRect(x,0,tw,h);}
+      // 横帯（半透明）
+      for(let y=-ext*.5;y<ext*1.5;y+=pitch){nc();ctx.fillRect(0,y,w,tw);}
+      // 交差点を重ねて濃くする
+      ctx.globalAlpha=op*.65;
+      for(let x=-ext*.5;x<ext*1.5;x+=pitch){
+        for(let y=-ext*.5;y<ext*1.5;y+=pitch){nc();ctx.fillRect(x,y,tw,tw);}
+      }
+      ctx.globalAlpha=op;
+      break;
+    }
+    case 'splash':{
+      const blobs=Math.max(6, Math.round(w*h/(sc*sc*8)));
+      for(let i=0;i<blobs;i++){
+        const bx=rnd()*w, by=rnd()*h;
+        const br=sc*(1.2+rnd()*3.5);
+        nc();
+        ctx.globalAlpha=op*(0.75+rnd()*0.25);
+        // ギザギザスパイク形状（本物のペイントスプラッシュ風）
+        const spikes=Math.floor(14+rnd()*18);
+        ctx.beginPath();
+        for(let j=0;j<spikes*2;j++){
+          const a=(j/(spikes*2))*Math.PI*2;
+          const r2=j%2===0
+            ? br*(0.65+rnd()*0.55)  // スパイク先端
+            : br*(0.3+rnd()*0.22);  // 内側くぼみ
+          const xa=bx+Math.cos(a)*r2, ya=by+Math.sin(a)*r2;
+          j===0?ctx.moveTo(xa,ya):ctx.lineTo(xa,ya);
+        }
+        ctx.closePath();ctx.fill();
+        // 細長いストリーク（参考画像の細い線）
+        const streaks=Math.floor(2+rnd()*6);
+        for(let k=0;k<streaks;k++){
+          nc();
+          ctx.globalAlpha=op*(0.65+rnd()*0.35);
+          const sa=rnd()*Math.PI*2;
+          const sd=br*(1.3+rnd()*2.2);
+          const sw2=br*(0.04+rnd()*0.1);
+          const ex=bx+Math.cos(sa)*sd, ey=by+Math.sin(sa)*sd;
+          const pa=sa+Math.PI/2;
+          const startD=br*0.7;
+          ctx.beginPath();
+          ctx.moveTo(bx+Math.cos(sa)*startD+Math.cos(pa)*sw2, by+Math.sin(sa)*startD+Math.sin(pa)*sw2);
+          ctx.lineTo(ex+Math.cos(pa)*sw2*0.2, ey+Math.sin(pa)*sw2*0.2);
+          ctx.lineTo(ex-Math.cos(pa)*sw2*0.2, ey-Math.sin(pa)*sw2*0.2);
+          ctx.lineTo(bx+Math.cos(sa)*startD-Math.cos(pa)*sw2, by+Math.sin(sa)*startD-Math.sin(pa)*sw2);
+          ctx.closePath();ctx.fill();
+        }
+        // 飛び散り小丸ドット
+        const drops=Math.floor(6+rnd()*18);
+        for(let k=0;k<drops;k++){
+          nc();
+          ctx.globalAlpha=op*(0.6+rnd()*0.4);
+          const da=rnd()*Math.PI*2;
+          const dd=br*(1.2+rnd()*2.8);
+          const dr=br*(0.04+rnd()*0.2);
+          ctx.beginPath();ctx.arc(bx+Math.cos(da)*dd,by+Math.sin(da)*dd,dr,0,Math.PI*2);ctx.fill();
+        }
+      }
+      ctx.globalAlpha=op;
+      break;
+    }
+
+    case 'paisley':{
+      const count=Math.min(60, Math.max(8, Math.round(w*h/(sc*sc*10))));
+      for(let i=0;i<count;i++){
+        const bx=rnd()*w, by=rnd()*h;
+        const sz=sc*(1.5+rnd()*1.8);
+        const ang=rnd()*Math.PI*2;
+        const co=Math.cos(ang), si=Math.sin(ang);
+        const T=(px,py)=>[bx+px*co-py*si, by+px*si+py*co];
+        nc();
+        ctx.globalAlpha=op*(0.8+rnd()*.2);
+        // ペイズリー（涙形＋フック）
+        ctx.beginPath();
+        ctx.moveTo(...T(0.1*sz,-0.55*sz));
+        ctx.bezierCurveTo(...T(0.7*sz,-0.5*sz),...T(0.6*sz,0),...T(0.5*sz,0.1*sz));
+        ctx.bezierCurveTo(...T(0.5*sz,0.45*sz),...T(0.25*sz,0.65*sz),...T(0,0.55*sz));
+        ctx.bezierCurveTo(...T(-0.3*sz,0.65*sz),...T(-0.55*sz,0.3*sz),...T(-0.45*sz,0.1*sz));
+        ctx.bezierCurveTo(...T(-0.55*sz,-0.05*sz),...T(-0.5*sz,-0.48*sz),...T(-0.28*sz,-0.5*sz));
+        ctx.bezierCurveTo(...T(-0.05*sz,-0.7*sz),...T(0.05*sz,-0.65*sz),...T(0.1*sz,-0.55*sz));
+        ctx.closePath();ctx.fill();
+        // 内側の小円
+        nc();
+        ctx.globalAlpha=op*.5;
+        const [ix,iy]=T(sz*.06,sz*.05);
+        ctx.beginPath();ctx.arc(ix,iy,sz*.18,0,Math.PI*2);ctx.fill();
+      }
+      ctx.globalAlpha=op;
+      break;
+    }
+    case 'camo':{
+      // 1色目で全面塗り
+      nc();ctx.fillRect(0,0,w,h);
+      // 3レイヤーの有機ブロブ（Array.fromではなくforループで安全に）
+      for(let layer=0;layer<3;layer++){
+        const bsz=sc*(2.6-layer*.4);
+        const cnt=Math.min(55, Math.round(w*h/(bsz*bsz*1.3)));
+        const col=nc();
+        for(let i=0;i<cnt;i++){
+          const bx=(rnd()*1.15-.075)*w, by=(rnd()*1.15-.075)*h;
+          const br=bsz*(.45+rnd()*.85);
+          const vpts=Math.floor(7+rnd()*8);
+          const verts=[];
+          for(let j=0;j<vpts;j++){
+            const ag=(j/vpts)*Math.PI*2;
+            verts.push([bx+Math.cos(ag)*br*(.5+rnd()*.7), by+Math.sin(ag)*br*(.5+rnd()*.7)]);
+          }
+          const n=verts.length;
+          ctx.fillStyle=col;
+          ctx.beginPath();
+          ctx.moveTo((verts[0][0]+verts[n-1][0])*.5,(verts[0][1]+verts[n-1][1])*.5);
+          for(let j=0;j<n;j++){
+            const nx=(j+1)%n;
+            ctx.quadraticCurveTo(verts[j][0],verts[j][1],(verts[j][0]+verts[nx][0])*.5,(verts[j][1]+verts[nx][1])*.5);
+          }
+          ctx.closePath();ctx.fill();
+        }
+      }
+      break;
+    }
+  }
+  ctx.restore();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function angToXY(ang, w, h) {
+  const deg=parseInt(ang), rad=(deg-90)*Math.PI/180;
+  const cx=w/2,cy=h/2,len=Math.sqrt(w*w+h*h)/2;
+  return {x0:cx-Math.cos(rad)*len,y0:cy-Math.sin(rad)*len,x1:cx+Math.cos(rad)*len,y1:cy+Math.sin(rad)*len};
+}
+
+function render() {
+  const size=SIZES[S.sizeIdx];
+  const canvas=document.getElementById('preview');
+  const isMobile=window.innerWidth<=700;
+  const maxW=isMobile ? window.innerWidth-32 : Math.min(820,window.innerWidth-420);
+  const maxH=isMobile ? window.innerWidth*.55 : window.innerHeight-160;
+  const ratio=Math.min(maxW/size.w, maxH/size.h, 1);
+  canvas.width=size.w; canvas.height=size.h;
+  canvas.style.width=Math.round(size.w*ratio)+'px';
+  canvas.style.height=Math.round(size.h*ratio)+'px';
+  document.getElementById('previewInfo').textContent=`${size.w} × ${size.h} px`;
+
+  const ctx=canvas.getContext('2d');
+  const w=size.w, h=size.h;
+
+  // 背景描画
+  const drawBg = () => {
+    if(S.bgType==='solid'){
+      ctx.fillStyle=S.colors[0]; ctx.fillRect(0,0,w,h);
+    } else {
+      const {x0,y0,x1,y1}=angToXY(S.angle,w,h);
+      const bg=ctx.createLinearGradient(x0,y0,x1,y1);
+      bg.addColorStop(0,S.colors[0]); bg.addColorStop(.5,S.colors[1]); bg.addColorStop(1,S.colors[2]);
+      ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+    }
+  };
+
+  if(S.patId==='flat'){
+    ctx.fillStyle=S.colors[0]; ctx.fillRect(0,0,w,h);
+  } else if(S.patId==='gradient'){
+    drawBg();
+  } else {
+    drawBg();
+  }
+  drawPat(ctx, S.patId, w, h, S.scale, S.opacity/100, S.rotate);
+}
+
+// ============================================================
+// PATTERN COLOR (複数色)
+// ============================================================
+let editingSlotIdx = -1;
+
+function renderPatColorSlots() {
+  const wrap = document.getElementById('patColorSlots');
+  wrap.innerHTML = '';
+  S.patColors.forEach((hex, i) => {
+    const outer = document.createElement('div');
+    outer.style.cssText = 'position:relative;display:inline-block;';
+
+    const sw = document.createElement('div');
+    sw.style.cssText = `width:30px;height:30px;border-radius:7px;background:${hex};border:2px solid #ddd;cursor:pointer;box-sizing:border-box;transition:transform .1s;`;
+    sw.title = hex;
+    sw.onclick = () => {
+      editingSlotIdx = i;
+      const picker = document.getElementById('patColorHidden');
+      picker.value = hex;
+      picker.click();
+    };
+
+    // × ボタン（2色以上の時だけ表示）
+    if(S.patColors.length > 1) {
+      const del = document.createElement('div');
+      del.textContent = '×';
+      del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:#f43f5e;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;';
+      del.onclick = e => { e.stopPropagation(); S.patColors.splice(i,1); renderPatColorSlots(); refreshPatThumbs(); render(); };
+      outer.appendChild(del);
+    }
+
+    outer.appendChild(sw);
+    wrap.appendChild(outer);
+  });
+}
+
+function initPatColor() {
+  const picker = document.getElementById('patColorHidden');
+  picker.addEventListener('input', () => {
+    if(editingSlotIdx < 0) return;
+    S.patColors[editingSlotIdx] = picker.value;
+    renderPatColorSlots(); refreshPatThumbs(); render();
+  });
+
+  document.getElementById('addPatColorBtn').onclick = () => {
+    if(S.patColors.length >= 5) return;
+    S.patColors.push('#ffffff');
+    renderPatColorSlots(); refreshPatThumbs(); render();
+  };
+
+  renderPatColorSlots();
+}
+
+// ============================================================
+// BG TYPE TOGGLE
+// ============================================================
+function setBgType(type) {
+  S.bgType = type;
+  document.getElementById('bgtGrad').classList.toggle('on',  type==='gradient');
+  document.getElementById('bgtSolid').classList.toggle('on', type==='solid');
+  render();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+buildSizes();
+buildPalettes();
+buildMoods();
+buildPatterns();
+buildAngles();
+initSwatches();
+initImageExtract();
+initPatColor();
+
+[['scaleR','scaleV','scale'],['opacityR','opacityV','opacity'],['rotateR','rotateV','rotate']].forEach(([rid,vid,key])=>{
+  const range=document.getElementById(rid), val=document.getElementById(vid);
+  range.addEventListener('input',()=>{ S[key]=+range.value; val.textContent=range.value; render(); });
+});
+
+// 模様の並びを変える
+document.getElementById('shuffleBtn').addEventListener('click',()=>{
+  S.seed = Math.floor(Math.random()*1e9);
+  render();
+});
+
+// 自由なサイズ
+['cw','ch'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    const c=SIZES.find(x=>x.custom);
+    const w=Math.min(4000,Math.max(100,+document.getElementById('cw').value||0));
+    const h=Math.min(4000,Math.max(100,+document.getElementById('ch').value||0));
+    c.w=w; c.h=h;
+    if(SIZES[S.sizeIdx]===c) render();
+  });
+});
+
+// 保存：スマホは共有メニュー（「画像を保存」で写真に入る）、パソコンはダウンロード
+document.getElementById('dlBtn').addEventListener('click',()=>{
+  const canvas=document.getElementById('preview'), size=SIZES[S.sizeIdx];
+  const name=`haikei-${size.w}x${size.h}.png`;
+  canvas.toBlob(async blob=>{
+    if(!blob) return;
+    const file=new File([blob],name,{type:'image/png'});
+    const touch=window.matchMedia('(pointer:coarse)').matches;
+    if(touch && navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file]}); return; }
+      catch(e){ if(e && e.name==='AbortError') return; }
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.download=name; a.href=url;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  },'image/png');
+});
+
+// 画面の向きや幅が変わったら、プレビューの大きさを合わせ直す
+let _rz;
+window.addEventListener('resize',()=>{ clearTimeout(_rz); _rz=setTimeout(render,150); });
+
+render();
+</script>
+</body>
+</html>
