@@ -1,0 +1,33 @@
+# Cloudflare Worker for MY SCHEDULE（アカウント＋同期版 = B）
+# デプロイ時に database_id を埋める（wrangler d1 create my-schedule で発行）。
+name = "my-schedule"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+# D1（SQLite）: 全データの保存先
+[[d1_databases]]
+binding = "DB"
+database_name = "my-schedule"
+database_id = "REPLACE_WITH_D1_ID"
+migrations_dir = "migrations"
+
+# フロント（Viteのビルド成果物）を同じWorkerから配信する。
+# /api/* 以外は SPA として index.html を返す。
+[assets]
+directory = "../schedule-app/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# リマインド（Web Push）。毎時:40に起動し、関数側で「JSTで各自の通知時刻か？」を判定。
+# （:40offsetで、その時刻の予定追加が終わってから送られる）
+[triggers]
+crons = ["40 * * * *"]
+
+# 非・秘密の設定のみ（秘密は wrangler secret put で登録）
+[vars]
+APP_NAME = "MY SCHEDULE"
+# 以下は `wrangler secret put` で設定（ここには置かない）:
+#   SESSION_SECRET      … セッション署名用のランダム文字列
+#   VAPID_PUBLIC_KEY    … Web Push 用（base64url, P-256 公開鍵）
+#   VAPID_PRIVATE_KEY   … Web Push 用（base64url, P-256 秘密鍵）
+#   VAPID_SUBJECT       … "mailto:you@example.com"
