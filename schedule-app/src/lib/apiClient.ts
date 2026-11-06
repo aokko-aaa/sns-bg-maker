@@ -90,6 +90,7 @@ export const api = {
     start: (v: { label: string; entry_id?: string | null; category_id?: string | null }) =>
       req<TimeLog>('/time-logs/start', { method: 'POST', ...body(v) }),
     stop: (id: string) => req<{ ok: true }>(`/time-logs/${id}/stop`, { method: 'POST' }),
+    remove: (id: string) => req<{ ok: true }>(`/time-logs/${id}`, { method: 'DELETE' }),
   },
 
   goals: {

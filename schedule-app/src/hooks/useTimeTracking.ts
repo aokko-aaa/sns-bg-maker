@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabase, CF } from '@/lib/supabase'
+import { api } from '@/lib/apiClient'
 import { useAuth } from '@/hooks/useAuth'
 import type { TimeLog } from '@/types/database'
 
@@ -16,6 +17,7 @@ export function useRunningTimer() {
     queryKey: ['time_logs', 'running', user?.id],
     enabled: !!user,
     queryFn: async (): Promise<TimeLog | null> => {
+      if (CF) return (await api.timeLogs.running())[0] ?? null
       const { data, error } = await supabase
         .from('time_logs')
         .select('*')
@@ -35,6 +37,7 @@ export function useRunningTimers() {
     queryKey: ['time_logs', 'running-all', user?.id],
     enabled: !!user,
     queryFn: async (): Promise<TimeLog[]> => {
+      if (CF) return api.timeLogs.running()
       const { data, error } = await supabase
         .from('time_logs')
         .select('*')
@@ -52,6 +55,10 @@ export function useStartTimer() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: StartTimerInput) => {
+      if (CF) {
+        await api.timeLogs.start(input)
+        return
+      }
       const nowIso = new Date().toISOString()
       const { error } = await supabase.from('time_logs').insert({
         user_id: user!.id,
@@ -72,6 +79,15 @@ export function useStopTimer() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id?: string) => {
+      if (CF) {
+        if (id) {
+          await api.timeLogs.stop(id)
+        } else {
+          const running = await api.timeLogs.running()
+          for (const t of running) await api.timeLogs.stop(t.id)
+        }
+        return
+      }
       const nowIso = new Date().toISOString()
       const base = supabase.from('time_logs').update({ ended_at: nowIso })
       const { error } = id
@@ -92,6 +108,7 @@ export function useTimeLogsInRange(start: Date, end: Date) {
     queryKey: ['time_logs', 'range', user?.id, startIso, endIso],
     enabled: !!user,
     queryFn: async (): Promise<TimeLog[]> => {
+      if (CF) return api.timeLogs.range(startIso, endIso)
       const { data, error } = await supabase
         .from('time_logs')
         .select('*')
@@ -109,6 +126,10 @@ export function useDeleteTimeLog() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      if (CF) {
+        await api.timeLogs.remove(id)
+        return
+      }
       const { error } = await supabase.from('time_logs').delete().eq('id', id)
       if (error) throw error
     },

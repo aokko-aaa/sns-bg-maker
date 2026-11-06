@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabase, CF } from '@/lib/supabase'
+import { api } from '@/lib/apiClient'
 import { useAuth } from '@/hooks/useAuth'
 import type { Category, GroupKey } from '@/types/database'
 
@@ -18,6 +19,18 @@ export function useCategories() {
     queryKey: ['categories', user?.id],
     enabled: !!user,
     queryFn: async (): Promise<Category[]> => {
+      if (CF) {
+        const list = await api.categories.list()
+        if (list.length === 0) {
+          // 初回: デフォルトカテゴリを投入
+          for (let i = 0; i < DEFAULT_CATEGORIES.length; i++) {
+            const c = DEFAULT_CATEGORIES[i]
+            await api.categories.upsert({ ...c, sort_order: i })
+          }
+          return api.categories.list()
+        }
+        return list
+      }
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -51,6 +64,10 @@ export function useUpsertCategory() {
     mutationFn: async (
       c: Partial<Category> & { name: string; group_key: GroupKey; color: string }
     ) => {
+      if (CF) {
+        await api.categories.upsert({ ...c, sort_order: c.sort_order ?? 0 })
+        return
+      }
       const payload = { ...c, user_id: user!.id, sort_order: c.sort_order ?? 0 }
       const { error } = await supabase.from('categories').upsert(payload)
       if (error) throw error
@@ -69,6 +86,14 @@ export function useAddCategoryReturning() {
       group_key?: GroupKey
       color?: string
     }): Promise<Category> => {
+      if (CF) {
+        return api.categories.upsert({
+          name: args.name,
+          group_key: args.group_key ?? 'personal',
+          color: args.color ?? GROUP_COLORS[args.group_key ?? 'personal'],
+          sort_order: 0,
+        })
+      }
       const { data, error } = await supabase
         .from('categories')
         .insert({
@@ -98,6 +123,10 @@ export function useDeleteCategory() {
       id: string
       reassignTo: string | null
     }) => {
+      if (CF) {
+        await api.categories.remove(id, reassignTo)
+        return
+      }
       // このカテゴリの予定を先に付け替える（外部キー制約で削除できない問題を回避）
       const { error: e1 } = await supabase
         .from('entries')

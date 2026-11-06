@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabase, CF } from '@/lib/supabase'
+import { api } from '@/lib/apiClient'
 import { useAuth } from '@/hooks/useAuth'
 import type { MonthlyGoal } from '@/types/database'
 
@@ -10,6 +11,7 @@ export function useMonthlyGoal(month: string) {
     queryKey: ['monthly_goal', user?.id, month],
     enabled: !!user,
     queryFn: async (): Promise<MonthlyGoal | null> => {
+      if (CF) return api.goals.get(month)
       const { data, error } = await supabase
         .from('monthly_goals')
         .select('*')
@@ -27,6 +29,10 @@ export function useSaveMonthlyGoal() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (args: { id?: string; month: string; goal: string }) => {
+      if (CF) {
+        await api.goals.put(args.month, args.goal)
+        return
+      }
       const nowIso = new Date().toISOString()
       if (args.id) {
         const { error } = await supabase

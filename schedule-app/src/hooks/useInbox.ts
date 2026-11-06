@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabase, CF } from '@/lib/supabase'
+import { api } from '@/lib/apiClient'
 import { useAuth } from '@/hooks/useAuth'
 import { parseNatural } from '@/lib/parseNatural'
 import type { InboxItem, InboxStatus, InputType } from '@/types/database'
@@ -10,6 +11,7 @@ export function useInboxItems() {
     queryKey: ['inbox', user?.id],
     enabled: !!user,
     queryFn: async (): Promise<InboxItem[]> => {
+      if (CF) return api.inbox.list()
       const { data, error } = await supabase
         .from('inbox_items')
         .select('*')
@@ -25,6 +27,10 @@ export function useAddInbox() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (args: { raw_text: string; input_type?: InputType }) => {
+      if (CF) {
+        await api.inbox.create({ raw_text: args.raw_text, input_type: args.input_type })
+        return
+      }
       const { error } = await supabase.from('inbox_items').insert({
         user_id: user!.id,
         raw_text: args.raw_text,
@@ -61,6 +67,10 @@ export function useAutoParseInbox() {
   return useMutation({
     mutationFn: async (args: { id: string; raw_text: string }) => {
       const parsed = parseNatural(args.raw_text)
+      if (CF) {
+        await api.inbox.patch(args.id, { parsed })
+        return parsed
+      }
       const { error } = await supabase
         .from('inbox_items')
         .update({ parsed, parsed_at: new Date().toISOString() })
@@ -76,6 +86,10 @@ export function useUpdateInboxStatus() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (args: { id: string; status: InboxStatus }) => {
+      if (CF) {
+        await api.inbox.patch(args.id, { status: args.status })
+        return
+      }
       const { error } = await supabase
         .from('inbox_items')
         .update({ status: args.status })
@@ -91,6 +105,10 @@ export function useDeleteInbox() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      if (CF) {
+        await api.inbox.remove(id)
+        return
+      }
       const { error } = await supabase.from('inbox_items').delete().eq('id', id)
       if (error) throw error
     },

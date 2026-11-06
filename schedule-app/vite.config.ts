@@ -35,6 +35,8 @@ export default defineConfig({
       workbox: {
         navigateFallback: '/index.html',
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Web Push のハンドラ（push-sw.js）を生成SWに取り込む
+        importScripts: ['push-sw.js'],
       },
     }),
   ],

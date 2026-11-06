@@ -57,4 +57,12 @@ r.post('/:id/stop', async (c) => {
   return c.json({ ok: true })
 })
 
+// 1件削除（記録の修正用）
+r.delete('/:id', async (c) => {
+  await c.env.DB.prepare('delete from time_logs where id=? and user_id=?')
+    .bind(c.req.param('id'), c.get('uid'))
+    .run()
+  return c.json({ ok: true })
+})
+
 export default r

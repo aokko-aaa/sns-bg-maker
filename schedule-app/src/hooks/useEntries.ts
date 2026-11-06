@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatInTimeZone } from 'date-fns-tz'
-import { supabase } from '@/lib/supabase'
+import { supabase, CF } from '@/lib/supabase'
+import { api } from '@/lib/apiClient'
 import { useAuth } from '@/hooks/useAuth'
 import { endOfDayJst, jstLocalToIso, startOfDayJst } from '@/lib/dates'
 import { TZ } from '@/lib/time'
@@ -20,6 +21,7 @@ export function useEntriesForDay(day: Date) {
     queryKey: ['entries', 'day', user?.id, dayStart.toISOString()],
     enabled: !!user,
     queryFn: async (): Promise<Entry[]> => {
+      if (CF) return api.entries.range(dayStart.toISOString(), dayEnd.toISOString())
       const { data, error } = await supabase
         .from('entries')
         .select('*')
@@ -39,6 +41,7 @@ export function useEntriesForRange(start: Date, end: Date) {
     queryKey: ['entries', 'range', user?.id, start.toISOString(), end.toISOString()],
     enabled: !!user,
     queryFn: async (): Promise<Entry[]> => {
+      if (CF) return api.entries.range(start.toISOString(), end.toISOString())
       const { data, error } = await supabase
         .from('entries')
         .select('*')
@@ -56,6 +59,16 @@ export function useSaveEntry() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: EntryInput) => {
+      if (CF) {
+        if (input.id) {
+          const { id, ...rest } = input
+          await api.entries.update(id, rest)
+        } else {
+          const { id: _omit, ...rest } = input
+          await api.entries.create(rest)
+        }
+        return
+      }
       const nowIso = new Date().toISOString()
       if (input.id) {
         // 既存の編集 → その id を更新
@@ -84,6 +97,10 @@ export function useAddEntries() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (rows: Omit<EntryInput, 'id'>[]) => {
+      if (CF) {
+        await api.entries.bulk(rows)
+        return
+      }
       const nowIso = new Date().toISOString()
       const payload = rows.map((r) => ({
         ...r,
@@ -112,6 +129,18 @@ export function useBulkAddEntries() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (rows: BulkEntryInput[]) => {
+      if (CF) {
+        await api.entries.bulk(
+          rows.map((r) => ({
+            ...r,
+            progress: 0,
+            notes: null,
+            source: 'manual' as const,
+            inbox_id: null,
+          }))
+        )
+        return
+      }
       const payload = rows.map((r) => ({
         ...r,
         user_id: user!.id,
@@ -135,6 +164,7 @@ export function useOverdueTasks() {
     enabled: !!user,
     queryFn: async (): Promise<Entry[]> => {
       const todayStart = startOfDayJst(new Date()).toISOString()
+      if (CF) return api.entries.overdueTasks(todayStart)
       // 終日/日付だけのTODOは ends_at が翌日0:00 になるため、境界を含める(lte)。
       // これで「昨日までの未完了TODO」が今日ぶんとして途切れず持ち越される。
       const { data, error } = await supabase
@@ -164,6 +194,21 @@ export function useCarryOverToday() {
         : formatInTimeZone(new Date(e.starts_at), TZ, 'HH:mm')
       const startsIso = jstLocalToIso(`${today}T${hhmm}`)
       const endsIso = new Date(new Date(startsIso).getTime() + durMs).toISOString()
+      if (CF) {
+        await api.entries.update(e.id, {
+          title: e.title,
+          category_id: e.category_id,
+          kind: e.kind,
+          starts_at: startsIso,
+          ends_at: endsIso,
+          all_day: e.all_day,
+          progress: e.progress,
+          notes: e.notes,
+          source: e.source,
+          inbox_id: e.inbox_id,
+        })
+        return
+      }
       const { error } = await supabase
         .from('entries')
         .update({
@@ -183,6 +228,10 @@ export function useUpdateChecklist() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (args: { id: string; notes: string; progress: number }) => {
+      if (CF) {
+        await api.entries.patch(args.id, { notes: args.notes, progress: args.progress })
+        return
+      }
       const { error } = await supabase
         .from('entries')
         .update({
@@ -202,6 +251,10 @@ export function useSetProgress() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (args: { id: string; progress: number }) => {
+      if (CF) {
+        await api.entries.patch(args.id, { progress: args.progress })
+        return
+      }
       const { error } = await supabase
         .from('entries')
         .update({ progress: args.progress, updated_at: new Date().toISOString() })
@@ -216,6 +269,10 @@ export function useDeleteEntry() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      if (CF) {
+        await api.entries.remove(id)
+        return
+      }
       const { error } = await supabase.from('entries').delete().eq('id', id)
       if (error) throw error
     },

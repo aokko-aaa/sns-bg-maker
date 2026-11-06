@@ -22,6 +22,11 @@ function detectLocalMode(): boolean {
 }
 export const LOCAL_MODE = detectLocalMode()
 
+// Cloudflare版（アカウント＋同期）: /api を使う。ビルド時 VITE_BACKEND=cf で有効化。
+export const CF = import.meta.env.VITE_BACKEND === 'cf'
+// ローカル or CF のときは本物のSupabaseに繋がない（CFは apiClient を使うのでシムで十分）
+const useShim = LOCAL_MODE || CF
+
 // 設計原則 2-3: フロントに置いてよいのは anon(publishable) key と URL のみ。
 // これらはブラウザに公開される前提の公開用の値（RLS で守られる）。
 // Anthropic API キーなどの秘密は絶対にここに置かず、Edge Function の Secret で扱う。
@@ -34,9 +39,9 @@ const FALLBACK_ANON_KEY = 'sb_publishable_juKioD-UgFHqwled9wXi1Q__O6h0fFN'
 const url = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_ANON_KEY
 
-export const isSupabaseConfigured = LOCAL_MODE ? true : Boolean(url && anonKey)
+export const isSupabaseConfigured = useShim ? true : Boolean(url && anonKey)
 
-export const supabase: SupabaseClient<Database> = LOCAL_MODE
+export const supabase: SupabaseClient<Database> = useShim
   ? (createLocalClient() as unknown as SupabaseClient<Database>)
   : createClient<Database>(url, anonKey, {
       auth: {

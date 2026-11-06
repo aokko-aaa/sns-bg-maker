@@ -2,6 +2,8 @@ import { useState } from 'react'
 import BottomSheet from './BottomSheet'
 import LineNotifySection from './LineNotifySection'
 import ChatImportSection from './ChatImportSection'
+import PushNotifySection from './PushNotifySection'
+import { CF } from '@/lib/supabase'
 import {
   useCategories,
   useDeleteCategory,
@@ -79,11 +81,15 @@ export default function CategorySheet({
   return (
     <BottomSheet open={open} onClose={onClose} title="設定">
       <div className="flex flex-col gap-5">
-        {/* チャット(Claude)から予定を登録（クラウド版のみ） */}
-        <ChatImportSection />
-
-        {/* LINEで翌日のお知らせ（クラウド版のみ） */}
-        <LineNotifySection />
+        {/* Cloudflare版: iPhone通知。それ以外(旧Supabase版): LINE/チャット取り込み */}
+        {CF ? (
+          <PushNotifySection />
+        ) : (
+          <>
+            <ChatImportSection />
+            <LineNotifySection />
+          </>
+        )}
 
         <div className="border-t border-gray-100 pt-1">
           <p className="text-xs font-bold text-gray-600">カテゴリ管理</p>
