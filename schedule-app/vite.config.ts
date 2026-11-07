@@ -34,6 +34,10 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        // 新しい版を待たせずにすぐ有効化し、開いている画面にも適用する
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         // Web Push のハンドラ（push-sw.js）を生成SWに取り込む
         importScripts: ['push-sw.js'],
