@@ -61,6 +61,9 @@ export default function Login() {
           <input
             type={CF ? 'text' : 'email'}
             autoComplete={CF ? 'username' : 'email'}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}

@@ -24,7 +24,7 @@ const TITLES: Record<string, string> = {
 }
 
 export default function App() {
-  const { session, loading } = useAuth()
+  const { user, loading } = useAuth()
   const { pathname, search } = useLocation()
   const [catOpen, setCatOpen] = useState(false)
   const [bgOpen, setBgOpen] = useState(false)
@@ -48,7 +48,7 @@ export default function App() {
     )
   }
 
-  if (!session) return <Login />
+  if (!user) return <Login />
 
   return (
     <>

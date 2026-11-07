@@ -18,7 +18,7 @@ r.post('/register', async (c) => {
   const pass = password ?? ''
   if (name.length < 3) return c.json({ error: 'ユーザー名は3文字以上にしてください' }, 400)
   if (pass.length < 6) return c.json({ error: 'パスワードは6文字以上にしてください' }, 400)
-  const existing = await c.env.DB.prepare('select id from users where username=?')
+  const existing = await c.env.DB.prepare('select id from users where lower(username)=lower(?)')
     .bind(name)
     .first()
   if (existing) return c.json({ error: 'そのユーザー名は使われています' }, 409)
@@ -34,7 +34,7 @@ r.post('/login', async (c) => {
   const name = (username ?? '').trim()
   const pass = password ?? ''
   const u = await c.env.DB.prepare(
-    'select id, username, pass_salt, pass_hash from users where username=?'
+    'select id, username, pass_salt, pass_hash from users where lower(username)=lower(?)'
   )
     .bind(name)
     .first<{ id: string; username: string; pass_salt: string; pass_hash: string }>()
