@@ -7,6 +7,7 @@ import timelogsR from './routes/timelogs'
 import goalsR from './routes/goals'
 import inboxR from './routes/inbox'
 import pushR from './routes/push'
+import digestR from './routes/digest'
 import { sendWebPush } from './webpush'
 import { toBool } from './util'
 
@@ -20,6 +21,8 @@ app.route('/api/time-logs', timelogsR)
 app.route('/api/goals', goalsR)
 app.route('/api/inbox', inboxR)
 app.route('/api/push', pushR)
+// 読み出し専用ダイジェスト（ログイン不要・専用トークン）
+app.route('/api/digest', digestR)
 
 // /api 以外はフロント(SPA)を配信。未知パスは index.html（not_found_handling=SPA）
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))
