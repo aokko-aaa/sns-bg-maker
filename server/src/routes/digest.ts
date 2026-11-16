@@ -45,6 +45,8 @@ type Row = {
   all_day: number
   progress: number | null
   notes: string | null
+  source: string
+  calendar: string | null
 }
 
 const r = new Hono<{ Bindings: Env; Variables: Vars }>()
@@ -69,15 +71,18 @@ r.get('/', async (c) => {
   const todayDate = ymd(t.y, t.m, t.d)
   const tomDate = dateJst(new Date(new Date(todayStart).getTime() + 86400000).toISOString())
 
+  // memo=0 のときはメモを返さない
+  const hideMemo = c.req.query('memo') === '0'
+
   // 今日・明日にかかる予定/タスク
   const range = await c.env.DB.prepare(
-    'select id,kind,title,starts_at,ends_at,all_day,progress,notes from entries where user_id=? and starts_at<? and ends_at>?'
+    'select id,kind,title,starts_at,ends_at,all_day,progress,notes,source,calendar from entries where user_id=? and starts_at<? and ends_at>?'
   )
     .bind(uid, tomorrowEnd, todayStart)
     .all<Row>()
   // 期限切れ・未完了のタスク（やり残し＝持ち越し）
   const overdue = await c.env.DB.prepare(
-    "select id,kind,title,starts_at,ends_at,all_day,progress,notes from entries where user_id=? and kind='task' and (progress is null or progress<100) and ends_at<=?"
+    "select id,kind,title,starts_at,ends_at,all_day,progress,notes,source,calendar from entries where user_id=? and kind='task' and (progress is null or progress<100) and ends_at<=?"
   )
     .bind(uid, todayStart)
     .all<Row>()
@@ -112,7 +117,10 @@ r.get('/', async (c) => {
         all_day: allDay,
         done: (e.progress ?? 0) >= 100,
         overdue: e.overdue, // task の「やり残し」判定（予定は常にfalse）
-        memo: isTask ? null : e.notes ?? null,
+        memo: isTask || hideMemo ? null : e.notes ?? null,
+        source: e.source,
+        // calendar はタイムツリー由来の予定だけ返す
+        calendar: e.source === 'timetree' ? e.calendar ?? null : null,
       }
     })
     .sort((a, b) => {
