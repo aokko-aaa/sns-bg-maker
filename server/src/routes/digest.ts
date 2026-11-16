@@ -1,19 +1,13 @@
 import { Hono } from 'hono'
 import type { Env, Vars } from '../types'
 import { toBool } from '../util'
+import { resolveTargetUser, timingSafeEqual } from '../target'
 
 // 読み出し専用の「今日・明日ダイジェスト」。
 // GET /api/digest?token=XXX  → token が DIGEST_TOKEN と一致したときだけ返す（不一致/未指定は401）。
 // 書き込みは一切しない（SELECTのみ）。
 
 const TZ = 'Asia/Tokyo'
-
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
 
 function jstYmd(d = new Date()) {
   const p = new Intl.DateTimeFormat('en-CA', {
@@ -64,13 +58,9 @@ r.get('/', async (c) => {
   }
 
   // 対象ユーザー: 指定があればそれ、無ければ単一ユーザーを自動採用
-  let uid = c.env.DIGEST_USER_ID ?? ''
-  if (!uid) {
-    const { results } = await c.env.DB.prepare('select id from users limit 2').all<{ id: string }>()
-    if (!results || results.length === 0) return c.json({ error: 'no user' }, 404)
-    if (results.length > 1) return c.json({ error: 'multiple users; set DIGEST_USER_ID' }, 409)
-    uid = results[0].id
-  }
+  const t0 = await resolveTargetUser(c.env)
+  if (t0.error) return c.json({ error: t0.error.msg }, t0.error.status)
+  const uid = t0.uid!
 
   // 今日・明日（JST）の範囲
   const t = jstYmd()
@@ -113,6 +103,7 @@ r.get('/', async (c) => {
       const isTask = e.kind === 'task'
       const openEnded = e.ends_at === e.starts_at
       return {
+        id: e.id,
         kind: e.kind,
         title: e.title,
         date: dateJst(e.starts_at),

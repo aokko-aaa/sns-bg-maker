@@ -399,6 +399,11 @@ export default function WeekView() {
                         title="開始をドラッグ"
                       />
                       <span className="pointer-events-none z-0 flex-1 truncate px-1">
+                        {e.source === 'timetree' && (
+                          <span className="mr-0.5 rounded bg-black/15 px-0.5 text-[9px]">
+                            TT{e.calendar ?? ''}
+                          </span>
+                        )}
                         {e.title}
                         {e.kind === 'task' && (e.progress ?? 0) > 0
                           ? ` ${e.progress}%`
@@ -440,6 +445,11 @@ export default function WeekView() {
               />
               <div className="min-w-0 flex-1">
                 <p className="break-words text-sm font-bold text-gray-800">
+                  {preview.e.source === 'timetree' && (
+                    <span className="mr-1 rounded bg-gray-200 px-1 text-[10px] font-bold text-gray-600">
+                      TT{preview.e.calendar ?? ''}
+                    </span>
+                  )}
                   {preview.e.title}
                 </p>
                 <p className="mt-0.5 text-xs text-gray-500">

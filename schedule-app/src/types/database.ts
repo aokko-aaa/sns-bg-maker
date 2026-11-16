@@ -3,7 +3,7 @@
 
 export type GroupKey = 'work' | 'family' | 'personal'
 export type EntryKind = 'event' | 'task'
-export type EntrySource = 'manual' | 'inbox'
+export type EntrySource = 'manual' | 'inbox' | 'timetree'
 export type InputType = 'text' | 'voice'
 export type InboxStatus =
   | 'pending'
@@ -38,6 +38,9 @@ export type Entry = {
   notes: string | null
   source: EntrySource
   inbox_id: string | null
+  // 外部カレンダー取り込み（タイムツリー等）由来のとき
+  ext_id?: string | null
+  calendar?: string | null
   created_at: string
   updated_at: string
 }

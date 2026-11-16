@@ -566,6 +566,13 @@ export default function EntrySheet({
           ))}
         </div>
 
+        {entry?.source === 'timetree' && (
+          <div className="rounded-lg bg-gray-100 px-3 py-2 text-xs text-gray-600">
+            📅 タイムツリー{entry.calendar ? `「${entry.calendar}」` : ''}から取り込んだ予定（TT
+            {entry.calendar ?? ''}）。編集しても、次回の取り込みで上書きされることがあります。
+          </div>
+        )}
+
         <label className={label}>
           {kind === 'task' ? 'タイトル（任意）' : 'タイトル'}
           <input

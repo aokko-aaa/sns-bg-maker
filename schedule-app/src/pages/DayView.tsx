@@ -324,7 +324,14 @@ export default function DayView() {
             style={{ color: ink }}
           >
             {showTitle && (
-              <div className="truncate text-[13px] font-medium">{e.title}</div>
+              <div className="truncate text-[13px] font-medium">
+                {e.source === 'timetree' && (
+                  <span className="mr-1 rounded bg-black/15 px-1 text-[9px] align-middle">
+                    TT{e.calendar ?? ''}
+                  </span>
+                )}
+                {e.title}
+              </div>
             )}
             {!isTask && (
               <div className="truncate text-[11px] opacity-90">

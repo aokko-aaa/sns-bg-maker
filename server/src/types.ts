@@ -10,6 +10,8 @@ export interface Env {
   VAPID_SUBJECT?: string
   // 読み出し専用 digest 用。?token= がこれと一致したときだけ返す
   DIGEST_TOKEN?: string
+  // 書き込み（取り込み・TODO完了）用の合言葉。digestとは別物
+  IMPORT_TOKEN?: string
   // 対象ユーザーを固定したいとき（省略時は単一ユーザーを自動採用）
   DIGEST_USER_ID?: string
 }

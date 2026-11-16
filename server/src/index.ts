@@ -8,6 +8,8 @@ import goalsR from './routes/goals'
 import inboxR from './routes/inbox'
 import pushR from './routes/push'
 import digestR from './routes/digest'
+import importR from './routes/import'
+import doneR from './routes/done'
 import { sendWebPush } from './webpush'
 import { toBool } from './util'
 
@@ -23,6 +25,9 @@ app.route('/api/inbox', inboxR)
 app.route('/api/push', pushR)
 // 読み出し専用ダイジェスト（ログイン不要・専用トークン）
 app.route('/api/digest', digestR)
+// 外部取り込み・TODO完了（書き込み用トークン）
+app.route('/api/import', importR)
+app.route('/api/done', doneR)
 
 // /api 以外はフロント(SPA)を配信。未知パスは index.html（not_found_handling=SPA）
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))
